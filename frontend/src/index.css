@@ -1331,3 +1331,25 @@ textarea:focus {
   color: var(--muted);
   font-weight: 600;
 }
+
+/* ---------- moje / kontakty ---------- */
+
+.contact {
+  padding: 12px 0;
+  border-top: 1px solid var(--line);
+}
+
+.contact-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.contact-msg {
+  margin: 8px 0;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: var(--bg);
+  font-size: 0.9rem;
+}
