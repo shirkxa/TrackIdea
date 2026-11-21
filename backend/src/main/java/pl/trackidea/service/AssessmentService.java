@@ -10,8 +10,10 @@ import pl.trackidea.repo.RadarRecordRepository;
 import java.util.*;
 
 /**
- * Propozycja oceny według 5 jawnych kryteriów z FAQ (wdrożenie, TRL, innowacyjność, potencjał, wiarygodność). Reguły są proste i opisane w uzasadnieniu,
- * żeby ekspert PCI mógł je szybko sprawdzić i poprawić.
+ * Propozycja oceny według jawnych kryteriów z FAQ (wdrożenie, TRL, innowacyjność, potencjał, wiarygodność).
+ * Reguły są proste i opisane w uzasadnieniu, żeby ekspert PCI mógł je szybko sprawdzić i poprawić.
+ * Automat nie udaje wiedzy, której nie ma: brak danych o etapie jest nazwany wprost, TRL liczy się tylko
+ * tam, gdzie ma zastosowanie, a najwyższą ocenę innowacyjności może przyznać dopiero analityk.
  */
 @Service
 @Transactional(readOnly = true)
@@ -68,21 +70,35 @@ public class AssessmentService {
         Assessment a = new Assessment();
         a.setInnovation(inn);
         a.getScores().add(deployment(inn));
-        a.getScores().add(trl(inn));
+        if (trlApplies(inn)) {
+            a.getScores().add(trl(inn));
+        }
         a.getScores().add(novelty(inn));
         a.getScores().add(potential(inn));
         a.getScores().add(credibility(inn));
         return a;
     }
 
+    /** TRL dotyczy rozwiązań technologicznych (FAQ: „jeśli ma zastosowanie”) albo kart, którym analityk go nadał. */
+    public static boolean trlApplies(Innovation inn) {
+        return inn.getArea() == null || inn.getArea() == Area.TECHNOLOGICZNY || inn.getTrl() != null;
+    }
+
     private CriterionScore deployment(Innovation inn) {
-        Maturity m = inn.getMaturity() == null ? Maturity.KONCEPCJA : inn.getMaturity();
+        if (inn.getMaturity() == null) {
+            return new CriterionScore(Criterion.WDROZENIE, 1,
+                    "Źródło nie podaje, na jakim etapie wdrożenia jest rozwiązanie – do ustalenia przez analityka.");
+        }
+        Maturity m = inn.getMaturity();
         String why = "Etap wdrożenia: " + m.getLabel() + estimateNote(inn, "maturity") + ".";
         return new CriterionScore(Criterion.WDROZENIE, clamp(m.getLevel()), why);
     }
 
     private CriterionScore trl(Innovation inn) {
         int level = trlOf(inn);
+        if (level == 0) {
+            return new CriterionScore(Criterion.TRL, 1, "Nie ustalono poziomu TRL – brak danych o etapie rozwoju.");
+        }
         String why = "TRL " + level + " – " + Trl.label(level).toLowerCase() + estimateNote(inn, "trl") + ".";
         return new CriterionScore(Criterion.TRL, Trl.toScore(level), why);
     }
@@ -95,10 +111,12 @@ public class AssessmentService {
         all.sort(Comparator.comparingInt(SimilarItem::similarityPercent).reversed());
         int max = all.isEmpty() ? 0 : all.getFirst().similarityPercent();
 
-        int score = max >= 75 ? 1 : max >= 55 ? 2 : max >= 38 ? 3 : max >= 25 ? 4 : 5;
+        // Porównanie z własną bazą potrafi wykazać brak nowości, ale nie potrafi jej dowieść –
+        // dlatego automat daje najwyżej 4, a 5 może przyznać analityk.
+        int score = max >= 75 ? 1 : max >= 55 ? 2 : max >= 38 ? 3 : 4;
         String why;
         if (all.isEmpty() || max < 25) {
-            why = "Nie znaleziono istotnie podobnych rozwiązań w bazie innowacji, patentów i publikacji.";
+            why = "W bazie Radaru nie ma podobnych rozwiązań, ale to nie dowodzi nowości – najwyższą ocenę może przyznać analityk.";
         } else {
             StringBuilder sb = new StringBuilder("Najbardziej podobne: ");
             all.stream().filter(s -> s.similarityPercent() >= 25).limit(3).forEach(s -> sb
@@ -110,7 +128,13 @@ public class AssessmentService {
             }
             why = sb.toString().trim();
         }
-        return new CriterionScore(Criterion.INNOWACYJNOSC, score, why);
+        Integer ai = inn.getNoveltyEstimate();
+        if (ai != null) {
+            why = "Szacunek modelu AI: " + ai + "/5" + (inn.getNoveltyNote() != null ? " – " + inn.getNoveltyNote() : "")
+                    + " " + why;
+            score = Math.min(score, ai);
+        }
+        return new CriterionScore(Criterion.INNOWACYJNOSC, clamp(score), why);
     }
 
     /** Potencjał = skala (ile instytucji ma podobną potrzebę) + przenaszalność (koszt i warunki wdrożenia). */
@@ -174,7 +198,7 @@ public class AssessmentService {
         }
         String results = inn.getResults() == null ? "" : inn.getResults();
         String norm = TextVectorizer.normalize(results);
-        if (results.matches("(?s).*\\d.*")) {
+        if (MEASURED.matcher(norm).find()) {
             score++;
             why.add("efekty opisane liczbowo");
         } else if (!results.isBlank()) {
@@ -187,8 +211,17 @@ public class AssessmentService {
         return new CriterionScore(Criterion.WIARYGODNOSC, clamp(score), capitalize(String.join("; ", why)) + ".");
     }
 
+    /** Efekt jest „zmierzony”, gdy liczba ma jednostkę albo opisuje zmianę („z 21 do 9 dni”), a nie gdy w tekście jest cyfra. */
+    private static final java.util.regex.Pattern MEASURED = java.util.regex.Pattern.compile(
+            "\\d+([.,]\\d+)?\\s*(%|proc|zl|tys|mln|godzin|dni|minut|tygodni|miesi|lat|osob|uczni|uczestnik|szkol|gmin|"
+                    + "mieszkanc|zgloszen|wnioskow|razy|pkt|punkt|kwh|ton|kg)|\\bz \\d+([.,]\\d+)? do \\d+|\\bo \\d+([.,]\\d+)?\\b");
+
+    /** Poziom TRL karty; 0, gdy nie da się go ustalić (brak TRL i brak etapu wdrożenia). */
     public static int trlOf(Innovation inn) {
-        return inn.getTrl() != null ? inn.getTrl()
+        if (inn.getTrl() != null) {
+            return inn.getTrl();
+        }
+        return inn.getMaturity() == null ? 0
                 : Trl.estimate(inn.getMaturity(), TextVectorizer.normalize(inn.getSolution() + " " + inn.getResults()));
     }
 

@@ -250,4 +250,46 @@ class InnovationServiceTest {
     void rejectionWithoutReasonUsesDefaultOne() {
         assertThat(lastEvent(service.reject(detected.getId(), " ", analyst))).isEqualTo("Odrzucona: Nie spełnia definicji innowacji.");
     }
+
+    @Test
+    void automaticAssessmentDoesNotClaimWhatItCannotKnow() {
+        Innovation lesson = new Innovation();
+        lesson.setTitle("Lekcje ekonomii prowadzone metodą gry symulacyjnej o budżecie gminy");
+        lesson.setSummary("Uczniowie liceum układają budżet fikcyjnej gminy i bronią go przed radą.");
+        lesson.setSolution("Scenariusz zajęć z kartami wydatków i rolami radnych.");
+        lesson.setResults("Opis w raporcie z 2024 roku.");
+        lesson.setType(InnovationType.EDUKACYJNA);
+        lesson.setSector(Sector.EDUKACJA);
+        lesson.setArea(Area.EDUKACYJNY);
+        innovations.save(lesson);
+
+        Assessment a = assessmentService.propose(lesson);
+
+        // TRL nie dotyczy innowacji edukacyjnej, więc nie wchodzi do oceny ani do wyniku
+        assertThat(a.getScores()).extracting(CriterionScore::getCriterion)
+                .containsExactly(Criterion.WDROZENIE, Criterion.INNOWACYJNOSC, Criterion.POTENCJAL, Criterion.WIARYGODNOSC);
+        CriterionScore stage = a.getScores().getFirst();
+        assertThat(stage.getProposedScore()).isEqualTo(1);
+        assertThat(stage.getProposedJustification()).contains("nie podaje");
+        // brak podobnych w bazie to nie dowód nowości: automat nie daje 5
+        CriterionScore novelty = a.getScores().get(1);
+        assertThat(novelty.getProposedScore()).isLessThanOrEqualTo(4);
+        // rok w tekście to nie „efekt opisany liczbowo”
+        assertThat(a.getScores().get(3).getProposedJustification()).doesNotContain("liczbowo");
+
+        lesson.setResults("Średnia ocen wzrosła o 0,6, w zajęciach wzięło udział 48 uczniów.");
+        assertThat(assessmentService.propose(lesson).getScores().get(3).getProposedJustification()).contains("liczbowo");
+        assertThat(AssessmentService.trlApplies(lesson)).isFalse();
+        assertThat(AssessmentService.trlApplies(detected)).isTrue();
+    }
+
+    @Test
+    void analystEditConfirmsDescriptionAndProtectsCardFromRadar() {
+        detected.getEstimated().add("content");
+
+        Innovation edited = service.update(detected.getId(), edit(null, InnovationType.TECHNICZNA, 6, null), analyst);
+
+        assertThat(edited.isEditedByAnalyst()).isTrue();
+        assertThat(edited.getEstimated()).doesNotContain("content");
+    }
 }

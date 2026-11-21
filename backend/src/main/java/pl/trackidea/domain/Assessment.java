@@ -36,7 +36,10 @@ public class Assessment {
         return approvedAt != null;
     }
 
-    /** Wynik merytoryczny = Σ waga × (ocena − 1) / 4 × 100. */
+    /**
+     * Wynik merytoryczny = Σ waga × (ocena − 1) / 4 × 100, podzielony przez sumę wag użytych kryteriów.
+     * Gdy kryterium nie ma zastosowania (TRL poza technologiami), pozostałe wagi zachowują proporcje.
+     */
     public double total() {
         return total(false);
     }
@@ -47,11 +50,13 @@ public class Assessment {
 
     private double total(boolean proposedOnly) {
         double sum = 0;
+        double weights = 0;
         for (CriterionScore s : scores) {
             int score = proposedOnly ? s.getProposedScore() : s.effectiveScore();
-            sum += s.getCriterion().getWeight() / 100.0 * (score - 1) / 4.0 * 100.0;
+            sum += s.getCriterion().getWeight() * (score - 1) / 4.0;
+            weights += s.getCriterion().getWeight();
         }
-        return Math.round(sum * 10) / 10.0;
+        return weights == 0 ? 0 : Math.round(sum / weights * 1000) / 10.0;
     }
 
     public int score(Criterion c) {

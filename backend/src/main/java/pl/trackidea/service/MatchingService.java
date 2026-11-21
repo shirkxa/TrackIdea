@@ -24,6 +24,9 @@ public class MatchingService {
     /** Podobieństwo cosinusowe, przy którym uznajemy treść za „w pełni zgodną” (skalowanie do 0–1). */
     private static final double TEXT_SATURATION = 0.45;
 
+    /** Poniżej tego podobieństwa treści potrzeba i innowacja nie są do siebie dopasowywane. */
+    static final double MIN_TEXT_SIMILARITY = 0.15;
+
     private final SimilarityService similarity;
     private final NeedRepository needs;
     private final InnovationRepository innovations;
@@ -68,7 +71,8 @@ public class MatchingService {
 
     private Optional<Match> scoreNeed(SimilarityService.Index idx, Innovation inn, Need need, boolean innovationSide) {
         double sim = idx.similarity(inn.searchText(), need.searchText());
-        if (sim < 0.08) {
+        // sam wspólny sektor i etap to za mało: dopasowanie musi wynikać z treści
+        if (sim < MIN_TEXT_SIMILARITY) {
             return Optional.empty();
         }
         List<String> reasons = new ArrayList<>();

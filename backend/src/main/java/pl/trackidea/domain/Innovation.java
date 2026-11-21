@@ -57,7 +57,10 @@ public class Innovation {
     /** Gotowość technologiczna 1–9. */
     private Integer trl;
 
-    /** Pola ustalone automatycznie (szacunek), jeszcze niepotwierdzone przez analityka: area, type, sector, maturity, trl. */
+    /**
+     * Pola ustalone automatycznie (szacunek), jeszcze niepotwierdzone przez analityka:
+     * area, type, sector, maturity, trl oraz content (opis: streszczenie, problem, rozwiązanie, efekty).
+     */
     @ElementCollection(fetch = FetchType.EAGER)
     private Set<String> estimated = new LinkedHashSet<>();
 
@@ -100,6 +103,23 @@ public class Innovation {
 
     @ManyToOne
     private Innovation mergedInto;
+
+    /** Kto wyodrębnił opis i klasyfikację z tekstu źródła: „CLAUDE” albo „REGUŁY”; puste dla kart wpisanych ręcznie. */
+    private String analysisEngine;
+
+    /** Nowość na tle znanych rozwiązań według modelu AI (1–5) – szacunek używany w kryterium „Innowacyjność”. */
+    private Integer noveltyEstimate;
+
+    @Column(length = 600)
+    private String noveltyNote;
+
+    /** Analityk poprawiał kartę – kolejne skany Radaru nie nadpisują już jej treści. */
+    @org.hibernate.annotations.ColumnDefault("false")
+    private boolean editedByAnalyst;
+
+    /** Rekord odrzucony automatycznie przez analizę AI – analityk może go przywrócić do katalogu. */
+    @org.hibernate.annotations.ColumnDefault("false")
+    private boolean autoRejected;
 
     @ElementCollection(fetch = FetchType.EAGER)
     @Enumerated(EnumType.STRING)

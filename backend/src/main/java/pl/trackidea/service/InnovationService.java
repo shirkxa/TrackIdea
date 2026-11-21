@@ -76,6 +76,16 @@ public class InnovationService {
     public Innovation update(Long id, CardEdit f, Person actor) {
         requireStaff(actor);
         Innovation inn = get(id);
+        // opis poprawiony przez analityka przestaje być szacunkiem automatu
+        boolean contentChanged = !Objects.equals(nz(inn.getSummary()), nz(trimTo(f.summary(), 500)))
+                || !Objects.equals(nz(inn.getProblem()), nz(trimTo(f.problem(), 4000)))
+                || !Objects.equals(nz(inn.getSolution()), nz(trimTo(f.solution(), 4000)))
+                || !Objects.equals(nz(inn.getResults()), nz(trimTo(f.results(), 2000)));
+        if (contentChanged) {
+            inn.getEstimated().remove("content");
+        }
+        // od teraz skan Radaru nie nadpisuje treści tej karty
+        inn.setEditedByAnalyst(true);
         if (f.title() != null && !f.title().isBlank()) inn.setTitle(f.title().trim());
         inn.setSummary(trimTo(f.summary(), 500));
         inn.setProblem(trimTo(f.problem(), 4000));
@@ -199,8 +209,22 @@ public class InnovationService {
     public Innovation reject(Long id, String reason, Person actor) {
         requireStaff(actor);
         Innovation inn = get(id);
+        inn.setAutoRejected(false);
         changeStatus(inn, InnovationStatus.ODRZUCONA,
                 notBlank(reason) ? reason.trim() : "Nie spełnia definicji innowacji.", actor);
+        return inn;
+    }
+
+    /** Analityk nie zgadza się z odrzuceniem (np. automatycznym) – rekord wraca do katalogu jako „Wykryta”. */
+    public Innovation restore(Long id, Person actor) {
+        requireStaff(actor);
+        Innovation inn = get(id);
+        if (inn.getStatus() != InnovationStatus.ODRZUCONA) {
+            throw DomainException.badRequest("Przywrócić można tylko odrzucony rekord.");
+        }
+        inn.setAutoRejected(false);
+        changeStatus(inn, InnovationStatus.WYKRYTA, "Analityk przywrócił rekord do katalogu.", actor);
+        assessmentService.autoAssess(inn);
         return inn;
     }
 
@@ -221,6 +245,10 @@ public class InnovationService {
         if (!isStaff(actor)) {
             throw DomainException.forbidden("Ta akcja wymaga roli: Analityk PCI / Administrator.");
         }
+    }
+
+    private static String nz(String s) {
+        return s == null ? "" : s;
     }
 
     static boolean notBlank(String s) {

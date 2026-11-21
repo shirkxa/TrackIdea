@@ -13,4 +13,7 @@ public interface InnovationRepository extends JpaRepository<Innovation, Long> {
 
     List<Innovation> findByInstitution(Institution institution);
 
+    /** Rekordy odrzucone przez analizę AI – do przejrzenia przez analityka. */
+    List<Innovation> findByStatusAndAutoRejectedTrue(InnovationStatus status);
+
 }
