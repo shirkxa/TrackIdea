@@ -1,5 +1,6 @@
 package pl.trackidea.web;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.*;
 import pl.trackidea.service.AssistantService;
 import pl.trackidea.service.SimilarItem;
@@ -9,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
+@Tag(name = "Asystent i podobieństwo", description = "Wypełnianie karty z opisu, wyszukiwanie podobnych rozwiązań")
 @RequestMapping("/api")
 public class AssistantController {
 

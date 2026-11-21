@@ -1955,3 +1955,14 @@ textarea:focus {
   color: color-mix(in srgb, var(--c) 55%, #fff);
   background: color-mix(in srgb, var(--c) 30%, var(--surface));
 }
+
+.results-count {
+  margin-right: auto;
+}
+
+.export-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-right: 12px;
+}

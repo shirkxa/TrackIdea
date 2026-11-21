@@ -1,5 +1,6 @@
 package pl.trackidea.web;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.*;
 import pl.trackidea.domain.Need;
 import pl.trackidea.domain.Person;
@@ -12,6 +13,7 @@ import java.util.*;
 
 /** Tablica potrzeb: instytucje i firmy opisują problemy, system dopasowuje istniejące innowacje. */
 @RestController
+@Tag(name = "Tablica potrzeb", description = "Problemy instytucji i firm z dopasowanymi innowacjami")
 @RequestMapping("/api/needs")
 public class NeedController {
 

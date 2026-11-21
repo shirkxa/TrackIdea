@@ -1,5 +1,6 @@
 package pl.trackidea.web;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.*;
 import pl.trackidea.domain.InnovationStatus;
 import pl.trackidea.domain.Person;
@@ -15,6 +16,7 @@ import java.util.*;
 
 /** Panel PCI (mierniki, kolejka ocen, Radar) oraz skrzynka kontaktów. */
 @RestController
+@Tag(name = "PCI, Radar i kontakty", description = "Mierniki skuteczności, kolejka pracy eksperta, skan Radaru, prośby o kontakt")
 @RequestMapping("/api")
 public class PciController {
 

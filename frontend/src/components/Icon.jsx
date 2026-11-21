@@ -106,6 +106,12 @@ const PATHS = {
       <path d="M12 3l5 7h-3l4 6H6l4-6H7z" />
     </>
   ),
+  download: (
+    <>
+      <path d="M12 4v11M7 10l5 5 5-5" />
+      <path d="M5 19h14" />
+    </>
+  ),
   contrast: (
     <>
       <circle cx="12" cy="12" r="9" />

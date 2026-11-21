@@ -155,6 +155,10 @@ zatrzymane duplikaty.
 
 ## API (wybrane endpointy)
 
+Pełna, interaktywna dokumentacja: **http://localhost:8080/swagger-ui.html** (specyfikacja OpenAPI: `/v3/api-docs`).
+Katalog można też pobrać jako **CSV** (przycisk „CSV” w katalogu albo `GET /api/innovations/export` z tymi samymi
+filtrami) – plik otwiera się bezpośrednio w Excelu.
+
 | Metoda | Ścieżka | Opis |
 |---|---|---|
 | GET | `/api/innovations?q=&type=&sector=&sort=` | katalog: wyszukiwanie semantyczne, filtry, sortowanie |
@@ -165,6 +169,7 @@ zatrzymane duplikaty.
 | POST | `/api/innovations/{id}/confirm`, `/request-assessment`, `/assessment/approve`, `/paths`, `/fork`, `/confirm-deployment` | przejścia statusów |
 | POST | `/api/assistant/draft`, `/api/similar` | asystent karty, podobne rozwiązania |
 | GET/POST | `/api/needs` | tablica potrzeb z dopasowaniami |
+| GET | `/api/innovations/export` | eksport katalogu do CSV (UTF-8, separator `;`) |
 | POST | `/api/radar/scan` | skan źródeł Radaru |
 | GET | `/api/stats`, `/api/pci/queue` | mierniki i kolejka pracy PCI |
 
@@ -188,7 +193,7 @@ Użytkownika demo wskazuje nagłówek `X-User-Id`.
 
 ## Co dalej po hackathonie
 
-- importery API dla PBN, NCBiR, UPRP i EPO oraz RSS-y stron szkół i gmin,
+- importery API dla PBN, NCBiR, UPRP i EPO oraz RSS-y stron szkół i gmin (Radar ma już kontrakt importera i REST API),
 - logowanie i role (Spring Security, SSO instytucji), powiadomienia e-mail,
 - embeddingi i PostgreSQL + pgvector,
 - kalibracja wag kryteriów na danych z pilotażu z PCI (10–20 instytucji z Podkarpacia),

@@ -97,6 +97,7 @@ export default function Layout({ children }) {
               <Link to="/submit">Zgłoś innowację</Link>
               <Link to="/needs">Tablica potrzeb</Link>
               <Link to="/pci">Radar i mierniki</Link>
+              <a href={`${import.meta.env.VITE_API_URL ?? ''}/swagger-ui.html`} target="_blank" rel="noreferrer">API</a>
             </nav>
           </div>
         </div>

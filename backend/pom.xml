@@ -37,6 +37,12 @@
             <artifactId>spring-boot-h2console</artifactId>
         </dependency>
 
+        <!-- Dokumentacja REST API: /swagger-ui.html i /v3/api-docs -->
+        <dependency>
+            <groupId>org.springdoc</groupId>
+            <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+            <version>3.2.1</version>
+        </dependency>
         <!-- Opcjonalny asystent AI (Claude) – używany tylko, gdy ustawiono ANTHROPIC_API_KEY -->
         <dependency>
             <groupId>com.anthropic</groupId>

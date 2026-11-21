@@ -1,5 +1,6 @@
 package pl.trackidea.web;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.*;
 import pl.trackidea.domain.Institution;
 import pl.trackidea.domain.Person;
@@ -16,6 +17,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
+@Tag(name = "Ludzie i instytucje", description = "Profile twórców, opiekunów, ekspertów i partnerów; strony instytucji; polecajki")
 @RequestMapping("/api")
 public class PeopleController {
 

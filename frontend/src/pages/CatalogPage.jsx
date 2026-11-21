@@ -119,7 +119,11 @@ export default function CatalogPage() {
       </div>
 
       <div className="results-bar">
-        <span className="muted small">{cards ? `${cards.length} wyników` : ''}</span>
+        <span className="muted small results-count">{cards ? `${cards.length} wyników` : ''}</span>
+        <a className="link-button export-link" href={`${import.meta.env.VITE_API_URL ?? ''}/api/innovations/export${query({ ...filters, q: debouncedQ })}`}
+          download title="Pobierz wyniki jako CSV (Excel)">
+          <Icon name="download" size={16} /> CSV
+        </a>
         <label className="sort">
           <span className="muted small">Sortuj:</span>
           <select value={filters.sort} onChange={(e) => set('sort')(e.target.value)} aria-label="Sortowanie">

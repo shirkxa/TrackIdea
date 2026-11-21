@@ -1,5 +1,6 @@
 package pl.trackidea.web;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -13,6 +14,7 @@ import java.util.Map;
 
 /** Słowniki z polskimi etykietami – frontend nie duplikuje enumów. */
 @RestController
+@Tag(name = "Słowniki", description = "Typy, sektory, etapy, statusy i kryteria oceny z wagami")
 @RequestMapping("/api/meta")
 public class MetaController {
 

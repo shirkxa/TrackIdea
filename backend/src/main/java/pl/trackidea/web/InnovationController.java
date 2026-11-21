@@ -1,15 +1,25 @@
 package pl.trackidea.web;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import pl.trackidea.domain.*;
 import pl.trackidea.repo.InnovationRepository;
 import pl.trackidea.service.*;
 
+import java.nio.charset.StandardCharsets;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.*;
 import java.util.stream.Stream;
 
 @RestController
 @RequestMapping("/api/innovations")
+@Tag(name = "Innowacje", description = "Katalog, karta innowacji, cykl życia (statusy), ocena, ścieżki, dopasowania")
 public class InnovationController {
 
     private final InnovationRepository innovations;
@@ -20,11 +30,14 @@ public class InnovationController {
     private final AssessmentService assessmentService;
     private final Views views;
     private final CurrentUser currentUser;
+    private final String publicUrl;
 
     public InnovationController(InnovationRepository innovations, InnovationService service,
                                 SimilarityService similarity, RecommendationService recommendations,
                                 MatchingService matching, AssessmentService assessmentService, Views views,
-                                CurrentUser currentUser) {
+                                CurrentUser currentUser,
+                                @Value("${trackidea.public-url:http://localhost:5173}") String publicUrl) {
+        this.publicUrl = publicUrl;
         this.innovations = innovations;
         this.service = service;
         this.similarity = similarity;
@@ -40,6 +53,7 @@ public class InnovationController {
      * scope=public (domyślnie) – tylko potwierdzone; scope=mine – moje i mojej instytucji (też szkice).
      */
     @GetMapping
+    @Operation(summary = "Katalog innowacji", description = "Wyszukiwanie semantyczne (q), filtry i sortowanie: newest, score, popular, forks, relevance.")
     public List<Dto.InnovationCard> list(@RequestParam(required = false) String q,
                                          @RequestParam(required = false) InnovationType type,
                                          @RequestParam(required = false) Sector sector,
@@ -102,6 +116,68 @@ public class InnovationController {
         }
         cards.sort(order);
         return cards;
+    }
+
+    /**
+     * Eksport katalogu do CSV (Excel: UTF-8 z BOM, separator „;”) – te same filtry co katalog.
+     * Ułatwia integrację z arkuszami i systemami instytucji.
+     */
+    @GetMapping(value = "/export", produces = "text/csv")
+    @Operation(summary = "Eksport katalogu do CSV", description = "Przyjmuje te same parametry co katalog. Plik otwiera się bezpośrednio w Excelu.")
+    public ResponseEntity<byte[]> export(@RequestParam(required = false) String q,
+                                         @RequestParam(required = false) InnovationType type,
+                                         @RequestParam(required = false) Sector sector,
+                                         @RequestParam(required = false) Maturity maturity,
+                                         @RequestParam(required = false) TransferModel transferModel,
+                                         @RequestParam(required = false) InstitutionType institutionType,
+                                         @RequestParam(required = false) InnovationStatus status,
+                                         @RequestParam(required = false) Long institutionId,
+                                         @RequestParam(defaultValue = "newest") String sort,
+                                         @RequestHeader(value = CurrentUser.HEADER, required = false) Long userId) {
+        List<Dto.InnovationCard> cards = list(q, type, sector, maturity, transferModel, institutionType, status,
+                institutionId, sort, "public", false, userId);
+        StringBuilder csv = new StringBuilder("\uFEFF");
+        csv.append(String.join(";", "ID", "Tytuł", "Instytucja", "Typ instytucji", "Powiat", "Typ innowacji",
+                "Sektor", "Etap", "Model transferu", "Status", "Wynik (0-100)", "Głosy", "Obserwujący", "Forki",
+                "Wdrożenia", "Źródło", "Data dodania", "Tagi", "Link")).append("\r\n");
+        for (Dto.InnovationCard c : cards) {
+            csv.append(String.join(";",
+                    String.valueOf(c.id()),
+                    cell(c.title()),
+                    cell(c.institution() == null ? "" : c.institution().name()),
+                    cell(label(c.institution() == null ? null : c.institution().type())),
+                    cell(c.institution() == null ? "" : c.institution().county()),
+                    cell(label(c.type())),
+                    cell(label(c.sector())),
+                    cell(label(c.maturity())),
+                    cell(label(c.transferModel())),
+                    cell(c.status().label()),
+                    c.score() == null ? "" : String.valueOf(Math.round(c.score())),
+                    String.valueOf(c.votes()),
+                    String.valueOf(c.followers()),
+                    String.valueOf(c.forks()),
+                    String.valueOf(c.deployments()),
+                    cell(c.sourceName() != null ? c.source().label() + " (" + c.sourceName() + ")" : label(c.source())),
+                    LocalDate.ofInstant(c.createdAt(), ZoneId.of("Europe/Warsaw")).toString(),
+                    cell(String.join(", ", c.tags())),
+                    cell(publicUrl + "/innovations/" + c.id())))
+                    .append("\r\n");
+        }
+        String filename = "trackidea-innowacje-" + LocalDate.now(ZoneId.of("Europe/Warsaw")) + ".csv";
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
+                .contentType(new MediaType("text", "csv", StandardCharsets.UTF_8))
+                .body(csv.toString().getBytes(StandardCharsets.UTF_8));
+    }
+
+    private static String label(Dto.EnumValue v) {
+        return v == null ? "" : v.label();
+    }
+
+    /** Pole CSV w cudzysłowie, z podwojonymi cudzysłowami w treści. */
+    private static String cell(String value) {
+        String v = value == null ? "" : value.replace("\r", " ").replace("\n", " ");
+        return "\"" + v.replace("\"", "\"\"") + "\"";
     }
 
     @GetMapping("/{id}")
