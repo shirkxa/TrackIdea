@@ -61,6 +61,7 @@ export default function CatalogPage() {
 
   // Filtry w panelu „Filtry” – pokazywane potem jako usuwalne etykiety.
   const panelFilters = [
+    { key: 'type', label: 'Typ innowacji', options: meta.types },
     { key: 'sector', label: 'Sektor', options: meta.sectors },
     { key: 'maturity', label: 'Etap', options: meta.maturities },
     { key: 'minTrl', label: 'TRL', options: [3, 5, 7, 9].map((n) => ({ value: String(n), label: n === 9 ? 'TRL 9' : `TRL ${n}+` })) },
@@ -72,7 +73,7 @@ export default function CatalogPage() {
     .filter((f) => filters[f.key])
     .map((f) => ({ ...f, valueLabel: f.options.find((o) => o.value === filters[f.key])?.label }))
   const clearAll = () => {
-    setFilters((f) => ({ sort: f.sort, type: f.type }))
+    setFilters((f) => ({ sort: f.sort, area: f.area }))
     setInst('')
   }
   const sortLabel = debouncedQ && filters.sort === 'newest' ? 'Najtrafniejsze' : null
@@ -80,6 +81,17 @@ export default function CatalogPage() {
   return (
     <>
       <h1 className="page-title">Katalog innowacji</h1>
+      <details className="definition">
+        <summary>Co uznajemy za innowację?</summary>
+        <p>
+          Za Podręcznikiem Oslo (OECD/Eurostat, 2018): <b>nowy lub ulepszony produkt albo proces</b>, który znacząco
+          różni się od dotychczasowych i został już udostępniony użytkownikom lub wdrożony. Radar szuka rozwiązań,
+          które już istnieją – w trzech obszarach:
+        </p>
+        <ul>
+          {meta.areas.map((a) => <li key={a.value}><b>{a.label}</b> – {a.description}</li>)}
+        </ul>
+      </details>
 
       <nav className="tiles" aria-label="Na skróty">
         {TILES.map((t, i) => (
@@ -131,14 +143,15 @@ export default function CatalogPage() {
       )}
 
       <div className="list-bar">
-        <div className="type-tabs" role="tablist" aria-label="Typ innowacji">
-          <button type="button" role="tab" aria-selected={!filters.type} className={!filters.type ? 'on' : ''}
-            onClick={() => set('type')(null)}>
+        <div className="type-tabs" role="tablist" aria-label="Obszar innowacji">
+          <button type="button" role="tab" aria-selected={!filters.area} className={!filters.area ? 'on' : ''}
+            onClick={() => set('area')(null)}>
             Wszystkie
           </button>
-          {meta.types.map((t) => (
-            <button key={t.value} type="button" role="tab" aria-selected={filters.type === t.value}
-              className={filters.type === t.value ? 'on' : ''} onClick={() => set('type')(t.value)}>
+          {meta.areas.map((t) => (
+            <button key={t.value} type="button" role="tab" aria-selected={filters.area === t.value}
+              className={filters.area === t.value ? 'on' : ''} onClick={() => set('area')(t.value)}
+              title={t.description}>
               {t.label}
             </button>
           ))}

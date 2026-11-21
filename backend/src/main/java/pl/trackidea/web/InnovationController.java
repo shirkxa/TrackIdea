@@ -53,6 +53,7 @@ public class InnovationController {
     @GetMapping
     @Operation(summary = "Katalog innowacji", description = "Wyszukiwanie semantyczne (q), filtr po nazwie instytucji lub firmy (institution), pozostałe filtry i sortowanie: newest, updated, score, relevance.")
     public List<Dto.InnovationCard> list(@RequestParam(required = false) String q,
+                                         @RequestParam(required = false) Area area,
                                          @RequestParam(required = false) InnovationType type,
                                          @RequestParam(required = false) Sector sector,
                                          @RequestParam(required = false) Maturity maturity,
@@ -64,6 +65,7 @@ public class InnovationController {
                                          @RequestParam(required = false) Integer minTrl,
                                          @RequestParam(defaultValue = "newest") String sort) {
         Stream<Innovation> stream = innovations.findAll().stream().filter(i -> i.getStatus().isPubliclyVisible());
+        if (area != null) stream = stream.filter(i -> i.getArea() == area);
         if (type != null) stream = stream.filter(i -> i.getType() == type);
         if (sector != null) stream = stream.filter(i -> i.getSector() == sector);
         if (maturity != null) stream = stream.filter(i -> i.getMaturity() == maturity);
@@ -119,6 +121,7 @@ public class InnovationController {
     @GetMapping(value = "/export", produces = "text/csv")
     @Operation(summary = "Eksport katalogu do CSV", description = "Przyjmuje te same parametry co katalog. Plik otwiera się bezpośrednio w Excelu.")
     public ResponseEntity<byte[]> export(@RequestParam(required = false) String q,
+                                         @RequestParam(required = false) Area area,
                                          @RequestParam(required = false) InnovationType type,
                                          @RequestParam(required = false) Sector sector,
                                          @RequestParam(required = false) Maturity maturity,
@@ -129,10 +132,10 @@ public class InnovationController {
                                          @RequestParam(required = false) String institution,
                                          @RequestParam(required = false) Integer minTrl,
                                          @RequestParam(defaultValue = "newest") String sort) {
-        List<Dto.InnovationCard> cards = list(q, type, sector, maturity, transferModel, institutionType, status,
+        List<Dto.InnovationCard> cards = list(q, area, type, sector, maturity, transferModel, institutionType, status,
                 institutionId, institution, minTrl, sort);
         StringBuilder csv = new StringBuilder("\uFEFF");
-        csv.append(String.join(";", "ID", "Tytuł", "Instytucja", "Typ instytucji", "Powiat", "Typ innowacji",
+        csv.append(String.join(";", "ID", "Tytuł", "Instytucja", "Typ instytucji", "Powiat", "Obszar", "Typ innowacji",
                 "Sektor", "Etap", "TRL", "Model transferu", "Status", "Wynik (0-100)", "Autorzy", "Źródło", "Data dodania",
                 "Tagi", "Link")).append("\r\n");
         for (Dto.InnovationCard c : cards) {
@@ -142,6 +145,7 @@ public class InnovationController {
                     cell(c.institution() == null ? "" : c.institution().name()),
                     cell(label(c.institution() == null ? null : c.institution().type())),
                     cell(c.institution() == null ? "" : c.institution().county()),
+                    cell(label(c.area())),
                     cell(label(c.type())),
                     cell(label(c.sector())),
                     cell(label(c.maturity())),

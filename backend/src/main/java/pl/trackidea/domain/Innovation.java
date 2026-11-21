@@ -41,6 +41,10 @@ public class Innovation {
     @Column(length = 2000)
     private String results;
 
+    /** Obszar: technologiczny / edukacyjny / administracyjny. */
+    @Enumerated(EnumType.STRING)
+    private Area area;
+
     @Enumerated(EnumType.STRING)
     private InnovationType type;
 
@@ -53,7 +57,7 @@ public class Innovation {
     /** Gotowość technologiczna 1–9. */
     private Integer trl;
 
-    /** Pola ustalone automatycznie (szacunek), jeszcze niepotwierdzone przez analityka: type, sector, maturity, trl. */
+    /** Pola ustalone automatycznie (szacunek), jeszcze niepotwierdzone przez analityka: area, type, sector, maturity, trl. */
     @ElementCollection(fetch = FetchType.EAGER)
     private Set<String> estimated = new LinkedHashSet<>();
 

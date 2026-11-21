@@ -51,7 +51,7 @@ public final class Dto {
         }
     }
 
-    public record InnovationCard(Long id, String title, String summary, EnumValue type, EnumValue sector,
+    public record InnovationCard(Long id, String title, String summary, EnumValue area, EnumValue type, EnumValue sector,
                                  EnumValue maturity, EnumValue transferModel, StatusView status,
                                  InstitutionView institution, String authors, Set<String> tags, Double score,
                                  Instant createdAt, Instant updatedAt, EnumValue source, String sourceName,

@@ -36,7 +36,7 @@ public class InnovationService {
     public record CardEdit(String title, String summary, String problem, String solution, String requirements,
                            String results, InnovationType type, Sector sector, Maturity maturity,
                            TransferModel transferModel, String ipStatus, List<String> tags, List<String> links,
-                           Long institutionId, String sourceAuthors, Integer trl) {
+                           Long institutionId, String sourceAuthors, Integer trl, Area area) {
     }
 
     @Transactional(readOnly = true)
@@ -90,6 +90,8 @@ public class InnovationService {
         confirmIfChanged(inn, "sector", inn.getSector(), f.sector());
         confirmIfChanged(inn, "maturity", inn.getMaturity(), f.maturity());
         confirmIfChanged(inn, "trl", inn.getTrl(), f.trl());
+        confirmIfChanged(inn, "area", inn.getArea(), f.area());
+        if (f.area() != null) inn.setArea(f.area());
         inn.setType(f.type());
         inn.setSector(f.sector());
         inn.setMaturity(f.maturity());

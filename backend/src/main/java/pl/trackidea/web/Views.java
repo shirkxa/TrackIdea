@@ -27,7 +27,8 @@ public class Views {
 
     public Dto.InnovationCard card(Innovation i) {
         Double score = assessmentService.latest(i).filter(Assessment::isApproved).map(Assessment::total).orElse(null);
-        return new Dto.InnovationCard(i.getId(), i.getTitle(), i.getSummary(), Dto.EnumValue.of(i.getType()),
+        return new Dto.InnovationCard(i.getId(), i.getTitle(), i.getSummary(), Dto.EnumValue.of(i.getArea()),
+                Dto.EnumValue.of(i.getType()),
                 Dto.EnumValue.of(i.getSector()), Dto.EnumValue.of(i.getMaturity()), Dto.EnumValue.of(i.getTransferModel()),
                 Dto.StatusView.of(i.getStatus()), Dto.InstitutionView.of(i.getInstitution()), i.getSourceAuthors(),
                 i.getTags(), score, i.getCreatedAt(), i.getUpdatedAt(), Dto.EnumValue.of(i.getSource()), i.getSourceName(),

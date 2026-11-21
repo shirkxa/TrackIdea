@@ -60,6 +60,7 @@ export default function PciPage() {
 
           <div className="dist-grid">
             <Distribution title="Innowacje wg statusu" data={stats.data.byStatus} />
+            <Distribution title="Wg obszaru" data={stats.data.byArea} />
             <Distribution title="Wg sektora" data={stats.data.bySector} />
             <Distribution title="Wg typu instytucji" data={stats.data.byInstitutionType} />
             <Distribution title="Skąd pochodzą" data={stats.data.bySource} />

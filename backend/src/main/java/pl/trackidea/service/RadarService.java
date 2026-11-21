@@ -206,8 +206,9 @@ public class RadarService {
         inn.setSector(r.sectorHint() != null ? r.sectorHint() : d.sector());
         inn.setMaturity(r.maturityHint() != null ? r.maturityHint() : d.maturity());
         inn.setTrl(Trl.estimate(inn.getMaturity(), TextVectorizer.normalize(r.title() + " " + r.abstractText())));
+        inn.setArea(Area.derive(inn.getType(), inn.getSector(), r.institutionType()));
         // klasyfikacja pochodzi z automatu – to szacunek, dopóki analityk jej nie potwierdzi
-        inn.getEstimated().addAll(List.of("type", "sector", "maturity", "trl"));
+        inn.getEstimated().addAll(List.of("area", "type", "sector", "maturity", "trl"));
         inn.setSourceYear(r.year());
         inn.getSourceFacts().addAll(r.facts());
         r.keywords().stream().filter(k -> k != null && !k.isBlank()).forEach(k -> inn.getTags().add(k.toLowerCase()));

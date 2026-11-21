@@ -9,6 +9,7 @@ import NeedsPage from './pages/NeedsPage.jsx'
 import PciPage from './pages/PciPage.jsx'
 import InstitutionPage from './pages/InstitutionPage.jsx'
 import LoginPage from './pages/LoginPage.jsx'
+import ComparePage from './pages/ComparePage.jsx'
 
 export default function App() {
   const { meta, error } = useApp()
@@ -21,6 +22,7 @@ export default function App() {
           <Route path="/" element={<CatalogPage />} />
           <Route path="/innovations/:id" element={<InnovationPage />} />
           <Route path="/innovations/:id/edit" element={<EditPage />} />
+          <Route path="/compare" element={<ComparePage />} />
           <Route path="/needs" element={<NeedsPage />} />
           <Route path="/pci" element={<PciPage />} />
           <Route path="/login" element={<LoginPage />} />

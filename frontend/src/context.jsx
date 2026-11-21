@@ -3,12 +3,34 @@ import { api } from './api.js'
 
 const AppContext = createContext(null)
 
+/** Porównanie: do 4 innowacji; zapamiętane w przeglądarce, żeby przetrwało odświeżenie strony. */
+export const COMPARE_MAX = 4
+const COMPARE_KEY = 'trackidea.compare'
+
+function readCompare() {
+  try {
+    const v = JSON.parse(localStorage.getItem(COMPARE_KEY) ?? '[]')
+    return Array.isArray(v) ? v.filter(Number.isInteger).slice(0, COMPARE_MAX) : []
+  } catch {
+    return []
+  }
+}
+
 export function AppProvider({ children }) {
   const [meta, setMeta] = useState(null)
   const [people, setPeople] = useState([])
   const [session, setSession] = useState({ user: null, demoMode: false, loaded: false })
   const [error, setError] = useState(null)
   const [toast, setToast] = useState(null)
+  const [compare, setCompare] = useState(readCompare)
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(COMPARE_KEY, JSON.stringify(compare))
+    } catch {
+      // bez dostępu do pamięci przeglądarki porównanie działa do odświeżenia strony
+    }
+  }, [compare])
 
   useEffect(() => {
     Promise.all([api.get('/meta'), api.get('/people'), api.get('/auth/me')])
@@ -42,9 +64,15 @@ export function AppProvider({ children }) {
     setTimeout(() => setToast((t) => (t && Date.now() - t.at >= 3500 ? null : t)), 3600)
   }, [])
 
+  const toggleCompare = useCallback((id) => {
+    setCompare((ids) => (ids.includes(id) ? ids.filter((x) => x !== id)
+      : ids.length >= COMPARE_MAX ? ids : [...ids, id]))
+  }, [])
+  const clearCompare = useCallback(() => setCompare([]), [])
+
   const value = {
     meta, people, user: session.user, demoMode: session.demoMode, sessionLoaded: session.loaded,
-    login, logout, chooseUser, error, notify, toast,
+    login, logout, chooseUser, error, notify, toast, compare, toggleCompare, clearCompare,
   }
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>
 }

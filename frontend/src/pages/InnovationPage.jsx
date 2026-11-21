@@ -171,6 +171,7 @@ function CardSection({ data }) {
       </dl>
       <h3 className="sub-title">Klasyfikacja</h3>
       <div className="facts">
+        <Fact label="Obszar" estimated={est.has('area')}>{card.area?.label}</Fact>
         <Fact label="Typ innowacji" estimated={est.has('type')}>{card.type?.label}</Fact>
         <Fact label="Sektor" estimated={est.has('sector')}>{card.sector?.label}</Fact>
         <Fact label="Etap wdrożenia" estimated={est.has('maturity')}>{card.maturity?.label}</Fact>

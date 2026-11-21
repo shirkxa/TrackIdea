@@ -27,6 +27,8 @@ public class MetaController {
     @GetMapping
     public Map<String, Object> meta() {
         Map<String, Object> m = new LinkedHashMap<>();
+        m.put("areas", Arrays.stream(Area.values()).map(a -> Map.of("value", a.name(), "label", a.getLabel(),
+                "description", a.getDescription())).toList());
         m.put("types", values(InnovationType.values()));
         m.put("sectors", values(Sector.values()));
         m.put("maturities", values(Maturity.values()));

@@ -167,6 +167,8 @@ public class DemoDataSeeder implements ApplicationRunner {
         if (s.trl() == null && s.status() != InnovationStatus.OCENIONA) {
             inn.getEstimated().add("trl");
         }
+        inn.setArea(Area.derive(s.type(), s.sector(),
+                inn.getInstitution() == null ? null : inn.getInstitution().getType()));
         if (s.paths() != null) inn.getChosenPaths().addAll(s.paths());
         Instant created = now.minus(Duration.ofDays(s.daysAgo()));
         inn.setCreatedAt(created);

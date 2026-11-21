@@ -14,7 +14,7 @@ function toForm(d) {
     transferModel: d.card.transferModel?.value ?? null, ipStatus: d.ipStatus ?? '',
     tags: [...(d.card.tags ?? [])].join(', '), links: [...(d.links ?? [])].join('\n'),
     institutionId: d.card.institution?.id ?? null, sourceAuthors: d.card.authors ?? '',
-    trl: d.card.trl?.level ?? null,
+    trl: d.card.trl?.level ?? null, area: d.card.area?.value ?? null,
   }
 }
 
@@ -73,6 +73,7 @@ function EditForm({ id, initial }) {
           <label className="field wide"><span>Rozwiązanie</span><textarea rows={4} {...input('solution')} /></label>
           <label className="field wide"><span>Wymagania wdrożenia</span><textarea rows={2} {...input('requirements')} /></label>
           <label className="field wide"><span>Efekty</span><textarea rows={2} {...input('results')} /></label>
+          <SelectEnum label="Obszar" value={form.area} onChange={set('area')} options={meta.areas} placeholder="Wybierz…" />
           <SelectEnum label="Typ" value={form.type} onChange={set('type')} options={meta.types} placeholder="Wybierz…" />
           <SelectEnum label="Sektor" value={form.sector} onChange={set('sector')} options={meta.sectors} placeholder="Wybierz…" />
           <SelectEnum label="Etap wdrożenia" value={form.maturity} onChange={set('maturity')} options={meta.maturities} placeholder="Wybierz…" />

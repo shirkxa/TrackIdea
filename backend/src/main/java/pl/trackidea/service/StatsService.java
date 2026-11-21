@@ -29,7 +29,7 @@ public class StatsService {
     public record Kpi(String key, String label, String value, String hint, String target) {
     }
 
-    public record Stats(List<Kpi> kpis, Map<String, Long> byStatus, Map<String, Long> bySector,
+    public record Stats(List<Kpi> kpis, Map<String, Long> byStatus, Map<String, Long> byArea, Map<String, Long> bySector,
                         Map<String, Long> byInstitutionType, Map<String, Long> bySource) {
     }
 
@@ -79,6 +79,11 @@ public class StatsService {
             long c = all.stream().filter(i -> i.getStatus() == s).count();
             if (c > 0) byStatus.put(s.getLabel(), c);
         }
+        Map<String, Long> byArea = new LinkedHashMap<>();
+        for (Area a : Area.values()) {
+            long c = visible.stream().filter(i -> i.getArea() == a).count();
+            if (c > 0) byArea.put(a.getLabel(), c);
+        }
         Map<String, Long> bySector = new LinkedHashMap<>();
         for (Sector s : Sector.values()) {
             long c = visible.stream().filter(i -> i.getSector() == s).count();
@@ -93,7 +98,7 @@ public class StatsService {
         visible.stream()
                 .map(i -> i.getSourceName() != null ? i.getSourceName() : i.getSource().getLabel())
                 .forEach(name -> bySource.merge(name, 1L, Long::sum));
-        return new Stats(kpis, byStatus, bySector, byInst, bySource);
+        return new Stats(kpis, byStatus, byArea, bySector, byInst, bySource);
     }
 
     private static String pct(long a, long b) {

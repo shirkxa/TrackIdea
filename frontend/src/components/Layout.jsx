@@ -1,6 +1,7 @@
 import { NavLink, Link, useNavigate } from 'react-router-dom'
 import { useApp } from '../context.jsx'
 import { usePrefs } from '../usePrefs.js'
+import CompareBar from './CompareBar.jsx'
 import Icon from './Icon.jsx'
 
 const ROLE_ORDER = ['EKSPERT', 'ADMIN']
@@ -110,6 +111,7 @@ export default function Layout({ children }) {
       <main className="main wrap">
         {error ? <div className="error-box">{error}</div> : children}
       </main>
+      <CompareBar />
       <footer className="footer">
         <div className="footer-band">
           <div className="wrap footer-inner">
