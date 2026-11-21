@@ -128,7 +128,8 @@ export default function Layout({ children }) {
           </div>
         </div>
         <div className="wrap footer-bottom">
-          © TrackIdea 2026 · HackNation, wyzwanie PCI „Radar innowacji” · dane demo są fikcyjne
+          © TrackIdea 2026 · HackNation, wyzwanie PCI „Radar innowacji” · karty ze źródłem „Przykład (dane demo)” są fikcyjne,
+          pozostałe pochodzą z publicznych źródeł
         </div>
       </footer>
       {toast && <div className={`toast toast-${toast.kind}`}>{toast.message}</div>}

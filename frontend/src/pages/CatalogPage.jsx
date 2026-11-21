@@ -17,6 +17,7 @@ const SORTS = [
   { value: 'newest', label: 'Najnowsze' },
   { value: 'score', label: 'Najlepiej ocenione' },
   { value: 'updated', label: 'Ostatnio aktualizowane' },
+  { value: 'maturity', label: 'Najbardziej wdrożone' },
   { value: 'trl', label: 'Najwyższy TRL' },
 ]
 
@@ -31,7 +32,7 @@ const GROUPS = [
   },
   {
     key: 'public', label: 'Samorząd / instytucja publiczna',
-    filters: { area: 'ADMINISTRACYJNY', sort: 'trl' },
+    filters: { area: 'ADMINISTRACYJNY', sort: 'maturity' },
     hint: 'Usprawnienia administracji – najpierw te sprawdzone w praktyce.',
   },
   {
@@ -41,7 +42,7 @@ const GROUPS = [
   },
   {
     key: 'schools', label: 'Szkoła / placówka edukacyjna',
-    filters: { area: 'EDUKACYJNY', sort: 'trl' },
+    filters: { area: 'EDUKACYJNY', sort: 'maturity' },
     hint: 'Metody i narzędzia edukacyjne, które już działają w innych szkołach.',
   },
   {

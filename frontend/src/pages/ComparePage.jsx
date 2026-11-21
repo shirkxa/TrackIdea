@@ -58,7 +58,10 @@ export default function ComparePage() {
     { label: 'Obszar', render: (d) => d.card.area?.label, estimated: (d) => est(d, 'area') },
     { label: 'Typ', render: (d) => d.card.type?.label, estimated: (d) => est(d, 'type') },
     { label: 'Sektor', render: (d) => d.card.sector?.label, estimated: (d) => est(d, 'sector') },
-    { label: 'Etap wdrożenia', render: (d) => d.card.maturity?.label, estimated: (d) => est(d, 'maturity') },
+    {
+      label: 'Etap wdrożenia', render: (d) => d.card.maturity?.label ?? <span className="muted">nieustalony</span>,
+      estimated: (d) => est(d, 'maturity'),
+    },
     {
       label: 'Gotowość (TRL)', value: (d) => d.card.trl?.level,
       render: (d) => d.card.trl && <>TRL {d.card.trl.level}<div className="muted small">{d.card.trl.label}</div></>,
@@ -74,7 +77,9 @@ export default function ComparePage() {
     },
     ...meta.criteria.map((c) => ({
       label: c.label, sub: `waga ${c.weight}%`, value: (d) => score(d, c.value),
-      render: (d) => (score(d, c.value) == null ? <span className="muted">–</span> : <>{score(d, c.value)}/5</>),
+      render: (d) => (score(d, c.value) == null
+        ? <span className="muted">{c.value === 'TRL' && d.assessment ? 'nie dotyczy' : '–'}</span>
+        : <>{score(d, c.value)}/5</>),
     })),
     { label: 'Źródło', render: (d) => [d.card.sourceName, d.sourceRef].filter(Boolean).join(' · ') },
     {

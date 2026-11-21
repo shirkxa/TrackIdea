@@ -115,11 +115,23 @@ function ActionPanel({ data, busy, act }) {
       <button key="reject" className="btn" onClick={() => setRejectOpen((o) => !o)}>Odrzuć rekord</button>,
     )
   }
+  if (viewer.canRestore) {
+    actions.push(
+      <button key="restore" className="btn btn-primary" disabled={busy}
+        onClick={() => act('/restore', {}, 'Rekord wrócił do katalogu.')}>
+        Przywróć do katalogu
+      </button>,
+    )
+  }
 
   const hints = []
   if (card.status.value === 'WYKRYTA') hints.push('Rekord z Radaru – czeka na weryfikację analityka PCI.')
   if (card.status.value === 'W_OCENIE') hints.push(viewer.canApprove ? 'Sprawdź i zatwierdź ocenę poniżej.' : 'Ocena czeka na analityka PCI.')
-  if (card.status.step === 0) hints.push(card.status.description)
+  if (card.status.step === 0) {
+    hints.push(card.autoRejected
+      ? 'Odrzucona automatycznie: według analizy AI to nie jest innowacja (powód na osi czasu). Decyzję może zmienić analityk PCI.'
+      : card.status.description)
+  }
 
   if (actions.length === 0 && hints.length === 0 && completeness.percent === 100) return null
 
@@ -153,6 +165,8 @@ function ActionPanel({ data, busy, act }) {
 function CardSection({ data }) {
   const { card } = data
   const est = new Set(card.estimated ?? [])
+  const engine = data.analysisEngine === 'CLAUDE' ? 'model AI' : 'reguły offline'
+
   const rows = [
     ['Problem', data.problem],
     ['Rozwiązanie', data.solution],
@@ -161,6 +175,12 @@ function CardSection({ data }) {
   ]
   return (
     <Section title="Opis">
+      {est.has('content') && (
+        <p className="muted small legend">
+          <Badge tone="estimate">szacunek</Badge> Opis przygotował automat ({engine}) na podstawie tekstu ze źródła –
+          do sprawdzenia przez analityka PCI. Oryginał jest pod linkiem do źródła.
+        </p>
+      )}
       <dl className="readme">
         {rows.map(([label, value]) => (
           <div key={label}>
@@ -174,7 +194,9 @@ function CardSection({ data }) {
         <Fact label="Obszar" estimated={est.has('area')}>{card.area?.label}</Fact>
         <Fact label="Typ innowacji" estimated={est.has('type')}>{card.type?.label}</Fact>
         <Fact label="Sektor" estimated={est.has('sector')}>{card.sector?.label}</Fact>
-        <Fact label="Etap wdrożenia" estimated={est.has('maturity')}>{card.maturity?.label}</Fact>
+        <Fact label="Etap wdrożenia" estimated={est.has('maturity')}>
+          {card.maturity?.label ?? <span className="muted">nieustalony – źródło go nie podaje</span>}
+        </Fact>
         <Fact label="Gotowość (TRL)" estimated={est.has('trl')}>
           {card.trl && <>TRL {card.trl.level} <span className="muted small">· {card.trl.label}</span></>}
         </Fact>
@@ -182,7 +204,7 @@ function CardSection({ data }) {
         <Fact label="Ochrona IP">{data.ipStatus}</Fact>
       </div>
       <p className="muted small legend">
-        <Badge tone="estimate">szacunek</Badge> ustalone automatycznie z opisu – do potwierdzenia przez analityka PCI;
+        <Badge tone="estimate">szacunek</Badge> ustalone automatycznie ({engine}) – do potwierdzenia przez analityka PCI;
         pozostałe dane podało źródło lub potwierdził analityk.
       </p>
 
@@ -234,12 +256,15 @@ function AssessmentSection({ data, busy, act }) {
   }
 
   const editing = viewer.canApprove
+  // kryterium, które nie ma zastosowania (TRL poza technologiami), nie wchodzi do oceny – wagi pozostałych zachowują proporcje
+  const weights = assessment.scores.reduce((sum, s) => sum + s.criterion.weight, 0)
+  const hasTrl = assessment.scores.some((s) => s.criterion.value === 'TRL')
   const total = editing
     ? assessment.scores.reduce((sum, s) => {
         const v = edits[s.criterion.value]?.score ?? s.proposedScore
-        return sum + (s.criterion.weight / 100) * ((v - 1) / 4) * 100
+        return sum + (s.criterion.weight / weights) * ((v - 1) / 4) * 100
       }, 0)
-    : assessment.total
+    : assessment.approved ? assessment.total : assessment.proposedTotal
 
   return (
     <Section
@@ -301,7 +326,11 @@ function AssessmentSection({ data, busy, act }) {
           })}
         </tbody>
       </table>
-      <p className="muted small">Wynik = Σ waga × (ocena − 1) / 4 × 100</p>
+      <p className="muted small">
+        Wynik = Σ waga × (ocena − 1) / 4 × 100, liczony z wag użytych kryteriów.
+        {!hasTrl && ' Gotowość technologiczna (TRL) nie dotyczy tej innowacji, więc nie wchodzi do oceny.'}
+        {!assessment.approved && ' Automat nie przyznaje najwyższej oceny za innowacyjność – może to zrobić analityk.'}
+      </p>
       {editing && (
         <button className="btn btn-primary" disabled={busy}
           onClick={() => act('/assessment/approve', {

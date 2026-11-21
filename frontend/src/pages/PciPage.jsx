@@ -25,9 +25,9 @@ export default function PciPage() {
       setVersion((v) => v + 1)
       notify(r.errors?.length
         ? `Część źródeł niedostępna: ${r.errors.join('; ')}`
-        : r.created + r.duplicates + r.updated + (r.needsCreated ?? 0) === 0
+        : r.created + r.duplicates + r.updated + (r.rejected ?? 0) + (r.needsCreated ?? 0) === 0
           ? 'Źródła sprawdzone – brak nowych rekordów.'
-          : `Radar: nowe ${r.created}, zaktualizowane ${r.updated}, duplikaty ${r.duplicates}, nowe potrzeby ${r.needsCreated ?? 0}.`,
+          : `Radar: nowe ${r.created}, zaktualizowane ${r.updated}, duplikaty ${r.duplicates}, odrzucone automatycznie ${r.rejected ?? 0}, nowe potrzeby ${r.needsCreated ?? 0}.`,
       r.errors?.length ? 'error' : 'ok')
     } catch (e) {
       notify(e.message, 'error')
@@ -58,6 +58,13 @@ export default function PciPage() {
             ))}
           </div>
 
+          {stats.data.demoRecords > 0 && (
+            <p className="notice small">
+              W katalogu jest {stats.data.demoRecords} fikcyjnych kart przykładowych (źródło „Przykład (dane demo)”).
+              {stats.data.demoAssessments > 0 && <> Mierniki weryfikacji – czas do oceny i zgodność propozycji z analitykiem –
+                obejmują {stats.data.demoAssessments} ocen tych kart, więc pokazują sposób liczenia, a nie wyniki prawdziwej pracy.</>}
+            </p>
+          )}
           <div className="dist-grid">
             <Distribution title="Innowacje wg statusu" data={stats.data.byStatus} />
             <Distribution title="Wg obszaru" data={stats.data.byArea} />
@@ -82,6 +89,7 @@ export default function PciPage() {
           <>
             <p className="muted small">
               {radar.data.live ? 'Tryb online' : 'Tryb offline (próbki z plików)'}
+              {' · '}nowe rekordy analizuje {radar.data.aiImport ? 'model AI' : 'zestaw reguł (bez klucza AI)'}
               {radar.data.lastScanAt && <> · ostatni skan {formatDateTime(radar.data.lastScanAt)}</>}
               {radar.data.nextScanAt && <> · następny automatycznie {formatDateTime(radar.data.nextScanAt)}</>}
             </p>
@@ -110,7 +118,7 @@ export default function PciPage() {
         {lastScan && (
           <p className="notice small">
             Skan: przejrzane {lastScan.scanned}, nowe {lastScan.created}, zaktualizowane {lastScan.updated},
-            duplikaty {lastScan.duplicates}, bez zmian {lastScan.skipped}.
+            duplikaty {lastScan.duplicates}, odrzucone automatycznie {lastScan.rejected ?? 0}, bez zmian {lastScan.skipped}.
             {' '}Potrzeby: nowe {lastScan.needsCreated ?? 0}, zamknięte po terminie {lastScan.needsClosed ?? 0}.
           </p>
         )}
@@ -141,6 +149,13 @@ export default function PciPage() {
                           <div className="small">
                             istnieje: <Link to={`/innovations/${r.duplicateOf.id}`}>{r.duplicateOf.name}</Link>
                           </div>
+                        </>
+                      ) : r.outcome === 'ODRZUCONA_AUTOMATYCZNIE' ? (
+                        <>
+                          <Badge tone="muted">Odrzucona automatycznie</Badge>
+                          {isPci && r.innovation && (
+                            <div className="small"><Link to={`/innovations/${r.innovation.id}`}>sprawdź</Link></div>
+                          )}
                         </>
                       ) : (
                         <>
@@ -192,6 +207,7 @@ function QueueSection({ queue }) {
   const groups = [
     ['toApprove', 'Oceny do zatwierdzenia'],
     ['toReview', 'Nowe z Radaru – do weryfikacji'],
+    ['autoRejected', 'Odrzucone automatycznie – do sprawdzenia'],
   ]
   return (
     <Section title="Kolejka pracy">
@@ -199,10 +215,10 @@ function QueueSection({ queue }) {
         <div className="queue">
           {groups.map(([key, title]) => (
             <div key={key} className="queue-col">
-              <h3>{title} <Badge tone={queue.data[key].length > 0 && key === 'toApprove' ? 'warn' : 'muted'}>{queue.data[key].length}</Badge></h3>
-              {queue.data[key].length === 0 ? <p className="muted small">Pusto.</p> : (
+              <h3>{title} <Badge tone={(queue.data[key] ?? []).length > 0 && key === 'toApprove' ? 'warn' : 'muted'}>{(queue.data[key] ?? []).length}</Badge></h3>
+              {(queue.data[key] ?? []).length === 0 ? <p className="muted small">Pusto.</p> : (
                 <ul className="queue-list">
-                  {queue.data[key].map((c) => (
+                  {(queue.data[key] ?? []).map((c) => (
                     <li key={c.id}>
                       <Link to={`/innovations/${c.id}`}>{c.title}</Link>
                       <div className="small muted">
