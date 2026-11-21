@@ -89,7 +89,7 @@ public class InnovationController {
             found = matched;
         }
 
-        List<Dto.InnovationCard> cards = new ArrayList<>(found.stream().map(views::card).toList());
+        List<Dto.InnovationCard> cards = new ArrayList<>(found.stream().map(i -> views.card(i, viewer)).toList());
         Comparator<Dto.InnovationCard> order = switch (sort) {
             case "score" -> Comparator.comparing((Dto.InnovationCard c) -> c.score() == null ? -1 : c.score()).reversed();
             case "popular" -> Comparator.comparingLong((Dto.InnovationCard c) -> c.votes() + c.followers()).reversed();

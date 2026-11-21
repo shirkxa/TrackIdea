@@ -25,10 +25,12 @@ public class PeopleController {
     private final NeedRepository needs;
     private final MatchingService matching;
     private final Views views;
+    private final CurrentUser currentUser;
 
     public PeopleController(PersonRepository people, InstitutionRepository institutions,
                             InnovationRepository innovations, NeedRepository needs, MatchingService matching,
-                            Views views) {
+                            Views views, CurrentUser currentUser) {
+        this.currentUser = currentUser;
         this.people = people;
         this.institutions = institutions;
         this.innovations = innovations;
@@ -45,12 +47,14 @@ public class PeopleController {
     }
 
     @GetMapping("/people/{id}")
-    public Map<String, Object> person(@PathVariable Long id) {
+    public Map<String, Object> person(@PathVariable Long id,
+                                      @RequestHeader(value = CurrentUser.HEADER, required = false) Long userId) {
+        Person viewer = currentUser.resolve(userId);
         Person p = people.findById(id).orElseThrow(() -> DomainException.notFound("Brak profilu."));
         Map<String, Object> out = new LinkedHashMap<>();
         out.put("person", Dto.PersonView.of(p));
         out.put("innovations", innovations.findAll().stream()
-                .filter(i -> i.isAuthor(p) && i.getStatus().isPubliclyVisible()).map(views::card).toList());
+                .filter(i -> i.isAuthor(p) && i.getStatus().isPubliclyVisible()).map(i -> views.card(i, viewer)).toList());
         out.put("needs", needs.findAll().stream()
                 .filter(n -> n.getAuthor() != null && n.getAuthor().getId().equals(id)).map(Dto.NeedView::of).toList());
         return out;
@@ -69,13 +73,15 @@ public class PeopleController {
     }
 
     @GetMapping("/institutions/{id}")
-    public Map<String, Object> institution(@PathVariable Long id) {
+    public Map<String, Object> institution(@PathVariable Long id,
+                                           @RequestHeader(value = CurrentUser.HEADER, required = false) Long userId) {
+        Person viewer = currentUser.resolve(userId);
         Institution inst = institutions.findById(id).orElseThrow(() -> DomainException.notFound("Brak instytucji."));
         Map<String, Object> out = new LinkedHashMap<>();
         out.put("institution", Dto.InstitutionView.of(inst));
         out.put("people", people.findByInstitution(inst).stream().map(Dto.PersonView::of).toList());
         out.put("innovations", innovations.findByInstitution(inst).stream()
-                .filter(i -> i.getStatus().isPubliclyVisible()).map(views::card).toList());
+                .filter(i -> i.getStatus().isPubliclyVisible()).map(i -> views.card(i, viewer)).toList());
         out.put("needs", needs.findAll().stream()
                 .filter(n -> n.getInstitution() != null && n.getInstitution().getId().equals(id))
                 .map(Dto.NeedView::of).toList());

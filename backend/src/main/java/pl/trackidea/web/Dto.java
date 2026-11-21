@@ -58,7 +58,8 @@ public final class Dto {
                                  EnumValue maturity, EnumValue transferModel, StatusView status,
                                  InstitutionView institution, List<Ref> authors, Set<String> tags, Double score,
                                  long votes, long followers, long forks, long deployments, Instant createdAt,
-                                 EnumValue source, String sourceName, Ref forkedFrom) {
+                                 EnumValue source, String sourceName, Ref forkedFrom, boolean voted,
+                                 boolean following) {
     }
 
     public record CriterionView(String value, String label, int weight, String question, String low, String high) {

@@ -37,6 +37,11 @@ public class Views {
     }
 
     public Dto.InnovationCard card(Innovation i) {
+        return card(i, null);
+    }
+
+    /** Karta z informacją, czy oglądający już głosował / obserwuje (przyciski w katalogu). */
+    public Dto.InnovationCard card(Innovation i, Person viewer) {
         List<Innovation> forks = innovations.findByForkedFrom(i);
         Double score = assessmentService.latest(i).filter(Assessment::isApproved).map(Assessment::total).orElse(null);
         return new Dto.InnovationCard(i.getId(), i.getTitle(), i.getSummary(), Dto.EnumValue.of(i.getType()),
@@ -45,7 +50,9 @@ public class Views {
                 i.getAuthors().stream().sorted(Comparator.comparing(Person::getId)).map(Dto.Ref::of).toList(), i.getTags(),
                 score, votes.countByInnovation(i), follows.countByInnovation(i), forks.size(),
                 forks.stream().filter(f -> f.getStatus() == InnovationStatus.WDROZONA).count(), i.getCreatedAt(),
-                Dto.EnumValue.of(i.getSource()), i.getSourceName(), Dto.Ref.of(i.getForkedFrom()));
+                Dto.EnumValue.of(i.getSource()), i.getSourceName(), Dto.Ref.of(i.getForkedFrom()),
+                viewer != null && votes.findByInnovationAndPerson(i, viewer).isPresent(),
+                viewer != null && follows.findByInnovationAndPerson(i, viewer).isPresent());
     }
 
     public Dto.InnovationDetail detail(Innovation i, Person viewer) {
@@ -91,7 +98,7 @@ public class Views {
                 viewer != null && votes.findByInnovationAndPerson(i, viewer).isPresent(),
                 viewer != null && follows.findByInnovationAndPerson(i, viewer).isPresent());
 
-        return new Dto.InnovationDetail(card(i), i.getProblem(), i.getSolution(), i.getRequirements(), i.getResults(),
+        return new Dto.InnovationDetail(card(i, viewer), i.getProblem(), i.getSolution(), i.getRequirements(), i.getResults(),
                 i.getIpStatus(), i.getLinks(), Dto.Ref.of(i.getReportedBy()), i.getSourceAuthors(), i.getSourceRef(),
                 innovationService.completeness(i), assessment,
                 i.getChosenPaths().stream().map(Dto.EnumValue::of).toList(), forks, timeline, perms,

@@ -57,6 +57,56 @@ const PATHS = {
       <path d="M7 7v2a3 3 0 0 0 3 3h4a3 3 0 0 0 3-3V7M12 12v5" />
     </>
   ),
+  car: (
+    <>
+      <path d="M5 16V12l2-5h10l2 5v4" />
+      <path d="M4 16h16v2H4z" />
+      <circle cx="8" cy="13.5" r="1" />
+      <circle cx="16" cy="13.5" r="1" />
+    </>
+  ),
+  heart: <path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10Z" />,
+  chip: (
+    <>
+      <rect x="7" y="7" width="10" height="10" rx="2" />
+      <path d="M10 4v3M14 4v3M10 17v3M14 17v3M4 10h3M4 14h3M17 10h3M17 14h3" />
+    </>
+  ),
+  plane: <path d="M3 13l7-2 4-7 2 1-2 6 5 1 2-2h2l-2 4 2 4h-2l-2-2-5 1 2 6-2 1-4-7-7-2z" />,
+  rocket: (
+    <>
+      <path d="M12 3c3 2 5 6 4 11l-2 3h-4l-2-3c-1-5 1-9 4-11Z" />
+      <circle cx="12" cy="10" r="1.5" />
+      <path d="M8 14l-3 3 3 1M16 14l3 3-3 1M11 20h2" />
+    </>
+  ),
+  cap: (
+    <>
+      <path d="M3 9l9-4 9 4-9 4z" />
+      <path d="M7 11v4c1.5 1.5 3 2 5 2s3.5-.5 5-2v-4M21 9v5" />
+    </>
+  ),
+  building: (
+    <>
+      <path d="M4 20h16M6 20V9l6-4 6 4v11" />
+      <path d="M9 20v-5h6v5M9 11h.01M12 11h.01M15 11h.01" />
+    </>
+  ),
+  sprout: (
+    <>
+      <path d="M12 20v-8" />
+      <path d="M12 12C12 8 9 6 5 6c0 4 3 6 7 6ZM12 14c0-4 3-6 7-6 0 4-3 6-7 6Z" />
+    </>
+  ),
+  bolt: <path d="M13 3L5 13h6l-1 8 8-10h-6z" />,
+  pulse: <path d="M3 12h4l2-5 4 10 2-5h6" />,
+  tree: (
+    <>
+      <path d="M12 21v-5" />
+      <path d="M12 3l5 7h-3l4 6H6l4-6H7z" />
+    </>
+  ),
+  star: <path d="M12 4l2.4 5 5.6.6-4.2 3.8 1.2 5.6L12 16.2 7 19l1.2-5.6L4 9.6 9.6 9z" />,
 }
 
 export default function Icon({ name, size = 24 }) {
