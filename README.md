@@ -5,36 +5,34 @@
   </picture>
 </p>
 
-# TrackIdea – radar ukrytych innowacji
+# TrackIdea – radar innowacji
 
-**GitHub dla innowacji z sektora publicznego.** Każdy dobry pomysł ze szkoły, uczelni czy samorządu dostaje
-kartę innowacji, przejrzystą ocenę i ścieżkę rozwoju, a jego wdrożenie w kolejnej instytucji to po prostu **fork**.
+**Narzędzie do odkrywania i analizy istniejących innowacji w Polsce.** Radar zbiera rozwiązania technologiczne,
+edukacyjne i administracyjne z rozproszonych źródeł, porządkuje je w karty, ocenia poziom wdrożenia i potencjał
+oraz pokazuje, gdzie mogą znaleźć zastosowanie.
 
 Prototyp na HackNation – wyzwanie Podkarpackiego Centrum Innowacji **„Radar innowacji”**.
 Plan projektu: [`docs/TrackIdea_plan_projektu.pdf`](docs/TrackIdea_plan_projektu.pdf).
-Wszystkie instytucje, osoby i dane w demo są fikcyjne.
+
+> Radar nie jest platformą do zgłaszania pomysłów, portalem społecznościowym ani narzędziem do pozyskiwania
+> finansowania – zgodnie z doprecyzowaniem wyzwania.
 
 ## Problem
 
-Wartościowe rozwiązania powstają lokalnie i zostają znane tylko tam, gdzie powstały. Brakuje sposobu, żeby je
-zauważać, oceniać i kierować do tych, którzy mogą je wdrożyć lub sfinansować – instytucje wymyślają więc to samo
-niezależnie od siebie.
+Informacje o innowacjach są rozproszone w wielu źródłach, więc wartościowe rozwiązania pozostają mało znane,
+a instytucje niezależnie budują podobne rzeczy.
 
 ## Rozwiązanie
 
 | Etap | Co robi TrackIdea |
 |---|---|
-| **Znajdź** | Zgłoszenia twórców i „zwiadowców” (cudzy pomysł) + **Radar**: import z otwartych baz (PBN, NCBiR, Interreg, patenty). |
-| **Uporządkuj** | Karta innowacji jak README. **Asystent AI** wypełnia ją z opisu własnymi słowami. |
-| **Sprawdź duplikaty** | Podobne innowacje i patenty widać już w trakcie pisania. |
-| **Oceń** | 6 kryteriów z jawnymi wagami i uzasadnieniem; propozycję zatwierdza ekspert PCI. |
-| **Wskaż ścieżkę** | Jawne reguły: replikacja, rozwój w PCI, komercjalizacja, grant, pilotaż B+R. |
-| **Połącz** | Polecajki z wyjaśnieniem „dlaczego”: potrzeby instytucji, partnerzy, inwestorzy. |
-| **Śledź efekt** | Status jak w Banku Pomysłów, fork = wdrożenie gdzie indziej, panel PCI z miernikami. |
+| **Wyszukaj** | Radar importuje rekordy z otwartych źródeł i rozpoznaje obszar oraz charakter innowacji. |
+| **Uporządkuj** | Każdy rekord to karta: opis, instytucja, źródło, etap wdrożenia. Duplikaty z wielu źródeł są wykrywane. |
+| **Oceń** | Jawne kryteria z wagami i uzasadnieniem; propozycję systemu zatwierdza analityk PCI. |
+| **Wskaż zastosowanie** | Reguły podpowiadają, gdzie rozwiązanie może zostać użyte; zapytania „szukam rozwiązania” dostają dopasowania. |
 
 ```
-Wykryta / Zgłoszona → Potwierdzona → Uzupełniona → W ocenie → Oceniona
-    → Ścieżka wskazana → W transferze → Wdrożona (×N)
+Wykryta → W ocenie → Zweryfikowana        (albo: Odrzucona / Połączona)
 ```
 
 ## Technologie
@@ -63,8 +61,8 @@ Otwórz **http://localhost:5173**. Restart backendu przywraca czyste dane demo.
 Opcjonalnie asystent AI z Claude: uruchom backend z ustawioną zmienną `ANTHROPIC_API_KEY`
 (bez niej działa tryb offline).
 
-**Konta demo:** hasło `demo123` (np. `k.nowak@pci.example.org` – ekspert PCI); konto można też przełączyć
-w prawym górnym rogu.
+Katalog jest publiczny. **Logowanie** potrzebne jest tylko zespołowi PCI do weryfikacji i oceny:
+`k.nowak@pci.example.org`, hasło `demo123` (w trybie demo konto można też przełączyć w prawym górnym rogu).
 
 ## Testy
 
@@ -74,14 +72,13 @@ cd backend
 ```
 
 21 testów (JUnit 5): jednostkowe dla wzoru oceny i wag, podobieństwa tekstów po polsku, reguł dopasowań
-i asystenta offline oraz test integracyjny logowania, CSRF i uprawnień ról.
+i analizy tekstu offline oraz test integracyjny logowania, CSRF i uprawnień zespołu PCI.
 
 ## Dane, bezpieczeństwo i ograniczenia
 
 - **Dane:** Radar czyta w prototypie próbki eksportów z baz wskazanych przez PCI; docelowo każde źródło to importer API.
 - **Ocena:** jawne reguły i wagi; AI i reguły tylko proponują, decyzję zatwierdza ekspert PCI.
-- **Prywatność:** zgłoszenia zwiadowców i rekordy Radaru są niepubliczne do potwierdzenia autora; dane kontaktowe
-  widać dopiero po akceptacji prośby o kontakt.
+- **Prywatność:** Radar nie zbiera danych osobowych użytkowników; autorzy innowacji są podawani tak, jak w źródle.
 - **Bezpieczeństwo:** logowanie Spring Security (sesja HttpOnly, CSRF, hasła BCrypt), uprawnienia sprawdzane
   w backendzie. Tryb demo służy tylko prezentacji – w produkcji `trackidea.demo-mode=false`.
 

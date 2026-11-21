@@ -5,12 +5,11 @@ import org.springframework.transaction.annotation.Transactional;
 import pl.trackidea.domain.*;
 import pl.trackidea.repo.InnovationRepository;
 import pl.trackidea.repo.NeedRepository;
-import pl.trackidea.repo.PersonRepository;
 
 import java.util.*;
 
 /**
- * Polecajki „jak na LinkedInie”, ale wytłumaczalne:
+ * Dopasowanie innowacji do potrzeb („szukam rozwiązania dla…”), zawsze z wyjaśnieniem:
  * dopasowanie = 0,5 × podobieństwo treści + 0,2 × sektor i tagi + 0,15 × etap + 0,15 × region.
  */
 @Service
@@ -27,19 +26,16 @@ public class MatchingService {
 
     private final SimilarityService similarity;
     private final NeedRepository needs;
-    private final PersonRepository people;
     private final InnovationRepository innovations;
 
-    public MatchingService(SimilarityService similarity, NeedRepository needs, PersonRepository people,
-                           InnovationRepository innovations) {
+    public MatchingService(SimilarityService similarity, NeedRepository needs, InnovationRepository innovations) {
         this.similarity = similarity;
         this.needs = needs;
-        this.people = people;
         this.innovations = innovations;
     }
 
     public record Match(String kind, Long id, String title, String subtitle, int score, List<String> reasons,
-                        Long contactPersonId, Long institutionId, String institutionType) {
+                        Long institutionId, String institutionType) {
     }
 
     /** Potrzeby z tablicy, które ta innowacja może rozwiązać. */
@@ -61,51 +57,13 @@ public class MatchingService {
         SimilarityService.Index idx = similarity.index();
         List<Match> out = new ArrayList<>();
         for (Innovation inn : innovations.findAll()) {
-            if (!inn.getStatus().isPubliclyVisible() || inn.getForkedFrom() != null
+            if (!inn.getStatus().isPubliclyVisible()
                     || sameInstitution(inn.getInstitution(), need.getInstitution())) {
                 continue;
             }
             scoreNeed(idx, inn, need, true).ifPresent(out::add);
         }
         return top(out, 6);
-    }
-
-    /** Partnerzy i inwestorzy, których profil pasuje do innowacji. */
-    public List<Match> partnersFor(Innovation inn) {
-        SimilarityService.Index idx = similarity.index();
-        List<Match> out = new ArrayList<>();
-        for (Person p : people.findByRole(Role.PARTNER)) {
-            scorePartner(idx, inn, p, false).ifPresent(out::add);
-        }
-        return top(out, 5);
-    }
-
-    /** Polecajki dla zalogowanego partnera / opiekuna. */
-    public List<Match> recommendationsFor(Person person) {
-        SimilarityService.Index idx = similarity.index();
-        List<Match> out = new ArrayList<>();
-        if (person.getRole() == Role.PARTNER) {
-            for (Innovation inn : innovations.findAll()) {
-                if (inn.getStatus().isPubliclyVisible() && inn.getForkedFrom() == null) {
-                    scorePartner(idx, inn, person, true).ifPresent(out::add);
-                }
-            }
-        } else if (person.getInstitution() != null) {
-            for (Need need : needs.findByOpenTrue()) {
-                if (sameInstitution(need.getInstitution(), person.getInstitution())) {
-                    for (Match m : innovationsForNeed(need)) {
-                        List<String> reasons = new ArrayList<>(m.reasons());
-                        reasons.addFirst("odpowiada na Waszą potrzebę „" + need.getTitle() + "”");
-                        out.add(new Match(m.kind(), m.id(), m.title(), m.subtitle(), m.score(), reasons,
-                                m.contactPersonId(), m.institutionId(), m.institutionType()));
-                    }
-                }
-            }
-        }
-        Map<Long, Match> unique = new LinkedHashMap<>();
-        out.stream().sorted(Comparator.comparingInt(Match::score).reversed())
-                .forEach(m -> unique.putIfAbsent(m.id(), m));
-        return top(new ArrayList<>(unique.values()), 8);
     }
 
     private Optional<Match> scoreNeed(SimilarityService.Index idx, Innovation inn, Need need, boolean innovationSide) {
@@ -136,59 +94,11 @@ public class MatchingService {
             return Optional.empty();
         }
         if (innovationSide) {
-            Long contact = inn.getAuthors().stream().map(Person::getId).findFirst().orElse(null);
             return Optional.of(new Match("INNOWACJA", inn.getId(), inn.getTitle(), instName(inn.getInstitution()),
-                    pct(score), reasons, contact, instId(inn.getInstitution()), instType(inn.getInstitution())));
+                    pct(score), reasons, instId(inn.getInstitution()), instType(inn.getInstitution())));
         }
-        Long contact = need.getAuthor() == null ? null : need.getAuthor().getId();
         return Optional.of(new Match("POTRZEBA", need.getId(), need.getTitle(), instName(need.getInstitution()),
-                pct(score), reasons, contact, instId(need.getInstitution()), instType(need.getInstitution())));
-    }
-
-    private Optional<Match> scorePartner(SimilarityService.Index idx, Innovation inn, Person p, boolean innovationSide) {
-        String profile = String.join(" ", nz(p.getHeadline()), nz(p.getBio()), String.join(" ", p.getInterestTags()),
-                p.getInterestSectors().stream().map(Sector::getLabel).reduce("", (a, b) -> a + " " + b));
-        double sim = idx.similarity(inn.searchText(), profile);
-        List<String> reasons = new ArrayList<>();
-        if (sim >= 0.10) {
-            reasons.add("profil zbieżny z opisem (" + SimilarityService.percent(sim) + "%)");
-        }
-
-        double sector = 0;
-        if (inn.getSector() != null && p.getInterestSectors().contains(inn.getSector())) {
-            sector = 1;
-            reasons.add("interesuje się sektorem " + inn.getSector().getLabel());
-        }
-        Set<String> common = commonTags(inn.getTags(), p.getInterestTags());
-        if (!common.isEmpty()) {
-            sector = 1;
-            reasons.add("obserwuje tag „" + common.iterator().next() + "”");
-        }
-
-        double stage = 0.5;
-        if (!p.getSeekingStages().isEmpty() && inn.getMaturity() != null) {
-            if (p.getSeekingStages().contains(inn.getMaturity())) {
-                stage = 1;
-                reasons.add("szuka rozwiązań na etapie: " + inn.getMaturity().getLabel());
-            } else {
-                stage = 0.2;
-            }
-        }
-        double region = regionScore(inn.getInstitution(), p.getInstitution(), reasons);
-
-        double score = W_TEXT * Math.min(1, sim / TEXT_SATURATION) + W_SECTOR * sector + W_STAGE * stage + W_REGION * region;
-        if (score < 0.35 || (sector == 0 && sim < 0.1)) {
-            return Optional.empty();
-        }
-        if (innovationSide) {
-            Long contact = inn.getAuthors().stream().map(Person::getId).findFirst().orElse(null);
-            return Optional.of(new Match("INNOWACJA", inn.getId(), inn.getTitle(), instName(inn.getInstitution()),
-                    pct(score), reasons, contact, instId(inn.getInstitution()), instType(inn.getInstitution())));
-        }
-        String sub = (p.getHeadline() != null ? p.getHeadline() : p.getRole().getLabel())
-                + (p.getInstitution() != null ? " · " + p.getInstitution().getName() : "");
-        return Optional.of(new Match("PARTNER", p.getId(), p.getName(), sub, pct(score), reasons, p.getId(),
-                instId(p.getInstitution()), instType(p.getInstitution())));
+                pct(score), reasons, instId(need.getInstitution()), instType(need.getInstitution())));
     }
 
     private double sectorScore(Sector a, Sector b, Set<String> tagsA, Set<String> tagsB, List<String> reasons) {

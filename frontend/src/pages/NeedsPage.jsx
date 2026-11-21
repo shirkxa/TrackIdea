@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { api } from '../api.js'
 import MatchRow from '../components/MatchRow.jsx'
-import { Badge, Empty, ErrorBox, InstitutionLink, Loading, PersonLink, Section, SelectEnum, Tag } from '../components/ui.jsx'
+import { Badge, Empty, ErrorBox, InstitutionLink, Loading, Section, SelectEnum, Tag } from '../components/ui.jsx'
 import { useApp } from '../context.jsx'
 import { formatDate, plural } from '../format.js'
 import { useFetch } from '../useFetch.js'
@@ -34,8 +34,8 @@ export default function NeedsPage() {
       setForm(EMPTY)
       setOpen(false)
       notify(created.matches.length > 0
-        ? `Opublikowano potrzebę – pasujące innowacje: ${created.matches.length}.`
-        : 'Opublikowano potrzebę. Powiadomimy, gdy pojawi się pasująca innowacja.')
+        ? `Znalezione rozwiązania: ${created.matches.length}.`
+        : 'Na razie brak pasujących innowacji – Radar sprawdzi nowe rekordy.')
     } catch (e) {
       setFormError(e.message)
     } finally {
@@ -52,22 +52,22 @@ export default function NeedsPage() {
     <>
       <section className="page-head">
         <div>
-          <h1 className="page-title">Tablica potrzeb</h1>
+          <h1 className="page-title">Szukam rozwiązania</h1>
         </div>
-        {user?.institution && (
+        {user && (
           <button className="btn btn-primary" onClick={() => setOpen((o) => !o)}>
-            {open ? 'Zamknij formularz' : '+ Opisz potrzebę'}
+            {open ? 'Zamknij formularz' : '+ Nowe zapytanie'}
           </button>
         )}
       </section>
 
 
       {open && (
-        <Section title="Nowa potrzeba">
+        <Section title="Czego szukasz?">
           <ErrorBox>{formError}</ErrorBox>
           <div className="form">
             <label className="field wide">
-              <span>Jaki macie problem? *</span>
+              <span>Problem do rozwiązania *</span>
               <input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })}
                 placeholder="Np. Długie kolejki w wydziale komunikacji" />
             </label>
@@ -90,13 +90,13 @@ export default function NeedsPage() {
                 </label>
                 <label className="checkbox">
                   <input type="radio" checked={!form.wantsReadySolution} onChange={() => setForm({ ...form, wantsReadySolution: false })} />
-                  <span>Partnera do wspólnego rozwoju (B+R)</span>
+                  <span>Rozwiązania we wczesnej fazie (do rozwoju)</span>
                 </label>
               </div>
             </div>
           </div>
           <button className="btn btn-primary" disabled={busy || !form.title.trim()} onClick={save}>
-            {busy ? 'Szukamy dopasowań…' : 'Opublikuj i znajdź dopasowania'}
+            {busy ? 'Szukamy dopasowań…' : 'Znajdź rozwiązania'}
           </button>
         </Section>
       )}
@@ -119,13 +119,13 @@ export default function NeedsPage() {
                 <div className="card-badges">
                   {need.sector && <Badge tone="muted">{need.sector.label}</Badge>}
                   <Badge tone={need.wantsReadySolution ? 'info' : 'radar'}>
-                    {need.wantsReadySolution ? 'Gotowe rozwiązanie' : 'Partner B+R'}
+                    {need.wantsReadySolution ? 'Gotowe rozwiązanie' : 'Wczesna faza'}
                   </Badge>
                   {need.institution && !need.institution.publicSector && <Badge tone="warn">{need.institution.type.label}</Badge>}
                 </div>
                 <h3>{need.title}</h3>
                 <p className="muted small">
-                  <InstitutionLink institution={need.institution} /> · <PersonLink person={need.author} /> · {formatDate(need.createdAt)}
+                  <InstitutionLink institution={need.institution} /> · {formatDate(need.createdAt)}
                 </p>
                 {need.description && <p className="small">{need.description}</p>}
                 <div className="tags">{[...(need.tags ?? [])].map((t) => <Tag key={t}>{t}</Tag>)}</div>

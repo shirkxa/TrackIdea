@@ -5,10 +5,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.util.HashSet;
-import java.util.Set;
 
-/** Profil użytkownika (jak na LinkedInie): twórca, opiekun instytucji, ekspert PCI albo partner. */
+/** Konto zespołu PCI (analityk lub administrator) – katalog innowacji jest publiczny. */
 @Entity
 @Getter
 @Setter
@@ -34,28 +32,12 @@ public class Person {
     @Column(length = 2000)
     private String bio;
 
-    /** Login. Widoczny dla innych dopiero po zaakceptowaniu prośby o kontakt. */
+    /** Login. */
     @Column(unique = true)
     private String email;
 
     /** Hasło zapisane jako hash BCrypt – nigdy nie wychodzi poza backend. */
     private String passwordHash;
-
-    private String github;
-    private String youtube;
-    private String linkedin;
-
-    @ElementCollection(fetch = FetchType.EAGER)
-    @Enumerated(EnumType.STRING)
-    private Set<Sector> interestSectors = new HashSet<>();
-
-    @ElementCollection(fetch = FetchType.EAGER)
-    private Set<String> interestTags = new HashSet<>();
-
-    /** Etapy dojrzałości, których szuka partner / inwestor. */
-    @ElementCollection(fetch = FetchType.EAGER)
-    @Enumerated(EnumType.STRING)
-    private Set<Maturity> seekingStages = new HashSet<>();
 
     public boolean hasRole(Role... roles) {
         for (Role r : roles) {

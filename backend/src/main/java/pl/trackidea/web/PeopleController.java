@@ -1,5 +1,6 @@
 package pl.trackidea.web;
 
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.*;
 import pl.trackidea.domain.Institution;
@@ -9,7 +10,6 @@ import pl.trackidea.repo.InstitutionRepository;
 import pl.trackidea.repo.NeedRepository;
 import pl.trackidea.repo.PersonRepository;
 import pl.trackidea.service.DomainException;
-import pl.trackidea.service.MatchingService;
 
 import java.util.Comparator;
 import java.util.LinkedHashMap;
@@ -17,54 +17,32 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@Tag(name = "Ludzie i instytucje", description = "Profile twórców, opiekunów, ekspertów i partnerów; strony instytucji; polecajki")
 @RequestMapping("/api")
+@Tag(name = "Instytucje", description = "Instytucje, w których powstały innowacje, oraz konta zespołu PCI")
 public class PeopleController {
 
     private final PersonRepository people;
     private final InstitutionRepository institutions;
     private final InnovationRepository innovations;
     private final NeedRepository needs;
-    private final MatchingService matching;
     private final Views views;
-    private final CurrentUser currentUser;
 
     public PeopleController(PersonRepository people, InstitutionRepository institutions,
-                            InnovationRepository innovations, NeedRepository needs, MatchingService matching,
-                            Views views, CurrentUser currentUser) {
-        this.currentUser = currentUser;
+                            InnovationRepository innovations, NeedRepository needs, Views views) {
         this.people = people;
         this.institutions = institutions;
         this.innovations = innovations;
         this.needs = needs;
-        this.matching = matching;
         this.views = views;
     }
 
+    /** Konta zespołu PCI – używane przez szybkie przełączanie w trybie demo. */
     @GetMapping("/people")
+    @Operation(summary = "Konta zespołu PCI")
     public List<Dto.PersonView> people() {
         return people.findAll().stream()
                 .sorted(Comparator.comparing((Person p) -> p.getRole().ordinal()).thenComparing(Person::getId))
                 .map(Dto.PersonView::of).toList();
-    }
-
-    @GetMapping("/people/{id}")
-    public Map<String, Object> person(@PathVariable Long id) {
-        Person viewer = currentUser.get();
-        Person p = people.findById(id).orElseThrow(() -> DomainException.notFound("Brak profilu."));
-        Map<String, Object> out = new LinkedHashMap<>();
-        out.put("person", Dto.PersonView.of(p));
-        out.put("innovations", innovations.findAll().stream()
-                .filter(i -> i.isAuthor(p) && i.getStatus().isPubliclyVisible()).map(i -> views.card(i, viewer)).toList());
-        out.put("needs", needs.findAll().stream()
-                .filter(n -> n.getAuthor() != null && n.getAuthor().getId().equals(id)).map(Dto.NeedView::of).toList());
-        return out;
-    }
-
-    @GetMapping("/people/{id}/recommendations")
-    public List<MatchingService.Match> recommendations(@PathVariable Long id) {
-        Person p = people.findById(id).orElseThrow(() -> DomainException.notFound("Brak profilu."));
-        return matching.recommendationsFor(p);
     }
 
     @GetMapping("/institutions")
@@ -75,13 +53,11 @@ public class PeopleController {
 
     @GetMapping("/institutions/{id}")
     public Map<String, Object> institution(@PathVariable Long id) {
-        Person viewer = currentUser.get();
         Institution inst = institutions.findById(id).orElseThrow(() -> DomainException.notFound("Brak instytucji."));
         Map<String, Object> out = new LinkedHashMap<>();
         out.put("institution", Dto.InstitutionView.of(inst));
-        out.put("people", people.findByInstitution(inst).stream().map(Dto.PersonView::of).toList());
         out.put("innovations", innovations.findByInstitution(inst).stream()
-                .filter(i -> i.getStatus().isPubliclyVisible()).map(i -> views.card(i, viewer)).toList());
+                .filter(i -> i.getStatus().isPubliclyVisible()).map(views::card).toList());
         out.put("needs", needs.findAll().stream()
                 .filter(n -> n.getInstitution() != null && n.getInstitution().getId().equals(id))
                 .map(Dto.NeedView::of).toList());

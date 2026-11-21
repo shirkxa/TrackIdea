@@ -29,9 +29,6 @@ public class Need {
     @ManyToOne
     private Institution institution;
 
-    @ManyToOne
-    private Person author;
-
     @Enumerated(EnumType.STRING)
     private Sector sector;
 

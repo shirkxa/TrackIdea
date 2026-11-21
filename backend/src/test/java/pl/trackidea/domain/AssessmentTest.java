@@ -43,10 +43,10 @@ class AssessmentTest {
     }
 
     @Test
-    void draftsAreNotPublic() {
-        assertThat(InnovationStatus.WYKRYTA.isPubliclyVisible()).isFalse();
-        assertThat(InnovationStatus.ZGLOSZONA.isPubliclyVisible()).isFalse();
-        assertThat(InnovationStatus.POTWIERDZONA.isPubliclyVisible()).isTrue();
-        assertThat(InnovationStatus.ARCHIWALNA.isPubliclyVisible()).isFalse();
+    void rejectedAndMergedRecordsLeaveTheCatalog() {
+        assertThat(InnovationStatus.WYKRYTA.isPubliclyVisible()).isTrue();
+        assertThat(InnovationStatus.OCENIONA.isPubliclyVisible()).isTrue();
+        assertThat(InnovationStatus.ODRZUCONA.isPubliclyVisible()).isFalse();
+        assertThat(InnovationStatus.POLACZONA.isPubliclyVisible()).isFalse();
     }
 }

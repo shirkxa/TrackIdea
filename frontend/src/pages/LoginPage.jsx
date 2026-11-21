@@ -5,9 +5,8 @@ import { useApp } from '../context.jsx'
 
 /** Przykładowe konta do szybkiego wypełnienia formularza w trybie demo. */
 const DEMO_ACCOUNTS = [
-  { email: 'anna.kowalczyk@example.org', label: 'Anna – twórczyni (szkoła)' },
-  { email: 'k.nowak@pci.example.org', label: 'Katarzyna – ekspert PCI' },
-  { email: 'jan.dudek@skyagro.example.org', label: 'Jan – partner (firma)' },
+  { email: 'k.nowak@pci.example.org', label: 'Katarzyna – analityk PCI' },
+  { email: 'administrator.pci@pci.example.org', label: 'Administrator PCI' },
 ]
 
 export default function LoginPage() {
@@ -24,7 +23,7 @@ export default function LoginPage() {
     setError(null)
     try {
       await login(email.trim(), password)
-      navigate('/me')
+      navigate('/pci')
     } catch (err) {
       setError(err.message)
     } finally {
@@ -37,14 +36,15 @@ export default function LoginPage() {
       <section className="login card">
         <h1>Jesteś zalogowany(-a)</h1>
         <p>{user.name} · {user.role.label}</p>
-        <Link className="btn btn-primary" to="/me">Przejdź do „Moje”</Link>
+        <Link className="btn btn-primary" to="/pci">Przejdź do panelu PCI</Link>
       </section>
     )
   }
 
   return (
     <section className="login card">
-      <h1>Zaloguj się</h1>
+      <h1>Logowanie zespołu PCI</h1>
+      <p className="muted small">Katalog jest publiczny – logowanie jest potrzebne tylko do weryfikacji i oceny.</p>
       <form onSubmit={submit} className="login-form">
         <ErrorBox>{error}</ErrorBox>
         <label className="field">

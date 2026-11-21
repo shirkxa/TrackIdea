@@ -7,7 +7,6 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpSession;
 import org.springframework.test.web.servlet.MockMvc;
-import pl.trackidea.domain.Innovation;
 import pl.trackidea.domain.InnovationStatus;
 import pl.trackidea.repo.InnovationRepository;
 
@@ -19,10 +18,12 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-/** Logowanie, CSRF i uprawnienia ról – na pełnym kontekście aplikacji z danymi demo. */
+/** Logowanie, CSRF i uprawnienia zespołu PCI – na pełnym kontekście aplikacji z danymi demo. */
 @SpringBootTest
 @AutoConfigureMockMvc
 class SecurityFlowTest {
+
+    private static final String ANALYST = "k.nowak@pci.example.org";
 
     @Autowired
     MockMvc mvc;
@@ -38,40 +39,42 @@ class SecurityFlowTest {
                 .andReturn().getRequest().getSession(false);
     }
 
+    private Long firstWithStatus(InnovationStatus status) {
+        return innovations.findByStatusIn(List.of(status)).getFirst().getId();
+    }
+
     @Test
     void catalogIsPublicButChangesRequireLogin() throws Exception {
         mvc.perform(get("/api/innovations")).andExpect(status().isOk());
-        mvc.perform(post("/api/innovations/1/vote").with(csrf())).andExpect(status().isUnauthorized());
+        mvc.perform(post("/api/innovations/" + firstWithStatus(InnovationStatus.WYKRYTA) + "/propose-assessment")
+                .with(csrf())).andExpect(status().isUnauthorized());
     }
 
     @Test
     void requestsWithoutCsrfTokenAreRejected() throws Exception {
-        MockHttpSession session = login("anna.kowalczyk@example.org", "demo123");
-        mvc.perform(post("/api/innovations/1/vote").session(session)).andExpect(status().is4xxClientError());
-        mvc.perform(post("/api/innovations/1/vote").session(session).with(csrf())).andExpect(status().isOk());
+        MockHttpSession session = login(ANALYST, "demo123");
+        mvc.perform(post("/api/radar/scan").session(session)).andExpect(status().is4xxClientError());
+        mvc.perform(post("/api/radar/scan").session(session).with(csrf())).andExpect(status().isOk());
     }
 
     @Test
     void wrongPasswordIsRejected() throws Exception {
         mvc.perform(post("/api/auth/login").with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"email\":\"anna.kowalczyk@example.org\",\"password\":\"zle-haslo\"}"))
+                        .content("{\"email\":\"" + ANALYST + "\",\"password\":\"zle-haslo\"}"))
                 .andExpect(status().isUnauthorized());
     }
 
     @Test
-    void onlyPciExpertCanApproveAssessment() throws Exception {
-        List<Innovation> inReview = innovations.findByStatusIn(List.of(InnovationStatus.W_OCENIE));
-        Long id = inReview.getFirst().getId();
+    void analystApprovesAssessment() throws Exception {
+        Long id = firstWithStatus(InnovationStatus.W_OCENIE);
         String body = "{\"scores\":[]}";
-
-        MockHttpSession creator = login("anna.kowalczyk@example.org", "demo123");
-        mvc.perform(post("/api/innovations/" + id + "/assessment/approve").session(creator).with(csrf())
+        mvc.perform(post("/api/innovations/" + id + "/assessment/approve").with(csrf())
                         .contentType(MediaType.APPLICATION_JSON).content(body))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isUnauthorized());
 
-        MockHttpSession expert = login("k.nowak@pci.example.org", "demo123");
-        mvc.perform(post("/api/innovations/" + id + "/assessment/approve").session(expert).with(csrf())
+        MockHttpSession analyst = login(ANALYST, "demo123");
+        mvc.perform(post("/api/innovations/" + id + "/assessment/approve").session(analyst).with(csrf())
                         .contentType(MediaType.APPLICATION_JSON).content(body))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.card.status.value").value("OCENIONA"));
@@ -79,7 +82,7 @@ class SecurityFlowTest {
 
     @Test
     void spoofedUserHeaderIsIgnored() throws Exception {
-        mvc.perform(get("/api/auth/me").header("X-User-Id", "9"))
+        mvc.perform(get("/api/auth/me").header("X-User-Id", "1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.user").doesNotExist());
     }

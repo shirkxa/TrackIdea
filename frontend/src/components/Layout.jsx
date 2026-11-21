@@ -3,7 +3,7 @@ import { useApp } from '../context.jsx'
 import { usePrefs } from '../usePrefs.js'
 import Icon from './Icon.jsx'
 
-const ROLE_ORDER = ['TWORCA', 'OPIEKUN', 'EKSPERT', 'PARTNER', 'ADMIN']
+const ROLE_ORDER = ['EKSPERT', 'ADMIN']
 
 const FONT_SIZES = [
   { scale: 0, sup: '', title: 'Tekst standardowy' },
@@ -36,7 +36,7 @@ function AccountBlock() {
         <label title="Tryb demo: przełącz konto jednym kliknięciem">
           <span className="sr-only">Konto demo</span>
           <select value={user?.id ?? ''} onChange={(e) => run(() => chooseUser(e.target.value ? Number(e.target.value) : null))}>
-            <option value="">Gość – wybierz konto demo</option>
+            <option value="">Gość</option>
             {groups.map((g) => (
               <optgroup key={g.role} label={g.label}>
                 {g.people.map((p) => (
@@ -102,10 +102,8 @@ export default function Layout({ children }) {
           </Link>
           <nav className="nav">
             <NavLink to="/" end>Katalog</NavLink>
-            <NavLink to="/submit">Zgłoś</NavLink>
-            <NavLink to="/needs">Potrzeby</NavLink>
+            <NavLink to="/needs">Szukam rozwiązania</NavLink>
             <NavLink to="/pci">{isPci ? 'Panel PCI' : 'Radar'}</NavLink>
-            {user && <NavLink to="/me">Moje</NavLink>}
           </nav>
         </div>
       </header>
@@ -121,8 +119,7 @@ export default function Layout({ children }) {
             </Link>
             <nav className="footer-nav">
               <Link to="/">Katalog</Link>
-              <Link to="/submit">Zgłoś innowację</Link>
-              <Link to="/needs">Tablica potrzeb</Link>
+              <Link to="/needs">Szukam rozwiązania</Link>
               <Link to="/pci">Radar i mierniki</Link>
               <a href={`${import.meta.env.VITE_API_URL ?? ''}/swagger-ui.html`} target="_blank" rel="noreferrer">API</a>
             </nav>

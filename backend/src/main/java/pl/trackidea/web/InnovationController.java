@@ -19,7 +19,7 @@ import java.util.stream.Stream;
 
 @RestController
 @RequestMapping("/api/innovations")
-@Tag(name = "Innowacje", description = "Katalog, karta innowacji, cykl życia (statusy), ocena, ścieżki, dopasowania")
+@Tag(name = "Innowacje", description = "Katalog, karta innowacji, weryfikacja i ocena, zastosowania, dopasowania")
 public class InnovationController {
 
     private final InnovationRepository innovations;
@@ -27,14 +27,13 @@ public class InnovationController {
     private final SimilarityService similarity;
     private final RecommendationService recommendations;
     private final MatchingService matching;
-    private final AssessmentService assessmentService;
     private final Views views;
     private final CurrentUser currentUser;
     private final String publicUrl;
 
     public InnovationController(InnovationRepository innovations, InnovationService service,
                                 SimilarityService similarity, RecommendationService recommendations,
-                                MatchingService matching, AssessmentService assessmentService, Views views,
+                                MatchingService matching, Views views,
                                 CurrentUser currentUser,
                                 @Value("${trackidea.public-url:http://localhost:5173}") String publicUrl) {
         this.publicUrl = publicUrl;
@@ -43,7 +42,6 @@ public class InnovationController {
         this.similarity = similarity;
         this.recommendations = recommendations;
         this.matching = matching;
-        this.assessmentService = assessmentService;
         this.views = views;
         this.currentUser = currentUser;
     }
@@ -53,7 +51,7 @@ public class InnovationController {
      * scope=public (domyślnie) – tylko potwierdzone; scope=mine – moje i mojej instytucji (też szkice).
      */
     @GetMapping
-    @Operation(summary = "Katalog innowacji", description = "Wyszukiwanie semantyczne (q), filtr po nazwie instytucji lub firmy (institution), pozostałe filtry i sortowanie: newest, score, popular, forks, relevance.")
+    @Operation(summary = "Katalog innowacji", description = "Wyszukiwanie semantyczne (q), filtr po nazwie instytucji lub firmy (institution), pozostałe filtry i sortowanie: newest, updated, score, relevance.")
     public List<Dto.InnovationCard> list(@RequestParam(required = false) String q,
                                          @RequestParam(required = false) InnovationType type,
                                          @RequestParam(required = false) Sector sector,
@@ -63,20 +61,8 @@ public class InnovationController {
                                          @RequestParam(required = false) InnovationStatus status,
                                          @RequestParam(required = false) Long institutionId,
                                          @RequestParam(required = false) String institution,
-                                         @RequestParam(defaultValue = "newest") String sort,
-                                         @RequestParam(defaultValue = "public") String scope,
-                                         @RequestParam(defaultValue = "false") boolean includeForks) {
-        Person viewer = currentUser.get();
-        Stream<Innovation> stream = innovations.findAll().stream();
-        if ("mine".equals(scope)) {
-            stream = stream.filter(i -> viewer != null && (i.isAuthor(viewer)
-                    || (i.getReportedBy() != null && i.getReportedBy().getId().equals(viewer.getId()))
-                    || (viewer.getInstitution() != null && i.getInstitution() != null
-                    && viewer.getInstitution().getId().equals(i.getInstitution().getId()))));
-        } else {
-            stream = stream.filter(i -> i.getStatus().isPubliclyVisible());
-        }
-        if (!includeForks && !"mine".equals(scope)) stream = stream.filter(i -> i.getForkedFrom() == null);
+                                         @RequestParam(defaultValue = "newest") String sort) {
+        Stream<Innovation> stream = innovations.findAll().stream().filter(i -> i.getStatus().isPubliclyVisible());
         if (type != null) stream = stream.filter(i -> i.getType() == type);
         if (sector != null) stream = stream.filter(i -> i.getSector() == sector);
         if (maturity != null) stream = stream.filter(i -> i.getMaturity() == maturity);
@@ -109,11 +95,10 @@ public class InnovationController {
             found = matched;
         }
 
-        List<Dto.InnovationCard> cards = new ArrayList<>(found.stream().map(i -> views.card(i, viewer)).toList());
+        List<Dto.InnovationCard> cards = new ArrayList<>(found.stream().map(views::card).toList());
         Comparator<Dto.InnovationCard> order = switch (sort) {
             case "score" -> Comparator.comparing((Dto.InnovationCard c) -> c.score() == null ? -1 : c.score()).reversed();
-            case "popular" -> Comparator.comparingLong((Dto.InnovationCard c) -> c.votes() + c.followers()).reversed();
-            case "forks" -> Comparator.comparingLong(Dto.InnovationCard::forks).reversed();
+            case "updated" -> Comparator.comparing(Dto.InnovationCard::updatedAt).reversed();
             case "relevance" -> Comparator.comparing((Dto.InnovationCard c) -> relevance.getOrDefault(c.id(), 0.0)).reversed();
             default -> Comparator.comparing(Dto.InnovationCard::createdAt).reversed();
         };
@@ -141,11 +126,11 @@ public class InnovationController {
                                          @RequestParam(required = false) String institution,
                                          @RequestParam(defaultValue = "newest") String sort) {
         List<Dto.InnovationCard> cards = list(q, type, sector, maturity, transferModel, institutionType, status,
-                institutionId, institution, sort, "public", false);
+                institutionId, institution, sort);
         StringBuilder csv = new StringBuilder("\uFEFF");
         csv.append(String.join(";", "ID", "Tytuł", "Instytucja", "Typ instytucji", "Powiat", "Typ innowacji",
-                "Sektor", "Etap", "Model transferu", "Status", "Wynik (0-100)", "Głosy", "Obserwujący", "Forki",
-                "Wdrożenia", "Źródło", "Data dodania", "Tagi", "Link")).append("\r\n");
+                "Sektor", "Etap", "Model transferu", "Status", "Wynik (0-100)", "Autorzy", "Źródło", "Data dodania",
+                "Tagi", "Link")).append("\r\n");
         for (Dto.InnovationCard c : cards) {
             csv.append(String.join(";",
                     String.valueOf(c.id()),
@@ -159,10 +144,7 @@ public class InnovationController {
                     cell(label(c.transferModel())),
                     cell(c.status().label()),
                     c.score() == null ? "" : String.valueOf(Math.round(c.score())),
-                    String.valueOf(c.votes()),
-                    String.valueOf(c.followers()),
-                    String.valueOf(c.forks()),
-                    String.valueOf(c.deployments()),
+                    cell(c.authors()),
                     cell(c.sourceName() != null ? c.source().label() + " (" + c.sourceName() + ")" : label(c.source())),
                     LocalDate.ofInstant(c.createdAt(), ZoneId.of("Europe/Warsaw")).toString(),
                     cell(String.join(", ", c.tags())),
@@ -191,7 +173,7 @@ public class InnovationController {
         Person viewer = currentUser.get();
         Innovation inn = service.get(id);
         if (!service.canView(inn, viewer)) {
-            throw DomainException.forbidden("To zgłoszenie czeka na potwierdzenie autora i nie jest jeszcze publiczne.");
+            throw DomainException.forbidden("Ten rekord jest wyłączony z katalogu.");
         }
         return views.detail(inn, viewer);
     }
@@ -212,37 +194,21 @@ public class InnovationController {
     @GetMapping("/{id}/matches")
     public Map<String, List<MatchingService.Match>> matches(@PathVariable Long id) {
         Innovation inn = service.get(id);
-        return Map.of("needs", matching.needsFor(inn), "partners", matching.partnersFor(inn));
-    }
-
-    /** Podgląd propozycji oceny bez zapisu – np. dla autora przed wysłaniem do oceny. */
-    @GetMapping("/{id}/assessment-preview")
-    public Dto.AssessmentView preview(@PathVariable Long id) {
-        return Dto.AssessmentView.of(assessmentService.propose(service.get(id)), true);
-    }
-
-    @PostMapping
-    public Dto.InnovationDetail create(@RequestBody InnovationForm form) {
-        Person actor = currentUser.get();
-        return views.detail(service.create(form, actor), actor);
+        return Map.of("needs", matching.needsFor(inn));
     }
 
     @PutMapping("/{id}")
-    public Dto.InnovationDetail update(@PathVariable Long id, @RequestBody InnovationForm form) {
+    @Operation(summary = "Poprawa karty przez analityka PCI")
+    public Dto.InnovationDetail update(@PathVariable Long id, @RequestBody InnovationService.CardEdit form) {
         Person actor = currentUser.get();
         return views.detail(service.update(id, form, actor), actor);
     }
 
-    @PostMapping("/{id}/confirm")
-    public Dto.InnovationDetail confirm(@PathVariable Long id) {
+    @PostMapping("/{id}/propose-assessment")
+    @Operation(summary = "Wygeneruj propozycję oceny (analityk PCI)")
+    public Dto.InnovationDetail proposeAssessment(@PathVariable Long id) {
         Person actor = currentUser.get();
-        return views.detail(service.confirm(id, actor), actor);
-    }
-
-    @PostMapping("/{id}/request-assessment")
-    public Dto.InnovationDetail requestAssessment(@PathVariable Long id) {
-        Person actor = currentUser.get();
-        return views.detail(service.requestAssessment(id, actor), actor);
+        return views.detail(service.proposeAssessment(id, actor), actor);
     }
 
     public record ApproveRequest(List<InnovationService.ScoreInput> scores) {
@@ -263,35 +229,13 @@ public class InnovationController {
         return views.detail(service.choosePaths(id, body.paths(), actor), actor);
     }
 
-    @PostMapping("/{id}/fork")
-    public Dto.InnovationDetail fork(@PathVariable Long id) {
+    public record RejectRequest(String reason) {
+    }
+
+    @PostMapping("/{id}/reject")
+    @Operation(summary = "Odrzuć rekord, który nie jest innowacją (analityk PCI)")
+    public Dto.InnovationDetail reject(@PathVariable Long id, @RequestBody RejectRequest body) {
         Person actor = currentUser.get();
-        return views.detail(service.fork(id, actor), actor);
-    }
-
-    @PostMapping("/{id}/confirm-deployment")
-    public Dto.InnovationDetail confirmDeployment(@PathVariable Long id) {
-        Person actor = currentUser.get();
-        return views.detail(service.confirmDeployment(id, actor), actor);
-    }
-
-    @PostMapping("/{id}/vote")
-    public Map<String, Object> vote(@PathVariable Long id) {
-        boolean voted = service.toggleVote(id, currentUser.get());
-        return Map.of("voted", voted);
-    }
-
-    @PostMapping("/{id}/follow")
-    public Map<String, Object> follow(@PathVariable Long id) {
-        boolean following = service.toggleFollow(id, currentUser.get());
-        return Map.of("following", following);
-    }
-
-    public record ContactBody(String message) {
-    }
-
-    @PostMapping("/{id}/contact")
-    public Dto.ContactView contact(@PathVariable Long id, @RequestBody ContactBody body) {
-        return Dto.ContactView.of(service.requestContact(id, body.message(), currentUser.get()));
+        return views.detail(service.reject(id, body.reason(), actor), actor);
     }
 }

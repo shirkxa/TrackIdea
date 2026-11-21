@@ -1,10 +1,8 @@
 package pl.trackidea.domain;
 
+/** Konta w Radarze to konta zespołu PCI – katalog jest publiczny i nie wymaga logowania. */
 public enum Role implements Labeled {
-    TWORCA("Twórca"),
-    OPIEKUN("Opiekun instytucji"),
-    EKSPERT("Ekspert PCI"),
-    PARTNER("Partner / inwestor"),
+    EKSPERT("Analityk PCI"),
     ADMIN("Administrator");
 
     private final String label;

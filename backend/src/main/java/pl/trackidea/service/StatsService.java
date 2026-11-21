@@ -8,22 +8,20 @@ import pl.trackidea.repo.*;
 import java.time.Duration;
 import java.util.*;
 
-/** Mierniki skuteczności z rozdziału 11 planu – panel PCI. */
+/** Mierniki Radaru: ile innowacji odnaleziono, jak szybko są weryfikowane i jak trafna jest propozycja oceny. */
 @Service
 @Transactional(readOnly = true)
 public class StatsService {
 
     private final InnovationRepository innovations;
     private final AssessmentRepository assessments;
-    private final ContactRequestRepository contacts;
     private final RadarRecordRepository radar;
     private final NeedRepository needs;
 
-    public StatsService(InnovationRepository innovations, AssessmentRepository assessments, ContactRequestRepository contacts,
+    public StatsService(InnovationRepository innovations, AssessmentRepository assessments,
                         RadarRecordRepository radar, NeedRepository needs) {
         this.innovations = innovations;
         this.assessments = assessments;
-        this.contacts = contacts;
         this.radar = radar;
         this.needs = needs;
     }
@@ -37,81 +35,64 @@ public class StatsService {
 
     public Stats stats() {
         List<Innovation> all = innovations.findAll();
-        List<Innovation> originals = all.stream().filter(i -> i.getForkedFrom() == null).toList();
+        List<Innovation> visible = all.stream().filter(i -> i.getStatus().isPubliclyVisible()).toList();
 
-        long detected = originals.stream().filter(i -> i.getSource() == Source.RADAR).count();
-        long reported = originals.stream().filter(i -> i.getSource() != Source.RADAR).count();
-        long detectedConfirmed = originals.stream()
-                .filter(i -> i.getSource() == Source.RADAR && !i.getStatus().isDraft()).count();
+        long verified = visible.stream().filter(i -> i.getStatus() == InnovationStatus.OCENIONA).count();
+        long fromRadar = visible.stream().filter(i -> i.getSource() == Source.RADAR).count();
+        long sources = all.stream().map(Innovation::getSourceName).filter(Objects::nonNull).distinct().count();
 
         List<Long> daysToAssessment = new ArrayList<>();
-        for (Innovation i : originals) {
-            Optional<Assessment> a = assessments.findTopByInnovationOrderByCreatedAtDescIdDesc(i);
-            if (a.isPresent() && a.get().isApproved()) {
-                daysToAssessment.add(Duration.between(i.getCreatedAt(), a.get().getApprovedAt()).toDays());
-            }
-        }
-        double avgDays = daysToAssessment.stream().mapToLong(Long::longValue).average().orElse(Double.NaN);
-
         int criteriaTotal = 0, criteriaAgree = 0;
         for (Assessment a : assessments.findAll()) {
             if (!a.isApproved()) continue;
+            daysToAssessment.add(Duration.between(a.getInnovation().getCreatedAt(), a.getApprovedAt()).toDays());
             for (CriterionScore s : a.getScores()) {
                 criteriaTotal++;
                 if (Math.abs(s.effectiveScore() - s.getProposedScore()) <= 1) criteriaAgree++;
             }
         }
-
-        long contactsAll = contacts.count();
-        long contactsAccepted = contacts.countByStatus(ContactStatus.ZAAKCEPTOWANA);
-        long forks = all.stream().filter(i -> i.getForkedFrom() != null).count();
-        long deployments = all.stream()
-                .filter(i -> i.getForkedFrom() != null && i.getStatus() == InnovationStatus.WDROZONA).count();
-        long duplicatesStopped = radar.countByOutcome(RadarRecord.Outcome.DUPLIKAT)
-                + all.stream().filter(i -> i.getStatus() == InnovationStatus.POLACZONA).count() + forks;
+        double avgDays = daysToAssessment.stream().mapToLong(Long::longValue).average().orElse(Double.NaN);
+        long duplicates = radar.countByOutcome(RadarRecord.Outcome.DUPLIKAT)
+                + all.stream().filter(i -> i.getStatus() == InnovationStatus.POLACZONA).count();
+        long rejected = all.stream().filter(i -> i.getStatus() == InnovationStatus.ODRZUCONA).count();
 
         List<Kpi> kpis = List.of(
-                new Kpi("found", "Odnalezione innowacje", String.valueOf(originals.size()),
-                        "Radar: " + detected + " · zgłoszenia: " + reported, "100+ w pierwszym kwartale"),
-                new Kpi("confirmed", "Wykryte potwierdzone przez autorów",
-                        detected == 0 ? "–" : pct(detectedConfirmed, detected),
-                        detectedConfirmed + " z " + detected + " wykrytych przez Radar", "≥ 50%"),
-                new Kpi("time", "Czas: zgłoszenie → ocena",
+                new Kpi("found", "Innowacje w katalogu", String.valueOf(visible.size()),
+                        "z Radaru: " + fromRadar + " · źródła: " + sources, "100+ w pierwszym kwartale"),
+                new Kpi("verified", "Zweryfikowane przez PCI", visible.isEmpty() ? "–" : pct(verified, visible.size()),
+                        verified + " z " + visible.size() + " rekordów", "≥ 50%"),
+                new Kpi("time", "Czas: wykrycie → ocena",
                         Double.isNaN(avgDays) ? "–" : String.format(Locale.ROOT, "%.1f dni", avgDays),
                         "zatwierdzone oceny: " + daysToAssessment.size(), "≤ 14 dni"),
-                new Kpi("ai", "Zgodność propozycji z ekspertem",
+                new Kpi("ai", "Zgodność propozycji z analitykiem",
                         criteriaTotal == 0 ? "–" : pct(criteriaAgree, criteriaTotal),
                         "kryteria z różnicą ≤ 1 pkt: " + criteriaAgree + "/" + criteriaTotal, "≥ 80%"),
-                new Kpi("contacts", "Kontakty zaakceptowane",
-                        contactsAll == 0 ? "–" : pct(contactsAccepted, contactsAll),
-                        contactsAccepted + " z " + contactsAll + " próśb o kontakt", "≥ 20% konwersji"),
-                new Kpi("deployments", "Forki / potwierdzone wdrożenia", forks + " / " + deployments,
-                        "transfer do innych instytucji", "10+ w pierwszym roku"),
-                new Kpi("duplicates", "Zatrzymane duplikaty", String.valueOf(duplicatesStopped),
-                        "duplikaty z Radaru + połączenia + forki zamiast budowy od zera", "mierzone od startu"),
-                new Kpi("needs", "Otwarte potrzeby na tablicy", String.valueOf(needs.findByOpenTrue().size()),
-                        "problemy zgłoszone przez instytucje i firmy", "–"));
+                new Kpi("duplicates", "Zatrzymane duplikaty", String.valueOf(duplicates),
+                        "ten sam projekt z kilku źródeł", "mierzone od startu"),
+                new Kpi("rejected", "Odrzucone rekordy", String.valueOf(rejected),
+                        "nie spełniały definicji innowacji", "–"),
+                new Kpi("needs", "Zapytania o rozwiązanie", String.valueOf(needs.findByOpenTrue().size()),
+                        "potrzeby z dopasowanymi innowacjami", "–"));
 
         Map<String, Long> byStatus = new LinkedHashMap<>();
         for (InnovationStatus s : InnovationStatus.values()) {
-            long c = originals.stream().filter(i -> i.getStatus() == s).count();
+            long c = all.stream().filter(i -> i.getStatus() == s).count();
             if (c > 0) byStatus.put(s.getLabel(), c);
         }
         Map<String, Long> bySector = new LinkedHashMap<>();
         for (Sector s : Sector.values()) {
-            long c = originals.stream().filter(i -> i.getSector() == s).count();
+            long c = visible.stream().filter(i -> i.getSector() == s).count();
             if (c > 0) bySector.put(s.getLabel(), c);
         }
         Map<String, Long> byInst = new LinkedHashMap<>();
         for (InstitutionType t : InstitutionType.values()) {
-            long c = originals.stream().filter(i -> i.getInstitution() != null && i.getInstitution().getType() == t).count();
+            long c = visible.stream().filter(i -> i.getInstitution() != null && i.getInstitution().getType() == t).count();
             if (c > 0) byInst.put(t.getLabel(), c);
         }
         Map<String, Long> bySource = new LinkedHashMap<>();
-        for (Source s : Source.values()) {
-            long c = all.stream().filter(i -> i.getSource() == s).count();
-            if (c > 0) bySource.put(s.getLabel(), c);
-        }
+        visible.stream()
+                .map(i -> i.getSourceName() != null ? i.getSourceName() : i.getSource().getLabel())
+                .forEach(name -> bySource.merge(name, 1L, Long::sum));
         return new Stats(kpis, byStatus, bySector, byInst, bySource);
     }
 

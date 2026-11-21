@@ -131,7 +131,7 @@ public class RadarService {
         inn.setStatus(InnovationStatus.WYKRYTA);
         innovations.save(inn);
         innovationService.log(inn, EventType.WYKRYTO, "Wykryto w źródle " + r.source() + " (" + r.ref()
-                + "). Autorzy w źródle: " + r.authors() + ". Czeka na potwierdzenie autora.", null);
+                + "). Autorzy w źródle: " + r.authors() + ". Czeka na weryfikację analityka PCI.", null);
         return inn;
     }
 

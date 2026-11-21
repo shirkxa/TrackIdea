@@ -44,17 +44,11 @@ public class SimilarityService {
         Set<Long> exclude = new HashSet<>();
         if (excludeId != null) {
             exclude.add(excludeId);
-            innovations.findById(excludeId).ifPresent(self -> {
-                if (self.getForkedFrom() != null) {
-                    exclude.add(self.getForkedFrom().getId());
-                }
-                innovations.findByForkedFrom(self).forEach(f -> exclude.add(f.getId()));
-            });
         }
         List<SimilarItem> out = new ArrayList<>();
         for (Innovation i : innovations.findAll()) {
             if (exclude.contains(i.getId()) || i.getStatus() == InnovationStatus.POLACZONA
-                    || i.getStatus() == InnovationStatus.ARCHIWALNA || i.getForkedFrom() != null) {
+                    || i.getStatus() == InnovationStatus.ARCHIWALNA || i.getStatus() == InnovationStatus.ODRZUCONA) {
                 continue;
             }
             int pct = percent(TextVectorizer.cosine(query, idx.vector(i.searchText())));

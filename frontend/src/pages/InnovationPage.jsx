@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Link, useParams } from 'react-router-dom'
 import { api } from '../api.js'
 import { formatDate } from '../format.js'
 import {
-  Badge, Empty, ErrorBox, InstitutionLink, Loading, PersonLink, Pipeline, ScoreRing, Section, StatusBadge, Tag,
+  Badge, Empty, ErrorBox, InstitutionLink, Loading, Pipeline, ScoreRing, Section, StatusBadge, Tag,
 } from '../components/ui.jsx'
 import { useApp } from '../context.jsx'
 import { useFetch } from '../useFetch.js'
@@ -14,7 +14,6 @@ import { targetLink } from '../links.js'
 export default function InnovationPage() {
   const { id } = useParams()
   const { user, meta, notify } = useApp()
-  const navigate = useNavigate()
   const { data, setData, loading, error } = useFetch(`/innovations/${id}`, [user?.id])
   const [version, setVersion] = useState(0)
   const [busy, setBusy] = useState(false)
@@ -23,20 +22,14 @@ export default function InnovationPage() {
   if (error) return <ErrorBox>{error}</ErrorBox>
   if (!data) return null
 
-  const { card, viewer } = data
+  const { card } = data
 
-  /** Wywołuje akcję na innowacji i odświeża widok (status, ocena, rekomendacje). */
+  /** Akcja analityka na rekordzie; odświeża widok (status, ocena, zastosowania). */
   async function act(path, body, okMessage) {
     setBusy(true)
     try {
       const res = await api.post(`/innovations/${card.id}${path}`, body)
-      if (res?.card) {
-        if (res.card.id !== card.id) {
-          navigate(`/innovations/${res.card.id}`)
-        } else {
-          setData(res)
-        }
-      }
+      if (res?.card) setData(res)
       setVersion((v) => v + 1)
       if (okMessage) notify(okMessage)
       return res
@@ -45,23 +38,6 @@ export default function InnovationPage() {
       return null
     } finally {
       setBusy(false)
-    }
-  }
-
-  async function toggle(kind) {
-    try {
-      const res = await api.post(`/innovations/${card.id}/${kind}`)
-      setData((d) => ({
-        ...d,
-        card: {
-          ...d.card,
-          votes: kind === 'vote' ? d.card.votes + (res.voted ? 1 : -1) : d.card.votes,
-          followers: kind === 'follow' ? d.card.followers + (res.following ? 1 : -1) : d.card.followers,
-        },
-        viewer: { ...d.viewer, voted: res.voted ?? d.viewer.voted, following: res.following ?? d.viewer.following },
-      }))
-    } catch (e) {
-      notify(e.message, 'error')
     }
   }
 
@@ -74,44 +50,18 @@ export default function InnovationPage() {
             <StatusBadge status={card.status} />
             {card.type && <Badge tone="muted">{card.type.label}</Badge>}
             {card.sector && <Badge tone="muted">{card.sector.label}</Badge>}
-            {card.source?.value === 'RADAR' && <Badge tone="radar">Wykryta przez Radar · {card.sourceName}</Badge>}
-            {card.source?.value === 'ZWIADOWCA' && <Badge tone="warn">Zgłoszona przez zwiadowcę</Badge>}
+            {card.sourceName && <Badge tone="radar">Źródło: {card.sourceName}</Badge>}
           </div>
           <h1>{card.title}</h1>
           <p className="lead">{card.summary}</p>
           <p className="muted small">
             <InstitutionLink institution={card.institution} />
-            {card.authors.length > 0 && (
-              <>
-                {' · '}Autorzy:{' '}
-                {card.authors.map((a, i) => (
-                  <span key={a.id}>
-                    {i > 0 && ', '}
-                    <PersonLink person={a} />
-                  </span>
-                ))}
-              </>
-            )}
-            {card.authors.length === 0 && data.sourceAuthors && <> · Autorzy w źródle: {data.sourceAuthors}</>}
-            {' · '}dodano {formatDate(card.createdAt)}
+            {card.authors && <> · Autorzy: {card.authors}</>}
+            {' · '}w Radarze od {formatDate(card.createdAt)}
           </p>
-          {card.forkedFrom && (
-            <p className="notice">
-              To wdrożenie (fork) innowacji <Link to={`/innovations/${card.forkedFrom.id}`}>{card.forkedFrom.name}</Link>.
-            </p>
-          )}
         </div>
         <div className="head-side">
           <ScoreRing score={card.score} size={84} />
-          <div className="head-buttons">
-            <button className={`btn btn-small ${viewer.voted ? 'btn-on' : ''}`} disabled={!user} onClick={() => toggle('vote')}
-              title="Głos jak w Banku Pomysłów: przydałoby się u nas">
-              ▲ Przydałoby się · {card.votes}
-            </button>
-            <button className={`btn btn-small ${viewer.following ? 'btn-on' : ''}`} disabled={!user} onClick={() => toggle('follow')}>
-              ☆ {viewer.following ? 'Obserwujesz' : 'Obserwuj'} · {card.followers}
-            </button>
-          </div>
         </div>
       </header>
 
@@ -119,7 +69,7 @@ export default function InnovationPage() {
         <Pipeline statuses={meta.statuses} current={card.status} />
       </div>
 
-      <ActionPanel data={data} user={user} busy={busy} act={act} />
+      <ActionPanel data={data} busy={busy} act={act} />
 
       <div className="two-col">
         <div className="col-main">
@@ -131,70 +81,40 @@ export default function InnovationPage() {
         <aside className="col-side">
           <MatchesSection id={card.id} version={version} />
           <SimilarSection id={card.id} />
-          <ForksSection forks={data.forks} deployments={card.deployments} />
         </aside>
       </div>
     </div>
   )
 }
 
-/** Akcje zależne od roli i statusu – „co dalej” z tą innowacją. */
-function ActionPanel({ data, user, busy, act }) {
+/** Akcje analityka PCI: popraw kartę, przygotuj ocenę, odrzuć rekord. */
+function ActionPanel({ data, busy, act }) {
   const { card, viewer, completeness } = data
-  const [contactOpen, setContactOpen] = useState(false)
-  const [message, setMessage] = useState('')
+  const [rejectOpen, setRejectOpen] = useState(false)
+  const [reason, setReason] = useState('')
   const actions = []
 
-  if (viewer.canConfirm) {
-    actions.push(
-      <button key="confirm" className="btn btn-primary" disabled={busy}
-        onClick={() => act('/confirm', {}, 'Potwierdzono – innowacja jest publiczna.')}>
-        {card.authors.some((a) => a.id === user?.id) || user?.role.value !== 'TWORCA'
-          ? 'Potwierdź zgłoszenie'
-          : 'To mój pomysł – potwierdzam autorstwo'}
-      </button>,
-    )
-  }
   if (viewer.canEdit) {
-    actions.push(<Link key="edit" className="btn" to={`/innovations/${card.id}/edit`}>Edytuj kartę</Link>)
+    actions.push(<Link key="edit" className="btn" to={`/innovations/${card.id}/edit`}>Popraw kartę</Link>)
   }
-  if (viewer.canRequestAssessment) {
+  if (viewer.canPropose) {
     actions.push(
-      <button key="assess" className="btn btn-primary" disabled={busy}
-        onClick={() => act('/request-assessment', {}, 'Wysłano do oceny – propozycja czeka na eksperta PCI.')}>
-        {card.status.value === 'UZUPELNIONA' ? 'Poproś o ocenę' : 'Poproś o ponowną ocenę'}
+      <button key="propose" className="btn btn-primary" disabled={busy}
+        onClick={() => act('/propose-assessment', {}, 'Przygotowano propozycję oceny.')}>
+        {card.status.value === 'OCENIONA' ? 'Oceń ponownie' : 'Przygotuj ocenę'}
       </button>,
     )
   }
-  if (viewer.canFork) {
+  if (viewer.canReject) {
     actions.push(
-      <button key="fork" className="btn btn-good" disabled={busy}
-        onClick={() => act('/fork', {}, 'Utworzono fork – wdrożenie w Waszej instytucji.')}>
-        ⑂ Wdrażamy u siebie (fork)
-      </button>,
-    )
-  }
-  if (viewer.canConfirmDeployment) {
-    actions.push(
-      <button key="deploy" className="btn btn-good" disabled={busy}
-        onClick={() => act('/confirm-deployment', {}, 'Potwierdzono wdrożenie.')}>
-        ✓ Potwierdź wdrożenie
-      </button>,
-    )
-  }
-  if (viewer.canContact) {
-    actions.push(
-      <button key="contact" className="btn" onClick={() => setContactOpen((o) => !o)}>
-        ✉ Poproś o kontakt
-      </button>,
+      <button key="reject" className="btn" onClick={() => setRejectOpen((o) => !o)}>Odrzuć rekord</button>,
     )
   }
 
   const hints = []
-  if (card.status.draft) hints.push('Niepubliczne – czeka na potwierdzenie autora.')
-  if (card.status.value === 'W_OCENIE' && !viewer.canApprove) hints.push('Ocena czeka na eksperta PCI.')
-  if (viewer.canApprove) hints.push('Sprawdź i zatwierdź ocenę poniżej.')
-  if (viewer.canChoosePaths && card.status.value === 'OCENIONA') hints.push('Wybierz ścieżkę rozwoju poniżej.')
+  if (card.status.value === 'WYKRYTA') hints.push('Rekord z Radaru – czeka na weryfikację analityka PCI.')
+  if (card.status.value === 'W_OCENIE') hints.push(viewer.canApprove ? 'Sprawdź i zatwierdź ocenę poniżej.' : 'Ocena czeka na analityka PCI.')
+  if (card.status.step === 0) hints.push(card.status.description)
 
   if (actions.length === 0 && hints.length === 0 && completeness.percent === 100) return null
 
@@ -203,25 +123,21 @@ function ActionPanel({ data, user, busy, act }) {
       {completeness.percent < 100 && (
         <div className="completeness">
           <div className="progress"><div style={{ width: `${completeness.percent}%` }} /></div>
-          <span className="small">
-            Karta wypełniona w {completeness.percent}%. Brakuje: {completeness.missing.join(', ')}.
-          </span>
+          <span className="small">Karta wypełniona w {completeness.percent}%. Brakuje: {completeness.missing.join(', ')}.</span>
         </div>
       )}
-      {hints.map((h) => (
-        <p key={h} className="small muted">{h}</p>
-      ))}
+      {hints.map((h) => <p key={h} className="small muted">{h}</p>)}
       {actions.length > 0 && <div className="actions">{actions}</div>}
-      {contactOpen && (
+      {rejectOpen && (
         <div className="contact-form">
-          <textarea placeholder="Krótko: kim jesteś i czego szukasz (dane kontaktowe zobaczycie po akceptacji prośby)."
-            value={message} onChange={(e) => setMessage(e.target.value)} />
+          <textarea placeholder="Powód, np. nie wdrożone ani nie udostępnione użytkownikom (Oslo Manual 2018)"
+            value={reason} onChange={(e) => setReason(e.target.value)} />
           <button className="btn btn-primary" disabled={busy}
             onClick={async () => {
-              const ok = await act('/contact', { message }, 'Wysłano prośbę o kontakt.')
-              if (ok) setContactOpen(false)
+              const ok = await act('/reject', { reason }, 'Rekord odrzucony – nie będzie widoczny w katalogu.')
+              if (ok) setRejectOpen(false)
             }}>
-            Wyślij prośbę
+            Odrzuć
           </button>
         </div>
       )}
@@ -243,16 +159,15 @@ function CardSection({ data }) {
         {rows.map(([label, value]) => (
           <div key={label}>
             <dt>{label}</dt>
-            <dd>{value || <span className="muted">— brak, warto uzupełnić</span>}</dd>
+            <dd>{value || <span className="muted">— brak w źródle</span>}</dd>
           </div>
         ))}
       </dl>
       <div className="facts">
-        <Fact label="Etap">{card.maturity?.label}</Fact>
+        <Fact label="Etap wdrożenia">{card.maturity?.label}</Fact>
         <Fact label="Model transferu">{card.transferModel?.label}</Fact>
         <Fact label="Ochrona IP">{data.ipStatus}</Fact>
-        {data.reportedBy && <Fact label="Zgłosił(a)"><PersonLink person={data.reportedBy} /> (zwiadowca)</Fact>}
-        {data.sourceRef && <Fact label="Źródło">{card.sourceName} · {data.sourceRef}</Fact>}
+        {data.sourceRef && <Fact label="Identyfikator w źródle">{card.sourceName} · {data.sourceRef}</Fact>}
       </div>
       {card.tags?.length > 0 && (
         <div className="tags">{[...card.tags].map((t) => <Tag key={t}>{t}</Tag>)}</div>
@@ -278,19 +193,15 @@ function Fact({ label, children }) {
   )
 }
 
-/** Karta oceny z jawnymi wagami. Ekspert może poprawić każde kryterium przed zatwierdzeniem. */
+/** Karta oceny z jawnymi wagami. Analityk może poprawić każde kryterium przed zatwierdzeniem. */
 function AssessmentSection({ data, busy, act }) {
-  const { assessment, viewer, card } = data
+  const { assessment, viewer } = data
   const [edits, setEdits] = useState({})
 
   if (!assessment) {
     return (
       <Section title="Ocena potencjału">
-        <Empty>
-          {card.status.step < 3
-            ? 'Najpierw potwierdź i uzupełnij kartę.'
-            : 'Jeszcze nieoceniona.'}
-        </Empty>
+        <Empty>Jeszcze nieoceniona.</Empty>
       </Section>
     )
   }
@@ -307,8 +218,8 @@ function AssessmentSection({ data, busy, act }) {
     <Section
       title="Ocena potencjału"
       subtitle={assessment.approved
-        ? `Zatwierdzona przez ${assessment.approvedBy?.name ?? 'eksperta PCI'} · ${formatDate(assessment.approvedAt)}`
-        : 'Propozycja – czeka na eksperta PCI'}
+        ? `Zatwierdzona przez ${assessment.approvedBy?.name ?? 'analityka PCI'} · ${formatDate(assessment.approvedAt)}`
+        : 'Propozycja systemu (reguły) – czeka na analityka PCI'}
       actions={<ScoreRing score={total} size={64} />}
     >
       <table className="score-table">
@@ -361,9 +272,7 @@ function AssessmentSection({ data, busy, act }) {
           })}
         </tbody>
       </table>
-      <p className="muted small">
-        Wynik = Σ waga × (ocena − 1) / 4 × 100
-      </p>
+      <p className="muted small">Wynik = Σ waga × (ocena − 1) / 4 × 100</p>
       {editing && (
         <button className="btn btn-primary" disabled={busy}
           onClick={() => act('/assessment/approve', {
@@ -380,31 +289,29 @@ function AssessmentSection({ data, busy, act }) {
   )
 }
 
-/** Rekomendowane ścieżki z regułą, uzasadnieniem, odbiorcami i checklistą. */
+/** Gdzie innowacja może znaleźć zastosowanie – rekomendacje z jawnych reguł. */
 function PathsSection({ data, busy, act, version }) {
   const { card, viewer } = data
   const [recs, setRecs] = useState(null)
   const [selected, setSelected] = useState(null)
 
   useEffect(() => {
-    if (card.status.step < 3) return
     api.get(`/innovations/${card.id}/recommendations`).then(setRecs).catch(() => setRecs([]))
-  }, [card.id, card.status.step, version])
+  }, [card.id, version])
 
-  if (card.status.step < 3) return null
   const chosen = selected ?? new Set(data.chosenPaths.map((p) => p.value))
   const choosing = viewer.canChoosePaths
 
   return (
-    <Section title="Ścieżki rozwoju">
+    <Section title="Zastosowania">
       {data.chosenPaths.length > 0 && (
-        <p>Zatwierdzona ścieżka: {data.chosenPaths.map((p) => <Badge key={p.value} tone="accent">{p.label}</Badge>)}</p>
+        <p>Wskazane przez PCI: {data.chosenPaths.map((p) => <Badge key={p.value} tone="accent">{p.label}</Badge>)}</p>
       )}
       {!recs ? <Loading /> : recs.map((r) => (
         <article key={r.path} className={`path ${r.chosen ? 'path-chosen' : ''}`}>
           <header>
             {choosing && (
-              <input type="checkbox" checked={chosen.has(r.path)} aria-label={`Wybierz ścieżkę ${r.label}`}
+              <input type="checkbox" checked={chosen.has(r.path)} aria-label={`Wybierz: ${r.label}`}
                 onChange={(e) => {
                   const next = new Set(chosen)
                   if (e.target.checked) next.add(r.path)
@@ -431,8 +338,8 @@ function PathsSection({ data, busy, act, version }) {
       ))}
       {choosing && (
         <button className="btn btn-primary" disabled={busy || chosen.size === 0}
-          onClick={() => act('/paths', { paths: [...chosen] }, 'Zatwierdzono ścieżkę rozwoju.')}>
-          Zatwierdź wybrane ścieżki
+          onClick={() => act('/paths', { paths: [...chosen] }, 'Zapisano zastosowania.')}>
+          Zapisz wybrane zastosowania
         </button>
       )}
     </Section>
@@ -442,15 +349,10 @@ function PathsSection({ data, busy, act, version }) {
 function MatchesSection({ id, version }) {
   const { data } = useFetch(`/innovations/${id}/matches`, [version])
   return (
-    <Section title="Polecane">
-      {!data ? <Loading /> : (
-        <>
-          <h3 className="sub">Potrzeby</h3>
-          {data.needs.length === 0 ? <p className="muted small">Brak dopasowanych potrzeb.</p> : data.needs.map((m) => <MatchRow key={`n${m.id}`} m={m} />)}
-          <h3 className="sub">Partnerzy</h3>
-          {data.partners.length === 0 ? <p className="muted small">Brak dopasowanych partnerów.</p> : data.partners.map((m) => <MatchRow key={`p${m.id}`} m={m} />)}
-        </>
-      )}
+    <Section title="Pasuje do zapytań">
+      {!data ? <Loading /> : data.needs.length === 0
+        ? <p className="muted small">Brak pasujących zapytań.</p>
+        : data.needs.map((m) => <MatchRow key={`n${m.id}`} m={m} />)}
     </Section>
   )
 }
@@ -480,25 +382,6 @@ function SimilarSection({ id }) {
   )
 }
 
-function ForksSection({ forks, deployments }) {
-  if (!forks.length) return null
-  return (
-    <Section title={`Wdrożenia (forki): ${forks.length}`} subtitle={`Potwierdzone: ${deployments}`}>
-      <ul className="fork-list">
-        {forks.map((f) => (
-          <li key={f.id}>
-            <span className="fork-icon">⑂</span>
-            <div>
-              <Link to={`/innovations/${f.id}`}>{f.institution?.name}</Link>
-              <div><StatusBadge status={f.status} /> <span className="muted small">od {formatDate(f.createdAt)}</span></div>
-            </div>
-          </li>
-        ))}
-      </ul>
-    </Section>
-  )
-}
-
 function TimelineSection({ events }) {
   return (
     <Section title="Oś czasu">
@@ -510,7 +393,7 @@ function TimelineSection({ events }) {
               <div>{e.message}</div>
               <div className="muted small">
                 {e.type.label}
-                {e.actor && <> · <PersonLink person={e.actor} /></>}
+                {e.actor && <> · {e.actor.name}</>}
               </div>
             </div>
           </li>

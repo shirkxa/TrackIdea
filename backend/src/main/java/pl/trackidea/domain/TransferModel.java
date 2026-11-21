@@ -4,7 +4,6 @@ public enum TransferModel implements Labeled {
     OTWARTA_REPLIKACJA("Otwarta replikacja (bezpłatnie)"),
     LICENCJA("Licencja"),
     WSPOLPRACA_BR("Współpraca B+R"),
-    SZUKAM_INWESTORA("Szukam inwestora"),
     KOMERCJALIZACJA("Komercjalizacja");
 
     private final String label;

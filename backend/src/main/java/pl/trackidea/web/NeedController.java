@@ -49,8 +49,8 @@ public class NeedController {
     @PostMapping
     public NeedWithMatches create(@RequestBody NeedForm form) {
         Person actor = currentUser.get();
-        if (actor == null || actor.getInstitution() == null) {
-            throw DomainException.forbidden("Potrzebę publikuje osoba przypisana do instytucji lub firmy.");
+        if (actor == null) {
+            throw DomainException.forbidden("Zaloguj się, żeby zapisać zapytanie.");
         }
         if (form.title() == null || form.title().isBlank()) {
             throw DomainException.badRequest("Podaj tytuł potrzeby.");
@@ -64,7 +64,6 @@ public class NeedController {
         }
         n.setWantsReadySolution(!Boolean.FALSE.equals(form.wantsReadySolution()));
         n.setInstitution(actor.getInstitution());
-        n.setAuthor(actor);
         needs.save(n);
         return new NeedWithMatches(Dto.NeedView.of(n), matching.innovationsForNeed(n));
     }

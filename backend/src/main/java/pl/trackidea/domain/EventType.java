@@ -7,8 +7,6 @@ public enum EventType implements Labeled {
     EDYCJA("Aktualizacja karty"),
     OCENA("Ocena"),
     SCIEZKA("Ścieżka rozwoju"),
-    FORK("Fork"),
-    KONTAKT("Kontakt"),
     WDROZENIE("Wdrożenie");
 
     private final String label;

@@ -17,9 +17,8 @@ export function Tag({ children }) {
 }
 
 const STATUS_TONE = {
-  WYKRYTA: 'draft', ZGLOSZONA: 'draft', POTWIERDZONA: 'info', UZUPELNIONA: 'info', W_OCENIE: 'warn',
-  OCENIONA: 'accent', SCIEZKA_WSKAZANA: 'accent', W_TRANSFERZE: 'good', WDROZONA: 'good',
-  WSTRZYMANA: 'muted', POLACZONA: 'muted', ARCHIWALNA: 'muted',
+  WYKRYTA: 'info', W_OCENIE: 'warn', OCENIONA: 'accent', ODRZUCONA: 'muted',
+  POLACZONA: 'muted', ARCHIWALNA: 'muted',
 }
 
 export function StatusBadge({ status }) {
@@ -53,7 +52,7 @@ export function Pipeline({ statuses, current }) {
     .forEach((s) => {
       if (!seen.has(s.step)) {
         seen.add(s.step)
-        steps.push(s.step === 1 ? { ...s, label: 'Wykryta / zgłoszona' } : s)
+        steps.push(s)
       }
     })
   const side = current && current.step === 0
@@ -75,11 +74,6 @@ export function Pipeline({ statuses, current }) {
 export function InstitutionLink({ institution }) {
   if (!institution) return null
   return <Link to={`/institutions/${institution.id}`}>{institution.name}</Link>
-}
-
-export function PersonLink({ person }) {
-  if (!person) return null
-  return <Link to={`/people/${person.id}`}>{person.name}</Link>
 }
 
 export function Section({ title, subtitle, children, actions, id }) {

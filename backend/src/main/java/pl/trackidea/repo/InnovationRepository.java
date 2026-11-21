@@ -9,11 +9,8 @@ import java.util.Collection;
 import java.util.List;
 
 public interface InnovationRepository extends JpaRepository<Innovation, Long> {
-    List<Innovation> findByForkedFrom(Innovation parent);
-
     List<Innovation> findByStatusIn(Collection<InnovationStatus> statuses);
 
     List<Innovation> findByInstitution(Institution institution);
 
-    long countByForkedFromAndStatus(Innovation parent, InnovationStatus status);
 }

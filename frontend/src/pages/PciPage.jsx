@@ -161,10 +161,8 @@ function Distribution({ title, data }) {
 
 function QueueSection({ queue }) {
   const groups = [
-    ['toApprove', 'Do zatwierdzenia'],
-    ['toChoosePath', 'Bez ścieżki'],
-    ['drafts', 'Czekają na autorów'],
-    ['readyForAssessment', 'Gotowe do oceny'],
+    ['toApprove', 'Oceny do zatwierdzenia'],
+    ['toReview', 'Nowe z Radaru – do weryfikacji'],
   ]
   return (
     <Section title="Kolejka pracy">

@@ -1,13 +1,142 @@
 [
-  {"key": "adapt_alfa", "title": "Pierwszoklasiści źle odnajdują się w nowej szkole", "description": "Uczniowie klas pierwszych mają problem z adaptacją: nie znają nikogo, gubią się w nowych zasadach, rośnie liczba nieobecności. Szukamy sprawdzonego programu wsparcia, np. opieki starszych uczniów (mentoring) i integracji.", "institution": "lo_alfa", "author": "dorota", "sector": "EDUKACJA", "tags": ["adaptacja", "mentoring", "pierwsza klasa"], "wantsReady": true},
-  {"key": "adapt_merkury", "title": "Wsparcie uczniów klas pierwszych w adaptacji", "description": "Po przejściu ze szkoły podstawowej uczniowie pierwszych klas czują się zagubieni. Chcemy wprowadzić program, w którym starsi uczniowie pomagają młodszym w pierwszych miesiącach nauki.", "institution": "zs_merkury", "author": "adam", "sector": "EDUKACJA", "tags": ["adaptacja", "uczniowie", "mentoring"], "wantsReady": true},
-  {"key": "adapt_iskra", "title": "Program integracji i adaptacji dla nowych uczniów technikum", "description": "Nowi uczniowie dojeżdżają z wielu miejscowości i trudno im zbudować relacje w klasie. Szukamy rozwiązania, które pomoże w adaptacji uczniów klas pierwszych i zmniejszy liczbę rezygnacji.", "institution": "tech_iskra", "author": "grzegorz", "sector": "EDUKACJA", "tags": ["adaptacja", "integracja"], "wantsReady": true},
-  {"key": "usterki_wisniowa", "title": "Zgłoszenia usterek od mieszkańców giną w urzędzie", "description": "Mieszkańcy zgłaszają usterki w przestrzeni publicznej (dziury w drogach, lampy, wysypiska) telefonicznie do różnych pracowników. Nie wiemy, ile zgłoszeń mamy ani kiedy je załatwiono. Szukamy prostego narzędzia do zgłaszania usterek z mapą.", "institution": "gm_wisniowa", "author": "piotr", "sector": "ADMINISTRACJA", "tags": ["usterki", "mieszkańcy", "e-usługi"], "wantsReady": true},
-  {"key": "dron_skyagro", "title": "Zespół naukowy do analizy zdjęć wielospektralnych upraw", "description": "Szukamy zespołu z uczelni do wspólnego projektu B+R: algorytmy wykrywania chorób roślin na zdjęciach wielospektralnych z dronów. Zapewniamy drony, loty i dostęp do gospodarstw testowych.", "institution": "skyagro", "author": "jan", "sector": "ROLNICTWO", "tags": ["drony", "rolnictwo precyzyjne", "kamera wielospektralna"], "wantsReady": false},
-  {"key": "energia_starostwo", "title": "Wysokie rachunki za energię w szkołach powiatowych", "description": "Koszty energii i ogrzewania w budynkach szkół powiatowych rosną. Nie wiemy, które budynki zużywają najwięcej. Szukamy systemu monitoringu zużycia energii.", "institution": "st_leskowiec", "author": "renata", "sector": "ENERGETYKA", "tags": ["energia", "budynki publiczne", "oszczędności"], "wantsReady": true},
-  {"key": "seniorzy_mops", "title": "Seniorzy wykluczeni cyfrowo nie korzystają z e-usług", "description": "Podopieczni ośrodka nie potrafią korzystać z e-recepty ani e-usług urzędu. Szukamy programu nauki obsługi smartfonów dla seniorów, najlepiej z udziałem wolontariuszy.", "institution": "mops", "author": "lucyna", "sector": "JAKOSC_ZYCIA", "tags": ["seniorzy", "wykluczenie cyfrowe", "wolontariat"], "wantsReady": true},
-  {"key": "kolejki_starostwo", "title": "Długie kolejki w wydziale komunikacji", "description": "Mieszkańcy czekają w kolejce do rejestracji pojazdów nawet 2 godziny i często wracają z brakującymi dokumentami. Szukamy systemu rezerwacji wizyt.", "institution": "st_leskowiec", "author": "renata", "sector": "ADMINISTRACJA", "tags": ["kolejki", "rezerwacja wizyt", "urząd"], "wantsReady": true},
-  {"key": "slabowidzacy", "title": "Brak pomocy dydaktycznych dla ucznia słabowidzącego", "description": "Do szkoły uczęszcza uczeń słabowidzący. Brakuje nam wypukłych map i modeli do lekcji biologii i geografii, a gotowe zestawy są bardzo drogie.", "institution": "sp_sloneczna", "author": "halina", "sector": "EDUKACJA", "tags": ["niepełnosprawność", "pomoce dydaktyczne"], "wantsReady": true},
-  {"key": "kompozyty_aero", "title": "Zagospodarowanie odpadów kompozytowych z produkcji", "description": "Produkujemy kilkanaście ton odpadów z włókna węglowego rocznie. Szukamy technologii recyklingu kompozytów i partnera naukowego do wdrożenia.", "institution": "aero", "author": "krzysztof", "sector": "LOTNICTWO", "tags": ["kompozyty", "recykling"], "wantsReady": false},
-  {"key": "ocenianie_edunova", "title": "Narzędzia wspierające nauczycieli w ocenianiu prac pisemnych", "description": "Rozwijamy platformę edukacyjną i szukamy zespołów, które budują narzędzia AI do sprawdzania i informacji zwrotnej z prac pisemnych uczniów.", "institution": "edunova", "author": "robert", "sector": "EDUKACJA", "tags": ["ocenianie", "sztuczna inteligencja", "edtech"], "wantsReady": false}
+  {
+    "key": "adapt_alfa",
+    "title": "Pierwszoklasiści źle odnajdują się w nowej szkole",
+    "description": "Uczniowie klas pierwszych mają problem z adaptacją: nie znają nikogo, gubią się w nowych zasadach, rośnie liczba nieobecności. Szukamy sprawdzonego programu wsparcia, np. opieki starszych uczniów (mentoring) i integracji.",
+    "institution": "lo_alfa",
+    "sector": "EDUKACJA",
+    "tags": [
+      "adaptacja",
+      "mentoring",
+      "pierwsza klasa"
+    ],
+    "wantsReady": true
+  },
+  {
+    "key": "adapt_merkury",
+    "title": "Wsparcie uczniów klas pierwszych w adaptacji",
+    "description": "Po przejściu ze szkoły podstawowej uczniowie pierwszych klas czują się zagubieni. Chcemy wprowadzić program, w którym starsi uczniowie pomagają młodszym w pierwszych miesiącach nauki.",
+    "institution": "zs_merkury",
+    "sector": "EDUKACJA",
+    "tags": [
+      "adaptacja",
+      "uczniowie",
+      "mentoring"
+    ],
+    "wantsReady": true
+  },
+  {
+    "key": "adapt_iskra",
+    "title": "Program integracji i adaptacji dla nowych uczniów technikum",
+    "description": "Nowi uczniowie dojeżdżają z wielu miejscowości i trudno im zbudować relacje w klasie. Szukamy rozwiązania, które pomoże w adaptacji uczniów klas pierwszych i zmniejszy liczbę rezygnacji.",
+    "institution": "tech_iskra",
+    "sector": "EDUKACJA",
+    "tags": [
+      "adaptacja",
+      "integracja"
+    ],
+    "wantsReady": true
+  },
+  {
+    "key": "usterki_wisniowa",
+    "title": "Zgłoszenia usterek od mieszkańców giną w urzędzie",
+    "description": "Mieszkańcy zgłaszają usterki w przestrzeni publicznej (dziury w drogach, lampy, wysypiska) telefonicznie do różnych pracowników. Nie wiemy, ile zgłoszeń mamy ani kiedy je załatwiono. Szukamy prostego narzędzia do zgłaszania usterek z mapą.",
+    "institution": "gm_wisniowa",
+    "sector": "ADMINISTRACJA",
+    "tags": [
+      "usterki",
+      "mieszkańcy",
+      "e-usługi"
+    ],
+    "wantsReady": true
+  },
+  {
+    "key": "dron_skyagro",
+    "title": "Zespół naukowy do analizy zdjęć wielospektralnych upraw",
+    "description": "Szukamy zespołu z uczelni do wspólnego projektu B+R: algorytmy wykrywania chorób roślin na zdjęciach wielospektralnych z dronów. Zapewniamy drony, loty i dostęp do gospodarstw testowych.",
+    "institution": "skyagro",
+    "sector": "ROLNICTWO",
+    "tags": [
+      "drony",
+      "rolnictwo precyzyjne",
+      "kamera wielospektralna"
+    ],
+    "wantsReady": false
+  },
+  {
+    "key": "energia_starostwo",
+    "title": "Wysokie rachunki za energię w szkołach powiatowych",
+    "description": "Koszty energii i ogrzewania w budynkach szkół powiatowych rosną. Nie wiemy, które budynki zużywają najwięcej. Szukamy systemu monitoringu zużycia energii.",
+    "institution": "st_leskowiec",
+    "sector": "ENERGETYKA",
+    "tags": [
+      "energia",
+      "budynki publiczne",
+      "oszczędności"
+    ],
+    "wantsReady": true
+  },
+  {
+    "key": "seniorzy_mops",
+    "title": "Seniorzy wykluczeni cyfrowo nie korzystają z e-usług",
+    "description": "Podopieczni ośrodka nie potrafią korzystać z e-recepty ani e-usług urzędu. Szukamy programu nauki obsługi smartfonów dla seniorów, najlepiej z udziałem wolontariuszy.",
+    "institution": "mops",
+    "sector": "JAKOSC_ZYCIA",
+    "tags": [
+      "seniorzy",
+      "wykluczenie cyfrowe",
+      "wolontariat"
+    ],
+    "wantsReady": true
+  },
+  {
+    "key": "kolejki_starostwo",
+    "title": "Długie kolejki w wydziale komunikacji",
+    "description": "Mieszkańcy czekają w kolejce do rejestracji pojazdów nawet 2 godziny i często wracają z brakującymi dokumentami. Szukamy systemu rezerwacji wizyt.",
+    "institution": "st_leskowiec",
+    "sector": "ADMINISTRACJA",
+    "tags": [
+      "kolejki",
+      "rezerwacja wizyt",
+      "urząd"
+    ],
+    "wantsReady": true
+  },
+  {
+    "key": "slabowidzacy",
+    "title": "Brak pomocy dydaktycznych dla ucznia słabowidzącego",
+    "description": "Do szkoły uczęszcza uczeń słabowidzący. Brakuje nam wypukłych map i modeli do lekcji biologii i geografii, a gotowe zestawy są bardzo drogie.",
+    "institution": "sp_sloneczna",
+    "sector": "EDUKACJA",
+    "tags": [
+      "niepełnosprawność",
+      "pomoce dydaktyczne"
+    ],
+    "wantsReady": true
+  },
+  {
+    "key": "kompozyty_aero",
+    "title": "Zagospodarowanie odpadów kompozytowych z produkcji",
+    "description": "Produkujemy kilkanaście ton odpadów z włókna węglowego rocznie. Szukamy technologii recyklingu kompozytów i partnera naukowego do wdrożenia.",
+    "institution": "aero",
+    "sector": "LOTNICTWO",
+    "tags": [
+      "kompozyty",
+      "recykling"
+    ],
+    "wantsReady": false
+  },
+  {
+    "key": "ocenianie_edunova",
+    "title": "Narzędzia wspierające nauczycieli w ocenianiu prac pisemnych",
+    "description": "Rozwijamy platformę edukacyjną i szukamy zespołów, które budują narzędzia AI do sprawdzania i informacji zwrotnej z prac pisemnych uczniów.",
+    "institution": "edunova",
+    "sector": "EDUKACJA",
+    "tags": [
+      "ocenianie",
+      "sztuczna inteligencja",
+      "edtech"
+    ],
+    "wantsReady": false
+  }
 ]

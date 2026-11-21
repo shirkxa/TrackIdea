@@ -39,7 +39,6 @@ public class RecommendationService {
         InnovationType type = inn.getType() == null ? InnovationType.TECHNICZNA : inn.getType();
 
         List<MatchingService.Match> needs = matching.needsFor(inn);
-        List<MatchingService.Match> partners = matching.partnersFor(inn);
         List<PathRecommendation> out = new ArrayList<>();
 
         if (type.isNonTechnical() && przen >= 4) {
@@ -50,46 +49,35 @@ public class RecommendationService {
                             publicNeeds.isEmpty() ? "brak jeszcze zgłoszonych potrzeb – warto ogłosić w sieci szkół/JST"
                                     : "instytucje z podobną potrzebą: " + publicNeeds.size()),
                     "Instytucje z podobną potrzebą, sieci szkół, związki gmin",
-                    List.of("Przygotować opis wdrożenia krok po kroku (README)", "Dodać materiały do pobrania",
-                            "Wskazać osobę do kontaktu dla instytucji forkujących", "Zbierać potwierdzenia wdrożeń"),
+                    List.of("Przygotować opis wdrożenia krok po kroku", "Wskazać materiały źródłowe",
+                            "Przekazać informację instytucjom z podobną potrzebą"),
                     publicNeeds));
         }
         if (type == InnovationType.TECHNICZNA && dojr <= 2) {
             out.add(rec(inn, PathType.ROZWOJ_PCI, 75 + (3 - dojr) * 5,
                     "Innowacja techniczna, dojrzałość ≤ 2",
                     List.of("etap: " + label(inn.getMaturity()), "potrzebne prototypowanie i testy"),
-                    "Laboratoria PCI, mentorzy, program akceleracyjny (16–30 lat), uczelnie",
-                    List.of("Zgłosić projekt do programu akceleracyjnego PCI", "Zarezerwować laboratorium do prototypowania",
-                            "Ustalić plan testów i mierniki", "Wrócić do oceny po zbudowaniu prototypu"),
-                    partners));
+                    "Laboratoria PCI, program akceleracyjny, uczelnie",
+                    List.of("Wskazać program akceleracyjny lub laboratorium PCI", "Wrócić do oceny po nowych wynikach"),
+                    List.of()));
         }
         if (type == InnovationType.TECHNICZNA && dojr >= 4 && nowosc >= 4) {
             out.add(rec(inn, PathType.KOMERCJALIZACJA, 80 + nowosc * 3,
                     "Innowacja techniczna, dojrzałość ≥ 4 i nowość ≥ 4",
                     List.of("dojrzałość " + dojr + "/5", "nowość " + nowosc + "/5",
                             "ochrona IP: " + (inn.getIpStatus() == null ? "brak informacji" : inn.getIpStatus())),
-                    "Firmy z sektora, centra transferu technologii, inwestorzy",
-                    List.of("Sprawdzić zdolność patentową (UPRP / EPO)", "Skontaktować się z centrum transferu technologii",
-                            "Przygotować pitch dla inwestorów", "Wybrać model: licencja lub spin-off"),
-                    partners));
+                    "Firmy z sektora, centra transferu technologii",
+                    List.of("Sprawdzić status ochrony (UPRP / EPO)", "Wskazać branże, w których może być zastosowana",
+                            "Przekazać do centrum transferu technologii"),
+                    List.of()));
         }
         if (type == InnovationType.TECHNICZNA && dojr == 3) {
             out.add(rec(inn, PathType.PILOTAZ_BR, 70 + nowosc * 2,
                     "Innowacja techniczna w pilotażu – potrzebny partner do wdrożenia",
                     List.of("etap: " + label(inn.getMaturity()), "nowość " + nowosc + "/5",
-                            partners.isEmpty() ? "brak dopasowanych partnerów" : "dopasowani partnerzy: " + partners.size()),
+                            "potrzebny partner do wdrożenia pilotażowego"),
                     "Firmy z branży, uczelnie, PCI",
-                    List.of("Wybrać partnera do pilotażu", "Ustalić zakres współpracy B+R i podział praw",
-                            "Poszukać finansowania (granty B+R, programy regionalne)"),
-                    partners));
-        }
-        if (wplyw >= 4 && type.isNonTechnical()) {
-            out.add(rec(inn, PathType.GRANT, 60 + wplyw * 4,
-                    "Wpływ ≥ 4 i niski potencjał rynkowy (innowacja nietechniczna)",
-                    List.of("wpływ " + wplyw + "/5", "rozwiązanie służy dobru publicznemu"),
-                    "Programy regionalne i UE, fundacje, samorządy",
-                    List.of("Opisać efekty w formie wskaźników", "Wybrać nabór (np. programy regionalne, fundacje)",
-                            "Znaleźć partnerów do wniosku wśród instytucji forkujących"),
+                    List.of("Wskazać instytucje, które mogą przetestować rozwiązanie", "Ustalić zakres pilotażu"),
                     List.of()));
         }
         List<MatchingService.Match> businessNeeds = needs.stream()
@@ -100,7 +88,7 @@ public class RecommendationService {
                     List.of("najlepsze dopasowanie: „" + businessNeeds.getFirst().title() + "” ("
                             + businessNeeds.getFirst().score() + "%)"),
                     businessNeeds.getFirst().subtitle(),
-                    List.of("Wysłać prośbę o kontakt", "Ustalić zakres pilotażu", "Mierzyć efekty pilotażu"),
+                    List.of("Przekazać informację instytucji z potrzebą", "Ustalić zakres pilotażu", "Mierzyć efekty pilotażu"),
                     businessNeeds));
         }
         List<SimilarItem> twins = similarity.similarInnovations(inn.searchText(), inn.getId(), 1);
@@ -110,10 +98,9 @@ public class RecommendationService {
                     "Podobieństwo ≥ 80% do istniejącej innowacji",
                     List.of("„" + twin.title() + "” – " + twin.subtitle() + " (" + twin.similarityPercent() + "%)"),
                     "Autor i instytucja podobnej innowacji",
-                    List.of("Skontaktować się z autorem podobnego rozwiązania", "Rozważyć fork zamiast budowania od zera",
-                            "Ekspert PCI może połączyć karty, zachowując wszystkich autorów"),
+                    List.of("Porównać oba rozwiązania", "Połączyć karty, jeśli to ten sam projekt"),
                     List.of(new MatchingService.Match("INNOWACJA", twin.id(), twin.title(), twin.subtitle(),
-                            twin.similarityPercent(), List.of("prawie identyczny opis"), null, null, null))));
+                            twin.similarityPercent(), List.of("prawie identyczny opis"), null, null))));
         }
         if (out.isEmpty()) {
             out.add(rec(inn, type.isNonTechnical() ? PathType.OTWARTA_REPLIKACJA : PathType.ROZWOJ_PCI, 50,

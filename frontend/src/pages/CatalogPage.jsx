@@ -8,18 +8,15 @@ import { useApp } from '../context.jsx'
 import { useFetch } from '../useFetch.js'
 
 const TILES = [
-  { to: '/submit', icon: 'idea', label: 'Zgłoś innowację' },
-  { to: '/needs', icon: 'needs', label: 'Tablica potrzeb' },
   { to: '/pci', icon: 'radar', label: 'Radar' },
+  { to: '/needs', icon: 'needs', label: 'Szukam rozwiązania' },
   { to: '/pci', icon: 'chart', label: 'Mierniki' },
-  { to: '/me', icon: 'user', label: 'Moje' },
 ]
 
 const SORTS = [
   { value: 'newest', label: 'Najnowsze' },
   { value: 'score', label: 'Najlepiej ocenione' },
-  { value: 'popular', label: 'Najpopularniejsze' },
-  { value: 'forks', label: 'Najczęściej wdrażane' },
+  { value: 'updated', label: 'Ostatnio aktualizowane' },
 ]
 
 const PUBLIC_INSTITUTIONS = ['SZKOLA', 'UCZELNIA', 'JST', 'INSTYTUCJA_PUBLICZNA']
@@ -59,7 +56,7 @@ export default function CatalogPage() {
   }, [filters, debouncedQ, debouncedInst])
 
   const set = (key) => (value) => setFilters((f) => ({ ...f, [key]: value }))
-  const statuses = meta.statuses.filter((s) => !s.draft && s.step > 0).map((s) => ({ value: s.value, label: s.label }))
+  const statuses = meta.statuses.filter((s) => s.step > 0).map((s) => ({ value: s.value, label: s.label }))
 
   // Filtry w panelu „Filtry” – pokazywane potem jako usuwalne etykiety.
   const panelFilters = [
@@ -183,7 +180,7 @@ export default function CatalogPage() {
       {!cards ? (
         <Loading />
       ) : cards.length === 0 ? (
-        <Empty>Nic nie znaleziono. <Link to="/needs">Opisz problem na tablicy potrzeb</Link>.</Empty>
+        <Empty>Nic nie znaleziono. <Link to="/needs">Opisz, czego szukasz</Link>.</Empty>
       ) : (
         <>
           <div className="grid">

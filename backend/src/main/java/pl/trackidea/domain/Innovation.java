@@ -6,7 +6,6 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.Instant;
-import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
@@ -63,30 +62,20 @@ public class Innovation {
     @ManyToOne
     private Institution institution;
 
-    @ManyToMany(fetch = FetchType.EAGER)
-    private Set<Person> authors = new HashSet<>();
-
-    /** Zwiadowca, który zgłosił cudzy pomysł. */
-    @ManyToOne
-    private Person reportedBy;
-
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private Source source = Source.ZGLOSZENIE_WLASNE;
+    private Source source = Source.RADAR;
 
     /** Np. „PBN”, „NCBiR” dla innowacji z Radaru. */
     private String sourceName;
     private String sourceRef;
 
-    /** Opis autorów z rekordu źródłowego, zanim autor założy konto. */
+    /** Autorzy według źródła (tekst – Radar nie zakłada kont twórcom). */
     private String sourceAuthors;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private InnovationStatus status = InnovationStatus.ZGLOSZONA;
-
-    @ManyToOne
-    private Innovation forkedFrom;
+    private InnovationStatus status = InnovationStatus.WYKRYTA;
 
     @ManyToOne
     private Innovation mergedInto;
@@ -97,10 +86,6 @@ public class Innovation {
 
     private Instant createdAt = Instant.now();
     private Instant updatedAt = Instant.now();
-
-    public boolean isAuthor(Person p) {
-        return p != null && authors.stream().anyMatch(a -> a.getId().equals(p.getId()));
-    }
 
     /** Tekst używany do wyszukiwania podobnych innowacji. */
     public String searchText() {

@@ -1,10 +1,8 @@
 package pl.trackidea.domain;
 
 public enum Source implements Labeled {
-    ZGLOSZENIE_WLASNE("Zgłoszenie autora"),
-    ZWIADOWCA("Zgłoszenie zwiadowcy"),
-    RADAR("Radar (automatyczne wykrycie)"),
-    FORK("Fork (wdrożenie w innej instytucji)");
+    RADAR("Radar (automatyczny import)"),
+    ANALITYK("Dodana przez analityka PCI");
 
     private final String label;
 

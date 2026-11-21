@@ -5,7 +5,6 @@ import org.springframework.transaction.annotation.Transactional;
 import pl.trackidea.domain.*;
 import pl.trackidea.repo.AssessmentRepository;
 import pl.trackidea.repo.InnovationRepository;
-import pl.trackidea.repo.VoteRepository;
 
 import java.util.*;
 
@@ -29,15 +28,13 @@ public class AssessmentService {
 
     private final SimilarityService similarity;
     private final MatchingService matching;
-    private final VoteRepository votes;
     private final InnovationRepository innovations;
     private final AssessmentRepository assessments;
 
-    public AssessmentService(SimilarityService similarity, MatchingService matching, VoteRepository votes,
+    public AssessmentService(SimilarityService similarity, MatchingService matching,
                              InnovationRepository innovations, AssessmentRepository assessments) {
         this.similarity = similarity;
         this.matching = matching;
-        this.votes = votes;
         this.innovations = innovations;
         this.assessments = assessments;
     }
@@ -66,11 +63,10 @@ public class AssessmentService {
     private CriterionScore scale(Innovation inn) {
         List<MatchingService.Match> needs = matching.needsFor(inn);
         long strong = needs.stream().filter(m -> m.score() >= 55).count();
-        long v = votes.countByInnovation(inn);
         String text = TextVectorizer.normalize(inn.getProblem() + " " + inn.getSummary());
         boolean broad = SCALE_HINTS.stream().anyMatch(text::contains);
 
-        int score = 1 + (int) Math.min(2, strong) + (v >= 5 ? 1 : 0) + (broad ? 1 : 0);
+        int score = 1 + (int) Math.min(3, strong) + (broad ? 1 : 0);
         if (score == 1 && !needs.isEmpty()) {
             score = 2;
         }
@@ -80,7 +76,7 @@ public class AssessmentService {
         if (!needs.isEmpty()) {
             why.append(", np. „").append(needs.getFirst().title()).append("” (").append(needs.getFirst().subtitle()).append(")");
         }
-        why.append(". Głosy „przydałoby się u nas”: ").append(v).append(".");
+        why.append(".");
         if (broad) {
             why.append(" Opis problemu wskazuje na powszechne zjawisko.");
         }
@@ -115,10 +111,8 @@ public class AssessmentService {
 
     private CriterionScore maturity(Innovation inn) {
         Maturity m = inn.getMaturity() == null ? Maturity.POMYSL : inn.getMaturity();
-        int forks = (int) innovations.countByForkedFromAndStatus(inn, InnovationStatus.WDROZONA);
-        int score = Math.max(m.getLevel(), forks > 0 ? 5 : 0);
-        String why = "Etap deklarowany w karcie: " + m.getLabel() + "."
-                + (forks > 0 ? " Potwierdzone wdrożenia w innych instytucjach: " + forks + "." : "");
+        int score = m.getLevel();
+        String why = "Etap wdrożenia według źródła: " + m.getLabel() + ".";
         return new CriterionScore(Criterion.DOJRZALOSC, clamp(score), why);
     }
 
@@ -138,11 +132,6 @@ public class AssessmentService {
         if (costly.isPresent()) {
             score--;
             why.add("wymaga specjalistycznego zaplecza lub sprzętu");
-        }
-        long forks = innovations.findByForkedFrom(inn).size();
-        if (forks > 0) {
-            score++;
-            why.add("już przeniesiona do innych instytucji (forki: " + forks + ")");
         }
         if (inn.getTransferModel() == TransferModel.OTWARTA_REPLIKACJA) {
             why.add("autor udostępnia rozwiązanie do otwartej replikacji");
@@ -178,18 +167,20 @@ public class AssessmentService {
     }
 
     private CriterionScore team(Innovation inn) {
-        int authors = inn.getAuthors().size();
-        int score = 1 + Math.min(2, authors);
+        int score = 1;
         List<String> why = new ArrayList<>();
-        why.add(authors == 0 ? "autor nie ma jeszcze konta w systemie" : "autorzy z kontem: " + authors);
-        boolean links = !inn.getLinks().isEmpty() || inn.getAuthors().stream()
-                .anyMatch(p -> p.getGithub() != null || p.getYoutube() != null || p.getLinkedin() != null);
-        if (links) {
+        if (inn.getSourceAuthors() != null && !inn.getSourceAuthors().isBlank()) {
             score++;
-            why.add("podpięte materiały lub profile (GitHub, YouTube, LinkedIn)");
+            why.add("znani autorzy: " + inn.getSourceAuthors());
+        } else {
+            why.add("źródło nie podaje autorów");
         }
-        if (inn.getInstitution() != null && inn.getInstitution().getType().isPublicSector()) {
+        if (!inn.getLinks().isEmpty()) {
             score++;
+            why.add("dostępne materiały źródłowe (" + inn.getLinks().size() + ")");
+        }
+        if (inn.getInstitution() != null) {
+            score += inn.getInstitution().getType().isPublicSector() ? 2 : 1;
             why.add("zaplecze instytucji: " + inn.getInstitution().getName());
         }
         return new CriterionScore(Criterion.ZESPOL, clamp(score), capitalize(String.join("; ", why)) + ".");
