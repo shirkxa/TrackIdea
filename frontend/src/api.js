@@ -8,7 +8,7 @@ function csrfToken() {
   return match ? decodeURIComponent(match[1]) : null
 }
 
-async function request(method, path, body) {
+async function request(method, path, body, signal) {
   const headers = { 'Content-Type': 'application/json' }
   if (method !== 'GET') {
     const token = csrfToken()
@@ -19,6 +19,7 @@ async function request(method, path, body) {
     headers,
     credentials: BASE ? 'include' : 'same-origin',
     body: body === undefined ? undefined : JSON.stringify(body),
+    signal,
   })
   const text = await res.text()
   let data = null
@@ -36,7 +37,7 @@ async function request(method, path, body) {
 }
 
 export const api = {
-  get: (path) => request('GET', path),
+  get: (path, signal) => request('GET', path, undefined, signal),
   post: (path, body) => request('POST', path, body ?? {}),
   put: (path, body) => request('PUT', path, body),
 }

@@ -1,9 +1,9 @@
 import { Link, useLocation } from 'react-router-dom'
-import { COMPARE_MAX, useApp } from '../context.jsx'
+import { COMPARE_MAX, clearCompare, useCompareIds } from '../compareStore.js'
 
 /** Pasek u dołu ekranu, gdy wybrano innowacje do porównania. */
 export default function CompareBar() {
-  const { compare, clearCompare } = useApp()
+  const compare = useCompareIds()
   const { pathname } = useLocation()
   if (compare.length === 0 || pathname === '/compare') return null
   return (

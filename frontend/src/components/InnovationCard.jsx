@@ -1,13 +1,15 @@
 import { Link } from 'react-router-dom'
-import { COMPARE_MAX, useApp } from '../context.jsx'
+import { memo } from 'react'
+import { COMPARE_MAX, toggleCompare, useCompareState } from '../compareStore.js'
 import { formatDate } from '../format.js'
 import InstitutionLogo from './InstitutionLogo.jsx'
 import { Badge, ScoreRing, StatusBadge, Tag } from './ui.jsx'
 
-export default function InnovationCard({ card, extra, index = 0 }) {
-  const { compare, toggleCompare } = useApp()
-  const picked = compare.includes(card.id)
-  const full = !picked && compare.length >= COMPARE_MAX
+/** Karta w katalogu; memo – przerysowuje się tylko, gdy zmieni się jej treść albo jej stan porównania. */
+export default memo(function InnovationCard({ card, extra, index = 0 }) {
+  const state = useCompareState(card.id)
+  const picked = state === 'on'
+  const full = state === 'full'
   return (
     <article className="card innovation-card pop" style={{ '--i': Math.min(index, 12) }}>
       <div className="card-top">
@@ -48,4 +50,4 @@ export default function InnovationCard({ card, extra, index = 0 }) {
       {extra}
     </article>
   )
-}
+})

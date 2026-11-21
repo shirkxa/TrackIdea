@@ -81,6 +81,19 @@ class SecurityFlowTest {
     }
 
     @Test
+    void comparesUpToFourInnovationsInOneRequestAndSkipsMissing() throws Exception {
+        List<Long> ids = innovations.findAll().stream().map(i -> i.getId()).limit(5).toList();
+        String param = ids.stream().map(String::valueOf).collect(java.util.stream.Collectors.joining(",")) + ",999999";
+        mvc.perform(get("/api/innovations/compare").param("ids", param))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(4))
+                .andExpect(jsonPath("$[0].card.id").value(ids.get(0)));
+        mvc.perform(get("/api/innovations/compare").param("ids", "999999"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(0));
+    }
+
+    @Test
     void requestsWithoutCsrfTokenAreRejected() throws Exception {
         MockHttpSession session = login(ANALYST, "demo123");
         mvc.perform(post("/api/radar/scan").session(session)).andExpect(status().is4xxClientError());

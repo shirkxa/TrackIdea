@@ -177,6 +177,23 @@ public class InnovationController {
         return "\"" + v.replace("\"", "\"\"") + "\"";
     }
 
+    /**
+     * Porównanie: do 4 innowacji w jednym zapytaniu (zamiast osobnego zapytania na każdą kartę).
+     * Rekordy usunięte lub wyłączone z katalogu są pomijane.
+     */
+    @GetMapping("/compare")
+    public List<Dto.InnovationDetail> compare(@RequestParam List<Long> ids) {
+        Person viewer = currentUser.get();
+        List<Long> wanted = ids.stream().distinct().limit(4).toList();
+        Map<Long, Innovation> found = new HashMap<>();
+        innovations.findAllById(wanted).forEach(i -> found.put(i.getId(), i));
+        return wanted.stream()
+                .map(found::get)
+                .filter(i -> i != null && service.canView(i, viewer))
+                .map(i -> views.detail(i, viewer))
+                .toList();
+    }
+
     @GetMapping("/{id}")
     public Dto.InnovationDetail get(@PathVariable Long id) {
         Person viewer = currentUser.get();

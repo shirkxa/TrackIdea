@@ -3,10 +3,12 @@ import { Link, useSearchParams } from 'react-router-dom'
 import { api } from '../api.js'
 import { Badge, Empty, ErrorBox, Loading, StatusBadge } from '../components/ui.jsx'
 import { useApp } from '../context.jsx'
+import { clearCompare, toggleCompare, useCompareIds } from '../compareStore.js'
 
 /** Porównanie 2–4 innowacji obok siebie: klasyfikacja, TRL, ocena wg kryteriów i fakty ze źródła. */
 export default function ComparePage() {
-  const { meta, compare, toggleCompare, clearCompare } = useApp()
+  const { meta } = useApp()
+  const compare = useCompareIds()
   const [params, setParams] = useSearchParams()
   const fromUrl = params.get('ids')
   const ids = fromUrl ? fromUrl.split(',').map(Number).filter(Number.isInteger).slice(0, 4) : compare
@@ -15,14 +17,16 @@ export default function ComparePage() {
 
   useEffect(() => {
     if (!key) return
-    // karty usunięte z bazy (np. po restarcie wersji demo) pomijamy zamiast pokazywać błąd
-    Promise.allSettled(key.split(',').map((id) => api.get(`/innovations/${id}`)))
-      .then((res) => {
-        const items = res.filter((r) => r.status === 'fulfilled').map((r) => r.value)
-        setResult(items.length > 0
-          ? { key, items, error: null }
-          : { key, items: null, error: 'Nie udało się wczytać wybranych innowacji.' })
+    // jedno zapytanie na wszystkie karty; karty usunięte z bazy (np. po restarcie demo) backend pomija
+    const ctrl = new AbortController()
+    api.get(`/innovations/compare?ids=${key}`, ctrl.signal)
+      .then((items) => setResult(items.length > 0
+        ? { key, items, error: null }
+        : { key, items: null, error: 'Nie udało się wczytać wybranych innowacji.' }))
+      .catch((e) => {
+        if (e.name !== 'AbortError') setResult({ key, items: null, error: e.message })
       })
+    return () => ctrl.abort()
   }, [key])
 
   const remove = (id) => {
