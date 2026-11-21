@@ -52,8 +52,8 @@ export default function CatalogPage() {
       <h1 className="page-title">Katalog innowacji</h1>
 
       <nav className="tiles" aria-label="Na skróty">
-        {TILES.map((t) => (
-          <Link key={t.label} to={t.to} className="tile">
+        {TILES.map((t, i) => (
+          <Link key={t.label} to={t.to} className="tile pop" style={{ '--i': i }}>
             <Icon name={t.icon} size={36} />
             <span>{t.label}</span>
           </Link>
@@ -90,8 +90,8 @@ export default function CatalogPage() {
         <>
           <p className="muted small results-count">{cards.length} wyników</p>
           <div className="grid">
-            {cards.map((c) => (
-              <InnovationCard key={c.id} card={c} />
+            {cards.map((c, i) => (
+              <InnovationCard key={c.id} card={c} index={i} />
             ))}
           </div>
         </>

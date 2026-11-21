@@ -1,9 +1,9 @@
 import { Link } from 'react-router-dom'
 import { Badge, ScoreRing, StatusBadge, Tag } from './ui.jsx'
 
-export default function InnovationCard({ card, extra }) {
+export default function InnovationCard({ card, extra, index = 0 }) {
   return (
-    <article className="card innovation-card">
+    <article className="card innovation-card pop" style={{ '--i': Math.min(index, 12) }}>
       <div className="card-top">
         <div className="card-badges">
           <StatusBadge status={card.status} />
