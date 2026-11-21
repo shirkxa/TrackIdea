@@ -4,10 +4,13 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 import pl.trackidea.domain.InstitutionType;
 import pl.trackidea.domain.Need;
 import pl.trackidea.domain.Sector;
 import pl.trackidea.radar.NeedRecord;
+import pl.trackidea.radar.NeedSource;
+import pl.trackidea.repo.InstitutionRepository;
 import pl.trackidea.repo.NeedRepository;
 
 import java.time.Duration;
@@ -78,5 +81,113 @@ class NeedRadarServiceTest {
             assertThat(s.name()).isEqualTo("BZP");
             assertThat(s.active()).isFalse();
         });
+    }
+
+    // ---------- pełny skan na podstawionym źródle ----------
+
+    @Autowired
+    InstitutionRepository institutions;
+    @Autowired
+    TransactionTemplate tx;
+
+    /** Źródło potrzeb, któremu test podstawia rekordy albo błąd. */
+    private static final class FakeSource implements NeedSource {
+        List<NeedRecord> records = List.of();
+        Exception failure;
+
+        @Override
+        public String name() {
+            return "BZP testowe";
+        }
+
+        @Override
+        public String description() {
+            return "Źródło podstawione w teście";
+        }
+
+        @Override
+        public String homepage() {
+            return "https://example.org";
+        }
+
+        @Override
+        public boolean live() {
+            return true;
+        }
+
+        @Override
+        public List<NeedRecord> fetch() throws Exception {
+            if (failure != null) {
+                throw failure;
+            }
+            return records;
+        }
+    }
+
+    private static NeedRecord fromSource(String ref, String title, Instant deadline) {
+        return new NeedRecord("BZP testowe", ref, title, null, " ", null, null, null, Sector.ICT, null, null, null, deadline, false);
+    }
+
+    @Test
+    void scanStoresNeedsClosesExpiredOnesAndReportsStatus() {
+        FakeSource source = new FakeSource();
+        NeedRadarService online = new NeedRadarService(List.of(source), needs, institutions, tx, true);
+        Instant open = Instant.now().plus(Duration.ofDays(7));
+        source.records = List.of(fromSource("N-1", "Wdrożenie systemu rezerwacji sal", open),
+                fromSource("N-2", "Budowa portalu mieszkańca", null));
+        // potrzeba z wcześniejszego skanu, której termin już minął
+        Need expired = new Need();
+        expired.setTitle("Wdrożenie e-dziennika");
+        expired.setSourceName("BZP testowe");
+        expired.setSourceRef("N-0");
+        expired.setDeadline(Instant.now().minus(Duration.ofDays(1)));
+        needs.save(expired);
+
+        NeedRadarService.Result first = online.scan();
+
+        assertThat(first.fetched()).isEqualTo(2);
+        assertThat(first.created()).isEqualTo(2);
+        assertThat(first.updated()).isZero();
+        assertThat(first.closed()).isEqualTo(1);
+        assertThat(first.errors()).isEmpty();
+        assertThat(expired.isOpen()).isFalse();
+        Need stored = needs.findFirstBySourceNameAndSourceRef("BZP testowe", "N-2").orElseThrow();
+        // brak terminu = potrzeba otwarta bezterminowo; brak danych o zamawiającym nie blokuje zapisu
+        assertThat(stored.isOpen()).isTrue();
+        assertThat(stored.isWantsReadySolution()).isFalse();
+        assertThat(stored.getInstitution().getName()).isEqualTo("Instytucja nieznana");
+        assertThat(stored.getInstitution().getRegion()).isEqualTo("Polska");
+
+        RadarService.SourceStatus status = online.sources().getFirst();
+        assertThat(status.name()).isEqualTo("BZP testowe");
+        assertThat(status.active()).isTrue();
+        assertThat(status.lastRunAt()).isNotNull();
+        assertThat(status.lastFetched()).isEqualTo(2);
+        assertThat(status.lastCreated()).isEqualTo(2);
+        assertThat(status.totalRecords()).isEqualTo(3);
+        assertThat(status.lastError()).isNull();
+
+        // drugi skan: termin przesunięty w źródle → odświeżenie zamiast nowego wpisu
+        source.records = List.of(fromSource("N-1", "Wdrożenie systemu rezerwacji sal", open.plus(Duration.ofDays(3))));
+        NeedRadarService.Result second = online.scan();
+        assertThat(second.created()).isZero();
+        assertThat(second.updated()).isEqualTo(1);
+        assertThat(needs.countBySourceName("BZP testowe")).isEqualTo(3);
+    }
+
+    @Test
+    void unavailableNeedSourceIsReported() {
+        FakeSource source = new FakeSource();
+        source.failure = new java.io.IOException("HTTP 500 z ezamowienia.gov.pl");
+        NeedRadarService online = new NeedRadarService(List.of(source), needs, institutions, tx, true);
+
+        NeedRadarService.Result result = online.scan();
+
+        assertThat(result.fetched()).isZero();
+        assertThat(result.errors()).containsExactly("BZP testowe: HTTP 500 z ezamowienia.gov.pl");
+        assertThat(online.sources().getFirst().lastError()).isEqualTo("Źródło niedostępne: HTTP 500 z ezamowienia.gov.pl");
+
+        source.failure = new IllegalStateException();
+        assertThat(online.scan().errors()).containsExactly("BZP testowe: IllegalStateException");
     }
 }

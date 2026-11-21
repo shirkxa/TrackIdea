@@ -7,6 +7,8 @@
 
 # TrackIdea – radar innowacji
 
+[![Pokrycie testami backendu](.github/badges/coverage.svg)](https://github.com/shirkxa/TrackIdea/actions/workflows/backend.yml)
+
 **Narzędzie do odkrywania i analizy istniejących innowacji w Polsce.** Radar zbiera rozwiązania technologiczne,
 edukacyjne i administracyjne z rozproszonych źródeł, porządkuje je w karty, ocenia poziom wdrożenia i potencjał
 oraz pokazuje, gdzie mogą znaleźć zastosowanie.
@@ -91,9 +93,25 @@ cd backend
 ./mvnw test
 ```
 
-53 testy (JUnit 5): jednostkowe dla wzoru oceny i wag, podobieństwa tekstów po polsku, reguł dopasowań,
-analizy tekstu offline, parsowania danych ze źródeł Radaru (w tym pliku XLSX Funduszy Europejskich, patentów RAD-on
-i ogłoszeń BZP), zapisu i zamykania potrzeb ze źródeł, ochrony przed pobieraniem adresów wewnętrznych, skali TRL i obszarów oraz testy integracyjne logowania, CSRF, uprawnień zespołu PCI, automatycznej oceny kart i analizy dokumentu.
+137 testów (JUnit 5), pokrycie linii 94% (gałęzi 82%):
+
+- **jednostkowe** – wzór oceny i wagi, podobieństwo tekstów po polsku, reguły dopasowań i rekomendacji zastosowań,
+  analiza tekstu offline, importery wszystkich źródeł Radaru (OpenAlex, CORDIS, Fundusze Europejskie z plikiem XLSX,
+  RAD-on, BZP) na przygotowanych odpowiedziach API, pobieranie i wznawianie plików, ochrona przed adresami
+  wewnętrznymi, skala TRL i obszary;
+- **na kontekście aplikacji z danymi demo** – skan Radaru (nowa karta, odświeżenie, duplikat, błąd źródła), potrzeby
+  ze źródeł, poprawki karty i zatwierdzanie oceny przez analityka, mierniki panelu PCI oraz endpointy REST: katalog
+  z filtrami i eksportem CSV, karta innowacji, tablica potrzeb, słowniki, logowanie, CSRF i uprawnienia zespołu PCI.
+
+Testy nie łączą się z internetem. Raport pokrycia (JaCoCo) powstaje przy każdym przebiegu w
+`backend/target/site/jacoco/index.html`. Odznakę na górze README generuje z niego skrypt:
+
+```bash
+./coverage-badge.sh
+```
+
+W CI odznaka jest odświeżana automatycznie po zmianie na `main` (commit bota tylko wtedy, gdy procent się zmienił),
+a raport HTML jest dołączany do przebiegu jako artefakt `jacoco-report`.
 
 ## Dane, bezpieczeństwo i ograniczenia
 

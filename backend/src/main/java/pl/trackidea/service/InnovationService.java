@@ -90,8 +90,11 @@ public class InnovationService {
         confirmIfChanged(inn, "sector", inn.getSector(), f.sector());
         confirmIfChanged(inn, "maturity", inn.getMaturity(), f.maturity());
         confirmIfChanged(inn, "trl", inn.getTrl(), f.trl());
-        confirmIfChanged(inn, "area", inn.getArea(), f.area());
-        if (f.area() != null) inn.setArea(f.area());
+        // brak obszaru w formularzu = bez zmian, więc nie potwierdza szacunku
+        if (f.area() != null) {
+            confirmIfChanged(inn, "area", inn.getArea(), f.area());
+            inn.setArea(f.area());
+        }
         inn.setType(f.type());
         inn.setSector(f.sector());
         inn.setMaturity(f.maturity());

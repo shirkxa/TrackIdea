@@ -27,6 +27,9 @@ jobs:
   test:
     name: Build & test
     runs-on: ubuntu-latest
+    permissions:
+      # zapis tylko po to, żeby zaktualizować odznakę pokrycia w README (krok „Commit coverage badge”)
+      contents: write
     defaults:
       run:
         working-directory: backend
@@ -41,6 +44,34 @@ jobs:
           cache-dependency-path: backend/pom.xml
 
       - run: ./mvnw -B verify
+
+      - name: Coverage badge
+        run: |
+          percent=$(./coverage-badge.sh)
+          echo "### Pokrycie testami (linie): ${percent}%" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: jacoco-report
+          path: backend/target/site/jacoco
+          retention-days: 14
+
+      - name: Commit coverage badge
+        # Tylko na main i tylko gdy procent się zmienił. Błąd (np. ochrona gałęzi) nie blokuje budowy obrazu.
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        continue-on-error: true
+        working-directory: .
+        run: |
+          git add .github/badges/coverage.svg
+          if git diff --cached --quiet; then
+            echo "Odznaka aktualna."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "ci: update coverage badge [skip ci]"
+          git push
 
   docker:
     name: Docker image
