@@ -1,0 +1,65 @@
+[
+  {
+    "kind": "PATENT",
+    "source": "EPO",
+    "ref": "EP 3 912 456",
+    "title": "Bezzałogowy statek powietrzny z kamerą wielospektralną do monitorowania stanu upraw",
+    "abstractText": "System obejmujący drona z kamerą wielospektralną wykonującego naloty nad polem oraz moduł analizy obrazu do oceny kondycji upraw, wczesnego wykrywania chorób roślin i tworzenia mapy pola dla gospodarstwa.",
+    "holder": "AgroVision GmbH",
+    "year": 2021
+  },
+  {
+    "kind": "PATENT",
+    "source": "EPO",
+    "ref": "EP 4 105 220",
+    "title": "Sposób wykrywania chorób roślin na podstawie wskaźników wegetacji z obrazów lotniczych",
+    "abstractText": "Metoda wykrywania chorób grzybowych upraw na podstawie wskaźników wegetacji z obrazów z kamery wielospektralnej drona; algorytm wskazuje ogniska choroby na mapie pola.",
+    "holder": "Universitat Agraria",
+    "year": 2023
+  },
+  {
+    "kind": "PATENT",
+    "source": "UPRP",
+    "ref": "P.438 117",
+    "title": "Sposób wytwarzania materiału z rozdrobnionych odpadów kompozytów węglowych",
+    "abstractText": "Sposób polega na rozdrobnieniu odpadów kompozytu z włóknem węglowym i związaniu ich żywicą epoksydową w celu otrzymania płyt.",
+    "holder": "Instytut Materiałów (przykład)",
+    "year": 2022
+  },
+  {
+    "kind": "PATENT",
+    "source": "EPO",
+    "ref": "EP 3 640 901",
+    "title": "Opaska alarmowa z detekcją upadku dla osób starszych",
+    "abstractText": "Urządzenie noszone na nadgarstku z akcelerometrem wykrywającym upadek i przyciskiem alarmowym wysyłającym powiadomienie do opiekuna.",
+    "holder": "CareTech Ltd",
+    "year": 2020
+  },
+  {
+    "kind": "PUBLIKACJA",
+    "source": "PBN",
+    "ref": "PBN-2022-118833",
+    "title": "Mentoring rówieśniczy jako narzędzie wspierania adaptacji uczniów szkół średnich",
+    "abstractText": "Przegląd programów mentoringu rówieśniczego w szkołach i ich wpływu na adaptację uczniów pierwszych klas oraz frekwencję.",
+    "holder": "Kwartalnik Pedagogiczny (przykład)",
+    "year": 2022
+  },
+  {
+    "kind": "PATENT",
+    "source": "UPRP",
+    "ref": "P.441 502",
+    "title": "System zarządzania kolejką interesantów z powiadomieniem SMS",
+    "abstractText": "System rezerwacji wizyt w urzędzie z wysyłaniem przypomnień SMS i listy wymaganych dokumentów.",
+    "holder": "Softpol (przykład)",
+    "year": 2023
+  },
+  {
+    "kind": "PUBLIKACJA",
+    "source": "PBN",
+    "ref": "PBN-2021-077120",
+    "title": "Mikrosatelity CubeSat w monitoringu aerozoli atmosferycznych",
+    "abstractText": "Analiza możliwości pomiaru zanieczyszczenia powietrza z pokładu satelitów klasy CubeSat.",
+    "holder": "Postępy Astronautyki (przykład)",
+    "year": 2021
+  }
+]

@@ -1,0 +1,22 @@
+[
+  {"key": "pci", "name": "Podkarpackie Centrum Innowacji", "type": "PCI", "city": "Rzeszów", "county": "rzeszowski"},
+  {"key": "lo_horyzont", "name": "Liceum Ogólnokształcące „Horyzont” w Krośnie", "type": "SZKOLA", "city": "Krosno", "county": "krośnieński"},
+  {"key": "lo_alfa", "name": "Liceum Ogólnokształcące „Alfa” w Przemyślu", "type": "SZKOLA", "city": "Przemyśl", "county": "przemyski"},
+  {"key": "zs_merkury", "name": "Zespół Szkół Ekonomicznych „Merkury” w Jaśle", "type": "SZKOLA", "city": "Jasło", "county": "jasielski"},
+  {"key": "sp_lipy", "name": "Szkoła Podstawowa „Pod Lipami” w Sanoku", "type": "SZKOLA", "city": "Sanok", "county": "sanocki"},
+  {"key": "sp_sloneczna", "name": "Szkoła Podstawowa „Słoneczna” w Krośnie", "type": "SZKOLA", "city": "Krosno", "county": "krośnieński"},
+  {"key": "tech_iskra", "name": "Technikum Mechatroniczne „Iskra” w Mielcu", "type": "SZKOLA", "city": "Mielec", "county": "mielecki"},
+  {"key": "atp", "name": "Akademia Techniczno-Przyrodnicza w Rzeszowie", "type": "UCZELNIA", "city": "Rzeszów", "county": "rzeszowski"},
+  {"key": "gm_sosnica", "name": "Gmina Sośnica Górna", "type": "JST", "city": "Sośnica Górna", "county": "jasielski"},
+  {"key": "gm_wisniowa", "name": "Gmina Wiśniowa Dolina", "type": "JST", "city": "Wiśniowa Dolina", "county": "krośnieński"},
+  {"key": "st_leskowiec", "name": "Starostwo Powiatowe w Leskowcu", "type": "JST", "city": "Leskowiec", "county": "leski"},
+  {"key": "mops", "name": "Miejski Ośrodek Pomocy Społecznej w Sośnicy Górnej", "type": "INSTYTUCJA_PUBLICZNA", "city": "Sośnica Górna", "county": "jasielski"},
+  {"key": "biblioteka", "name": "Gminna Biblioteka Publiczna w Wiśniowej Dolinie", "type": "INSTYTUCJA_PUBLICZNA", "city": "Wiśniowa Dolina", "county": "krośnieński"},
+  {"key": "szpital", "name": "Szpital Powiatowy w Leskowcu", "type": "INSTYTUCJA_PUBLICZNA", "city": "Leskowiec", "county": "leski"},
+  {"key": "skyagro", "name": "SkyAgro Systems sp. z o.o.", "type": "FIRMA", "city": "Rzeszów", "county": "rzeszowski"},
+  {"key": "fundusz", "name": "Fundusz Karpacki Ventures", "type": "FUNDUSZ", "city": "Rzeszów", "county": "rzeszowski"},
+  {"key": "edunova", "name": "EduNova sp. z o.o.", "type": "FIRMA", "city": "Krosno", "county": "krośnieński"},
+  {"key": "fundacja", "name": "Fundacja „Aktywni Razem”", "type": "NGO", "city": "Sanok", "county": "sanocki"},
+  {"key": "aero", "name": "AeroPodkarpacie Komponenty S.A.", "type": "FIRMA", "city": "Mielec", "county": "mielecki"},
+  {"key": "autolab", "name": "AutoLab Mielec sp. z o.o.", "type": "FIRMA", "city": "Mielec", "county": "mielecki"}
+]
