@@ -122,8 +122,3 @@ a raport HTML jest dołączany do przebiegu jako artefakt `jacoco-report`.
 - **Prywatność:** Radar nie zbiera danych osobowych użytkowników; autorzy innowacji są podawani tak, jak w źródle.
 - **Bezpieczeństwo:** logowanie Spring Security (sesja HttpOnly, CSRF, hasła BCrypt), uprawnienia sprawdzane
   w backendzie. Tryb demo służy tylko prezentacji – w produkcji `trackidea.demo-mode=false`.
-
-## Co dalej
-
-Importery API baz danych, SSO instytucji, embeddingi zamiast TF-IDF, kalibracja wag w pilotażu z PCI
-i uruchomienie dla kolejnych regionów.
