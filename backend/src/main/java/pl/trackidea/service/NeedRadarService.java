@@ -5,12 +5,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
-import pl.trackidea.domain.Institution;
-import pl.trackidea.domain.InstitutionType;
 import pl.trackidea.domain.Need;
 import pl.trackidea.radar.NeedRecord;
 import pl.trackidea.radar.NeedSource;
-import pl.trackidea.repo.InstitutionRepository;
 import pl.trackidea.repo.NeedRepository;
 
 import java.time.Instant;
@@ -36,12 +33,12 @@ public class NeedRadarService {
 
     private final List<NeedSource> sources;
     private final NeedRepository needs;
-    private final InstitutionRepository institutions;
+    private final InstitutionDirectory institutions;
     private final TransactionTemplate tx;
     private final boolean liveEnabled;
     private final Map<String, RadarService.SourceStatus> status = new ConcurrentHashMap<>();
 
-    public NeedRadarService(List<NeedSource> sources, NeedRepository needs, InstitutionRepository institutions,
+    public NeedRadarService(List<NeedSource> sources, NeedRepository needs, InstitutionDirectory institutions,
                             TransactionTemplate tx, @Value("${trackidea.radar.live:true}") boolean liveEnabled) {
         this.sources = sources;
         this.needs = needs;
@@ -140,11 +137,7 @@ public class NeedRadarService {
         if (r.publishedAt() != null) {
             n.setCreatedAt(r.publishedAt());
         }
-        String name = r.institution() == null || r.institution().isBlank() ? "Instytucja nieznana" : r.institution();
-        n.setInstitution(institutions.findFirstByNameIgnoreCase(name).orElseGet(() ->
-                institutions.save(new Institution(name,
-                        r.institutionType() == null ? InstitutionType.INSTYTUCJA_PUBLICZNA : r.institutionType(),
-                        r.city(), null, r.region() == null ? "Polska" : r.region()))));
+        n.setInstitution(institutions.resolve(r.institution(), r.institutionType(), r.city(), null, r.region()));
         needs.save(n);
         counts[0]++;
     }

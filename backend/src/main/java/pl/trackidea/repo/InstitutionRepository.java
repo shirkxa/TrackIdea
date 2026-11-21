@@ -7,4 +7,6 @@ import java.util.Optional;
 
 public interface InstitutionRepository extends JpaRepository<Institution, Long> {
     Optional<Institution> findFirstByNameIgnoreCase(String name);
+
+    Optional<Institution> findFirstByNameKey(String nameKey);
 }

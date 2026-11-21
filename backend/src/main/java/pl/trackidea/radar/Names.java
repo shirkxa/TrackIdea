@@ -51,8 +51,10 @@ final class Names {
     /** Typ instytucji z nazwy (gmina, szkoła, uczelnia, firma); gdy nie wiadomo – {@code fallback}. */
     static pl.trackidea.domain.InstitutionType institutionType(String name, pl.trackidea.domain.InstitutionType fallback) {
         String n = name == null ? "" : name.toUpperCase(Locale.ROOT);
+        // „Wyższa Szkoła…”, „Szkoła Główna…” to uczelnie, nie szkoły
+        if (n.matches(".*(UNIWERSYTET|POLITECHNIK|AKADEMI|UCZELNI|WYŻSZA SZKOŁA|WYZSZA SZKOLA|SZKOŁA WYŻSZA|SZKOLA WYZSZA|SZKOŁA GŁÓWNA|SZKOLA GLOWNA).*")) return pl.trackidea.domain.InstitutionType.UCZELNIA;
         if (n.matches(".*(SZKOŁ|LICEUM|TECHNIKUM|PRZEDSZKOL|SZKOL).*")) return pl.trackidea.domain.InstitutionType.SZKOLA;
-        if (n.matches(".*(UNIWERSYTET|POLITECHNIK|AKADEMIA|UCZELNIA|INSTYTUT|ŁUKASIEWICZ).*")) return pl.trackidea.domain.InstitutionType.UCZELNIA;
+        if (n.matches(".*(INSTYTUT|ŁUKASIEWICZ).*")) return pl.trackidea.domain.InstitutionType.UCZELNIA;
         if (n.matches(".*(GMINA|POWIAT|MIASTO|URZĄD|URZAD|WOJEWÓDZTW|STAROSTWO|ZWIĄZEK).*")) return pl.trackidea.domain.InstitutionType.JST;
         if (n.matches(".*(SP\\. ?Z ?O\\. ?O\\.|S\\.A\\.|SPÓŁKA|FIRMA|P\\.?P\\.?H\\.?U).*")) return pl.trackidea.domain.InstitutionType.FIRMA;
         return fallback;

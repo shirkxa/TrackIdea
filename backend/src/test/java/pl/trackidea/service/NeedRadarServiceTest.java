@@ -88,6 +88,8 @@ class NeedRadarServiceTest {
     @Autowired
     InstitutionRepository institutions;
     @Autowired
+    InstitutionDirectory directory;
+    @Autowired
     TransactionTemplate tx;
 
     /** Źródło potrzeb, któremu test podstawia rekordy albo błąd. */
@@ -131,7 +133,7 @@ class NeedRadarServiceTest {
     @Test
     void scanStoresNeedsClosesExpiredOnesAndReportsStatus() {
         FakeSource source = new FakeSource();
-        NeedRadarService online = new NeedRadarService(List.of(source), needs, institutions, tx, true);
+        NeedRadarService online = new NeedRadarService(List.of(source), needs, directory, tx, true);
         Instant open = Instant.now().plus(Duration.ofDays(7));
         source.records = List.of(fromSource("N-1", "Wdrożenie systemu rezerwacji sal", open),
                 fromSource("N-2", "Budowa portalu mieszkańca", null));
@@ -179,7 +181,7 @@ class NeedRadarServiceTest {
     void unavailableNeedSourceIsReported() {
         FakeSource source = new FakeSource();
         source.failure = new java.io.IOException("HTTP 500 z ezamowienia.gov.pl");
-        NeedRadarService online = new NeedRadarService(List.of(source), needs, institutions, tx, true);
+        NeedRadarService online = new NeedRadarService(List.of(source), needs, directory, tx, true);
 
         NeedRadarService.Result result = online.scan();
 
