@@ -48,12 +48,18 @@ public class PciController {
         return stats.stats();
     }
 
-    /** Kolejka pracy analityka: oceny do zatwierdzenia i nowe rekordy z Radaru do weryfikacji. */
+    /** Kolejka pracy analityka: oceny do zatwierdzenia, nowe rekordy z Radaru i rekordy odrzucone automatycznie. */
     @GetMapping("/pci/queue")
     public Map<String, List<Dto.InnovationCard>> queue() {
         Map<String, List<Dto.InnovationCard>> out = new LinkedHashMap<>();
         out.put("toApprove", cards(InnovationStatus.W_OCENIE));
         out.put("toReview", cards(InnovationStatus.WYKRYTA));
+        // rekordy wyłączone z katalogu widzi tylko zespół PCI
+        Person viewer = currentUser.get();
+        boolean staff = viewer != null && viewer.hasRole(pl.trackidea.domain.Role.EKSPERT, pl.trackidea.domain.Role.ADMIN);
+        out.put("autoRejected", staff
+                ? innovations.findByStatusAndAutoRejectedTrue(InnovationStatus.ODRZUCONA).stream().map(views::card).toList()
+                : List.of());
         return out;
     }
 
@@ -65,6 +71,7 @@ public class PciController {
     public Map<String, Object> radarState() {
         Map<String, Object> out = new LinkedHashMap<>();
         out.put("live", radar.isLive());
+        out.put("aiImport", radar.usesAi());
         out.put("lastScanAt", radar.lastScanAt());
         out.put("nextScanAt", radar.nextScanAt());
         List<RadarService.SourceStatus> sources = new ArrayList<>(radar.sources());
@@ -120,6 +127,7 @@ public class PciController {
         out.put("duplicates", r.duplicates());
         out.put("updated", r.updated());
         out.put("skipped", r.skipped());
+        out.put("rejected", r.rejected());
         out.put("errors", errors);
         out.put("needsCreated", needs.created());
         out.put("needsClosed", needs.closed());

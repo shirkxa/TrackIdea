@@ -14,7 +14,7 @@ import java.time.Instant;
 @NoArgsConstructor
 public class RadarRecord {
 
-    public enum Outcome { NOWA_INNOWACJA, DUPLIKAT }
+    public enum Outcome { NOWA_INNOWACJA, DUPLIKAT, ODRZUCONA_AUTOMATYCZNIE }
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

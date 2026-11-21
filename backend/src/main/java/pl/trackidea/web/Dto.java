@@ -55,7 +55,7 @@ public final class Dto {
                                  EnumValue maturity, EnumValue transferModel, StatusView status,
                                  InstitutionView institution, String authors, Set<String> tags, Double score,
                                  Instant createdAt, Instant updatedAt, EnumValue source, String sourceName,
-                                 TrlView trl, Set<String> estimated, boolean scoreEstimated) {
+                                 TrlView trl, Set<String> estimated, boolean scoreEstimated, boolean autoRejected) {
     }
 
     /** Poziom gotowości technologicznej z opisem. */
@@ -99,14 +99,15 @@ public final class Dto {
 
     /** Co zalogowany analityk może zrobić z tą kartą. */
     public record Permissions(boolean canEdit, boolean canPropose, boolean canApprove, boolean canChoosePaths,
-                              boolean canReject) {
+                              boolean canReject, boolean canRestore) {
     }
 
     public record InnovationDetail(InnovationCard card, String problem, String solution, String requirements,
                                    String results, String ipStatus, Set<String> links, String sourceRef,
                                    InnovationService.Completeness completeness, AssessmentView assessment,
                                    List<EnumValue> chosenPaths, List<EventView> events, Permissions viewer,
-                                   Ref mergedInto, Integer sourceYear, List<String> sourceFacts) {
+                                   Ref mergedInto, Integer sourceYear, List<String> sourceFacts,
+                                   String analysisEngine) {
     }
 
     public record NeedView(Long id, String title, String description, InstitutionView institution,

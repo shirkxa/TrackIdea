@@ -97,6 +97,10 @@ class RadarServiceTest {
     AssessmentService assessmentService;
     @Autowired
     TransactionTemplate tx;
+    @Autowired
+    InstitutionDirectory directory;
+    @Autowired
+    RecordClassifier classifier;
 
     private FakeImporter importer;
     private RadarService radar;
@@ -108,8 +112,8 @@ class RadarServiceTest {
     }
 
     private RadarService radar(boolean live, SourceImporter... importers) {
-        return new RadarService(List.of(importers), records, innovations, institutions, similarity, assistant,
-                innovationService, assessmentService, tx, live, Duration.ofHours(6));
+        return new RadarService(List.of(importers), records, innovations, directory, similarity, assistant,
+                classifier, innovationService, assessmentService, tx, live, Duration.ofHours(6));
     }
 
     private static SourceRecord record(String ref, String title, String abstractText, String fact) {
@@ -149,7 +153,8 @@ class RadarServiceTest {
         assertThat(inn.getMaturity()).isEqualTo(Maturity.STOSOWANE);
         assertThat(inn.getTrl()).isBetween(1, 9);
         assertThat(inn.getArea()).isNotNull();
-        assertThat(inn.getEstimated()).containsExactlyInAnyOrder("area", "type", "sector", "maturity", "trl");
+        assertThat(inn.getEstimated()).containsExactlyInAnyOrder("area", "type", "sector", "maturity", "trl", "content");
+        assertThat(inn.getAnalysisEngine()).isEqualTo("REGUŁY");
         assertThat(inn.getTags()).contains("kompost");
         assertThat(inn.getLinks()).containsExactly("https://example.org/R-1");
         assertThat(inn.getSourceFacts()).containsExactly("Fakt ze źródła");
