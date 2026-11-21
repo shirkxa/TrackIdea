@@ -43,6 +43,18 @@ public class Need {
 
     private Instant createdAt = Instant.now();
 
+    /** Źródło zewnętrzne (np. „BZP”); puste, gdy potrzebę zgłoszono w formularzu. */
+    private String sourceName;
+
+    /** Identyfikator w źródle, np. numer ogłoszenia w BZP. */
+    private String sourceRef;
+
+    @Column(length = 1000)
+    private String sourceUrl;
+
+    /** Termin, do którego można odpowiedzieć (np. składanie ofert); po nim potrzeba jest zamykana. */
+    private Instant deadline;
+
     public String searchText() {
         return String.join(" ", title, title, description == null ? "" : description, String.join(" ", tags));
     }

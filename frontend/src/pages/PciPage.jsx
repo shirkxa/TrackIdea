@@ -25,9 +25,9 @@ export default function PciPage() {
       setVersion((v) => v + 1)
       notify(r.errors?.length
         ? `Część źródeł niedostępna: ${r.errors.join('; ')}`
-        : r.created + r.duplicates + r.updated === 0
+        : r.created + r.duplicates + r.updated + (r.needsCreated ?? 0) === 0
           ? 'Źródła sprawdzone – brak nowych rekordów.'
-          : `Radar: nowe ${r.created}, zaktualizowane ${r.updated}, duplikaty ${r.duplicates}.`,
+          : `Radar: nowe ${r.created}, zaktualizowane ${r.updated}, duplikaty ${r.duplicates}, nowe potrzeby ${r.needsCreated ?? 0}.`,
       r.errors?.length ? 'error' : 'ok')
     } catch (e) {
       notify(e.message, 'error')
@@ -111,6 +111,7 @@ export default function PciPage() {
           <p className="notice small">
             Skan: przejrzane {lastScan.scanned}, nowe {lastScan.created}, zaktualizowane {lastScan.updated},
             duplikaty {lastScan.duplicates}, bez zmian {lastScan.skipped}.
+            {' '}Potrzeby: nowe {lastScan.needsCreated ?? 0}, zamknięte po terminie {lastScan.needsClosed ?? 0}.
           </p>
         )}
         {!radar.data ? <Loading /> : radar.data.records.length === 0 ? (

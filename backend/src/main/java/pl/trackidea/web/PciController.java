@@ -9,6 +9,7 @@ import pl.trackidea.radar.SourceRecord;
 import pl.trackidea.repo.InnovationRepository;
 import pl.trackidea.repo.RadarRecordRepository;
 import pl.trackidea.service.DomainException;
+import pl.trackidea.service.NeedRadarService;
 import pl.trackidea.service.RadarService;
 import pl.trackidea.service.StatsService;
 
@@ -22,15 +23,18 @@ public class PciController {
 
     private final StatsService stats;
     private final RadarService radar;
+    private final NeedRadarService needRadar;
     private final RadarRecordRepository radarRecords;
     private final InnovationRepository innovations;
     private final Views views;
     private final CurrentUser currentUser;
     private final ManualSource manual;
 
-    public PciController(StatsService stats, RadarService radar, RadarRecordRepository radarRecords,
-                         InnovationRepository innovations, Views views, CurrentUser currentUser, ManualSource manual) {
+    public PciController(StatsService stats, RadarService radar, NeedRadarService needRadar,
+                         RadarRecordRepository radarRecords, InnovationRepository innovations, Views views,
+                         CurrentUser currentUser, ManualSource manual) {
         this.manual = manual;
+        this.needRadar = needRadar;
         this.stats = stats;
         this.radar = radar;
         this.radarRecords = radarRecords;
@@ -63,7 +67,9 @@ public class PciController {
         out.put("live", radar.isLive());
         out.put("lastScanAt", radar.lastScanAt());
         out.put("nextScanAt", radar.nextScanAt());
-        out.put("sources", radar.sources());
+        List<RadarService.SourceStatus> sources = new ArrayList<>(radar.sources());
+        sources.addAll(needRadar.sources());
+        out.put("sources", sources);
         out.put("records", radarRecords.findAllByOrderByImportedAtDescIdDesc().stream().limit(100)
                 .map(Dto.RadarRecordView::of).toList());
         return out;
@@ -104,14 +110,19 @@ public class PciController {
     @PostMapping("/radar/scan")
     public Map<String, Object> scan() {
         requireStaff("Skan Radaru uruchamia ekspert lub administrator PCI.");
+        NeedRadarService.Result needs = needRadar.scan();
         RadarService.ScanResult r = radar.scan();
+        List<String> errors = new ArrayList<>(needs.errors());
+        errors.addAll(r.errors());
         Map<String, Object> out = new LinkedHashMap<>();
         out.put("scanned", r.scanned());
         out.put("created", r.created());
         out.put("duplicates", r.duplicates());
         out.put("updated", r.updated());
         out.put("skipped", r.skipped());
-        out.put("errors", r.errors());
+        out.put("errors", errors);
+        out.put("needsCreated", needs.created());
+        out.put("needsClosed", needs.closed());
         out.put("records", r.records().stream().map(Dto.RadarRecordView::of).toList());
         return out;
     }

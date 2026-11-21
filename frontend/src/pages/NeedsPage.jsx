@@ -8,9 +8,33 @@ import { useFetch } from '../useFetch.js'
 
 const EMPTY = { title: '', description: '', sector: null, tags: '', wantsReadySolution: true }
 
+/** Skąd pochodzi potrzeba: zgłoszona w formularzu albo pobrana przez Radar z ogłoszeń o zamówieniach. */
+const ORIGINS = [
+  { value: 'FORM', label: 'Zgłoszone w TrackIdea' },
+  { value: 'SOURCE', label: 'Zamówienia publiczne (BZP)' },
+]
+
+/** Opisy z ogłoszeń bywają długie – na karcie skrót, całość po kliknięciu. */
+function Description({ text }) {
+  const [full, setFull] = useState(false)
+  if (!text) return null
+  const long = text.length > 420
+  return (
+    <p className="small">
+      {long && !full ? `${text.slice(0, 400).trimEnd()}… ` : `${text} `}
+      {long && (
+        <button type="button" className="link-button" onClick={() => setFull((f) => !f)}>
+          {full ? 'zwiń' : 'pokaż całość'}
+        </button>
+      )}
+    </p>
+  )
+}
+
 /**
  * Tablica potrzeb: instytucja lub firma opisuje problem, a system od razu
  * pokazuje innowacje, które mogą go rozwiązać (z powodami dopasowania).
+ * Obok zgłoszeń z formularza są tu potrzeby z otwartych źródeł (ogłoszenia BZP) – z linkiem i terminem.
  */
 export default function NeedsPage() {
   const { user, meta, notify } = useApp()
@@ -20,6 +44,7 @@ export default function NeedsPage() {
   const [busy, setBusy] = useState(false)
   const [formError, setFormError] = useState(null)
   const [sector, setSector] = useState(null)
+  const [origin, setOrigin] = useState(null)
   const [q, setQ] = useState('')
 
   async function save() {
@@ -46,6 +71,7 @@ export default function NeedsPage() {
   const needle = q.trim().toLowerCase()
   const visible = (data ?? []).filter(({ need }) =>
     (!sector || need.sector?.value === sector)
+    && (!origin || (origin === 'SOURCE') === Boolean(need.source))
     && (!needle || `${need.title} ${need.description} ${need.institution?.name}`.toLowerCase().includes(needle)))
 
   return (
@@ -104,6 +130,7 @@ export default function NeedsPage() {
       <div className="filters filters-narrow">
         <input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Szukaj problemu lub instytucji" aria-label="Szukaj" />
         <SelectEnum compact label="Sektor" value={sector} onChange={setSector} options={meta.sectors} />
+        <SelectEnum compact label="Pochodzenie" value={origin} onChange={setOrigin} options={ORIGINS} />
       </div>
 
       <ErrorBox>{error}</ErrorBox>
@@ -122,13 +149,20 @@ export default function NeedsPage() {
                     {need.wantsReadySolution ? 'Gotowe rozwiązanie' : 'Wczesna faza'}
                   </Badge>
                   {need.institution && !need.institution.publicSector && <Badge tone="warn">{need.institution.type.label}</Badge>}
+                  {need.source && <Badge tone="radar" title="Pobrane automatycznie z otwartego źródła">{need.source}</Badge>}
                 </div>
                 <h3>{need.title}</h3>
                 <p className="muted small">
                   <InstitutionLink institution={need.institution} /> · {formatDate(need.createdAt)}
+                  {need.deadline && <> · oferty do {formatDate(need.deadline)}</>}
                 </p>
-                {need.description && <p className="small">{need.description}</p>}
+                <Description text={need.description} />
                 <div className="tags">{[...(need.tags ?? [])].map((t) => <Tag key={t}>{t}</Tag>)}</div>
+                {need.sourceUrl && (
+                  <p className="small">
+                    <a href={need.sourceUrl} target="_blank" rel="noreferrer">Ogłoszenie {need.sourceRef} ↗</a>
+                  </p>
+                )}
               </div>
               <div className="need-matches">
                 <h4>{matches.length} {plural(matches.length, 'pasująca innowacja', 'pasujące innowacje', 'pasujących innowacji')}</h4>

@@ -111,10 +111,11 @@ public final class Dto {
 
     public record NeedView(Long id, String title, String description, InstitutionView institution,
                            EnumValue sector, Set<String> tags, boolean wantsReadySolution, boolean open,
-                           Instant createdAt) {
+                           Instant createdAt, String source, String sourceRef, String sourceUrl, Instant deadline) {
         public static NeedView of(Need n) {
             return new NeedView(n.getId(), n.getTitle(), n.getDescription(), InstitutionView.of(n.getInstitution()),
-                    EnumValue.of(n.getSector()), n.getTags(), n.isWantsReadySolution(), n.isOpen(), n.getCreatedAt());
+                    EnumValue.of(n.getSector()), n.getTags(), n.isWantsReadySolution(), n.isOpen(), n.getCreatedAt(),
+                    n.getSourceName(), n.getSourceRef(), n.getSourceUrl(), n.getDeadline());
         }
     }
 

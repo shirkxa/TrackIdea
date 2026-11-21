@@ -3,6 +3,7 @@ package pl.trackidea.radar;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+import pl.trackidea.service.NeedRadarService;
 import pl.trackidea.service.RadarService;
 
 /** Cykliczna aktualizacja bazy: pierwszy skan chwilę po starcie, potem co `trackidea.radar.refresh-interval`. */
@@ -10,10 +11,13 @@ import pl.trackidea.service.RadarService;
 public class RadarScheduler {
 
     private final RadarService radar;
+    private final NeedRadarService needRadar;
     private final boolean liveEnabled;
 
-    public RadarScheduler(RadarService radar, @Value("${trackidea.radar.live:true}") boolean liveEnabled) {
+    public RadarScheduler(RadarService radar, NeedRadarService needRadar,
+                          @Value("${trackidea.radar.live:true}") boolean liveEnabled) {
         this.radar = radar;
+        this.needRadar = needRadar;
         this.liveEnabled = liveEnabled;
     }
 
@@ -29,6 +33,8 @@ public class RadarScheduler {
             fixedDelayString = "${trackidea.radar.refresh-interval:PT6H}")
     public void refresh() {
         if (liveEnabled) {
+            // najpierw potrzeby: automatyczna ocena nowych innowacji liczy pasujące do nich zapytania
+            needRadar.scan();
             radar.scan();
         }
     }

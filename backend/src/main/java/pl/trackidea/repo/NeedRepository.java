@@ -7,4 +7,11 @@ import java.util.List;
 
 public interface NeedRepository extends JpaRepository<Need, Long> {
     List<Need> findByOpenTrue();
+
+    java.util.Optional<Need> findFirstBySourceNameAndSourceRef(String sourceName, String sourceRef);
+
+    /** Otwarte potrzeby z zewnętrznych źródeł – do zamknięcia po terminie. */
+    List<Need> findBySourceNameIsNotNullAndOpenTrue();
+
+    long countBySourceName(String sourceName);
 }
