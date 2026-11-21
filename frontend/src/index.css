@@ -1033,3 +1033,80 @@ textarea:focus {
     gap: 2px;
   }
 }
+
+/* ---------- zgłaszanie ---------- */
+
+.wizard {
+  display: flex;
+  gap: 8px;
+  list-style: none;
+  padding: 0;
+  margin: 0 0 16px;
+}
+
+.wizard li {
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.wizard li.on {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.wizard li.done {
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+}
+
+.examples {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 10px 0 14px;
+}
+
+.form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.form .wide {
+  grid-column: 1 / -1;
+}
+
+.checkbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--ink);
+  font-size: 0.95rem;
+}
+
+.checkbox input {
+  width: auto;
+}
+
+.onbehalf {
+  padding: 12px;
+  border-radius: 8px;
+  background: var(--warm-soft);
+}
+
+@media (max-width: 860px) {
+  .form {
+    grid-template-columns: 1fr;
+  }
+
+  .wizard {
+    flex-direction: column;
+  }
+}
