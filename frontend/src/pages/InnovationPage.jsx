@@ -7,6 +7,8 @@ import {
 } from '../components/ui.jsx'
 import { useApp } from '../context.jsx'
 import { useFetch } from '../useFetch.js'
+import MatchRow from '../components/MatchRow.jsx'
+import { targetLink } from '../links.js'
 
 export default function InnovationPage() {
   const { id } = useParams()
@@ -438,12 +440,6 @@ function PathsSection({ data, busy, act, version }) {
   )
 }
 
-function targetLink(t) {
-  if (t.kind === 'PARTNER') return `/people/${t.id}`
-  if (t.kind === 'INNOWACJA') return `/innovations/${t.id}`
-  return t.institutionId ? `/institutions/${t.institutionId}` : '/needs'
-}
-
 function MatchesSection({ id, version }) {
   const { data } = useFetch(`/innovations/${id}/matches`, [version])
   return (
@@ -457,19 +453,6 @@ function MatchesSection({ id, version }) {
         </>
       )}
     </Section>
-  )
-}
-
-function MatchRow({ m }) {
-  return (
-    <div className="match">
-      <div className="match-head">
-        <Link to={targetLink(m)}>{m.title}</Link>
-        <Badge tone={m.score >= 70 ? 'good' : 'info'}>{m.score}%</Badge>
-      </div>
-      <div className="muted small">{m.subtitle}</div>
-      <div className="reasons">{m.reasons.map((r) => <span key={r}>{r}</span>)}</div>
-    </div>
   )
 }
 

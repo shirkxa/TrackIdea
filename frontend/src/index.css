@@ -1110,3 +1110,71 @@ textarea:focus {
     flex-direction: column;
   }
 }
+
+/* ---------- tablica potrzeb ---------- */
+
+.page-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.page-head p {
+  max-width: 720px;
+}
+
+.filters-narrow {
+  grid-template-columns: minmax(200px, 2fr) minmax(150px, 1fr);
+  max-width: 560px;
+}
+
+.radio-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.needs {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.need {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  gap: 20px;
+}
+
+.need h3 {
+  margin-top: 8px;
+}
+
+.need-matches {
+  border-left: 1px solid var(--line);
+  padding-left: 18px;
+}
+
+.need-matches h4 {
+  margin: 0 0 4px;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+@media (max-width: 860px) {
+  .page-head {
+    flex-direction: column;
+  }
+
+  .need {
+    grid-template-columns: 1fr;
+  }
+
+  .need-matches {
+    border-left: 0;
+    border-top: 1px solid var(--line);
+    padding: 12px 0 0;
+  }
+}
