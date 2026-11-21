@@ -36,7 +36,7 @@ export default function Layout({ children }) {
     <div className="app">
       <header className="topbar">
         <Link to="/" className="brand">
-          <img src="/favicon.svg" alt="" width="28" height="28" />
+          <img src="/logo-black.png" alt="" className="brand-logo" />
           <span>TrackIdea</span>
         </Link>
         <nav className="nav">

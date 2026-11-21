@@ -41,7 +41,8 @@ export default function CatalogPage() {
   return (
     <>
       <section className="hero">
-        <div>
+        <img src="/logo-white.png" alt="" className="hero-logo" />
+        <div className="hero-text">
           <h1>Ukryte innowacje z sektora publicznego w jednym miejscu</h1>
           <p>
             Każdy dobry pomysł ze szkoły, uczelni czy gminy dostaje kartę, przejrzystą ocenę i ścieżkę rozwoju.
