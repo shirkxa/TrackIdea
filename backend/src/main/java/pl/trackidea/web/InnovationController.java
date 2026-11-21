@@ -46,12 +46,9 @@ public class InnovationController {
         this.currentUser = currentUser;
     }
 
-    /**
-     * Katalog: wyszukiwanie pełnotekstowe i semantyczne, filtry i sortowanie.
-     * scope=public (domyślnie) – tylko potwierdzone; scope=mine – moje i mojej instytucji (też szkice).
-     */
+    /** Katalog: wyszukiwanie po treści (podobieństwo i początki wyrazów), filtry i sortowanie. */
     @GetMapping
-    @Operation(summary = "Katalog innowacji", description = "Wyszukiwanie semantyczne (q), filtr po nazwie instytucji lub firmy (institution), pozostałe filtry i sortowanie: newest, updated, score, relevance.")
+    @Operation(summary = "Katalog innowacji", description = "Wyszukiwanie po treści (q), filtr po nazwie instytucji lub firmy (institution), pozostałe filtry i sortowanie: newest, updated, score, trl, maturity, relevance.")
     public List<Dto.InnovationCard> list(@RequestParam(required = false) String q,
                                          @RequestParam(required = false) Area area,
                                          @RequestParam(required = false) InnovationType type,
@@ -87,10 +84,15 @@ public class InnovationController {
             SimilarityService.Index idx = similarity.index();
             Map<String, Double> query = idx.vector(q);
             String nq = TextVectorizer.normalize(q);
+            List<String> words = Arrays.stream(nq.split("[^a-z0-9]+")).filter(w -> w.length() >= 4).toList();
             List<Innovation> matched = new ArrayList<>();
             for (Innovation i : found) {
+                String text = TextVectorizer.normalize(i.searchText());
                 double score = TextVectorizer.cosine(query, idx.vector(i.searchText()));
-                if (TextVectorizer.normalize(i.searchText()).contains(nq)) score += 0.5;
+                if (text.contains(nq)) score += 0.5;
+                // „dron” znajduje też „drona” i „drony”: wyraz zapytania jako początek wyrazu w karcie
+                long prefixHits = words.stream().filter(w -> startsWord(text, w)).count();
+                if (!words.isEmpty()) score += 0.3 * prefixHits / words.size();
                 if (score >= 0.06) {
                     relevance.put(i.getId(), score);
                     matched.add(i);
@@ -104,6 +106,8 @@ public class InnovationController {
             case "score" -> Comparator.comparing((Dto.InnovationCard c) -> c.score() == null ? -1 : c.score()).reversed();
             case "updated" -> Comparator.comparing(Dto.InnovationCard::updatedAt).reversed();
             case "trl" -> Comparator.comparing((Dto.InnovationCard c) -> c.trl() == null ? 0 : c.trl().level()).reversed();
+            case "maturity" -> Comparator.comparing((Dto.InnovationCard c) ->
+                    c.maturity() == null ? 0 : Maturity.valueOf(c.maturity().value()).getLevel()).reversed();
             case "relevance" -> Comparator.comparing((Dto.InnovationCard c) -> relevance.getOrDefault(c.id(), 0.0)).reversed();
             default -> Comparator.comparing(Dto.InnovationCard::createdAt).reversed();
         };
@@ -167,13 +171,37 @@ public class InnovationController {
                 .body(csv.toString().getBytes(StandardCharsets.UTF_8));
     }
 
+    private static boolean startsWord(String text, String word) {
+        for (int i = text.indexOf(word); i >= 0; i = text.indexOf(word, i + 1)) {
+            if (i == 0 || !Character.isLetterOrDigit(text.charAt(i - 1))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** Karta wyłączona z katalogu (odrzucona, połączona) jest dostępna tylko dla zespołu PCI – także jej powiązania. */
+    private Innovation visible(Long id) {
+        Innovation inn = service.get(id);
+        if (!service.canView(inn, currentUser.get())) {
+            throw DomainException.forbidden("Ten rekord jest wyłączony z katalogu.");
+        }
+        return inn;
+    }
+
     private static String label(Dto.EnumValue v) {
         return v == null ? "" : v.label();
     }
 
-    /** Pole CSV w cudzysłowie, z podwojonymi cudzysłowami w treści. */
+    /**
+     * Pole CSV w cudzysłowie, z podwojonymi cudzysłowami w treści. Tekst ze źródeł zewnętrznych, który arkusz
+     * mógłby potraktować jak formułę (zaczyna się od =, +, - lub @), dostaje apostrof na początku.
+     */
     private static String cell(String value) {
         String v = value == null ? "" : value.replace("\r", " ").replace("\n", " ");
+        if (!v.isEmpty() && "=+-@".indexOf(v.charAt(0)) >= 0) {
+            v = "'" + v;
+        }
         return "\"" + v.replace("\"", "\"\"") + "\"";
     }
 
@@ -206,7 +234,7 @@ public class InnovationController {
 
     @GetMapping("/{id}/similar")
     public Map<String, List<SimilarItem>> similar(@PathVariable Long id) {
-        Innovation inn = service.get(id);
+        Innovation inn = visible(id);
         return Map.of(
                 "innovations", similarity.similarInnovations(inn.searchText(), id, 5),
                 "priorArt", similarity.similarPriorArt(inn.searchText(), 4));
@@ -214,12 +242,12 @@ public class InnovationController {
 
     @GetMapping("/{id}/recommendations")
     public List<RecommendationService.PathRecommendation> recommendations(@PathVariable Long id) {
-        return recommendations.recommend(service.get(id));
+        return recommendations.recommend(visible(id));
     }
 
     @GetMapping("/{id}/matches")
     public Map<String, List<MatchingService.Match>> matches(@PathVariable Long id) {
-        Innovation inn = service.get(id);
+        Innovation inn = visible(id);
         return Map.of("needs", matching.needsFor(inn));
     }
 
@@ -256,6 +284,13 @@ public class InnovationController {
     }
 
     public record RejectRequest(String reason) {
+    }
+
+    @PostMapping("/{id}/restore")
+    @Operation(summary = "Przywróć odrzucony rekord do katalogu (analityk PCI)")
+    public Dto.InnovationDetail restore(@PathVariable Long id) {
+        Person actor = currentUser.get();
+        return views.detail(service.restore(id, actor), actor);
     }
 
     @PostMapping("/{id}/reject")

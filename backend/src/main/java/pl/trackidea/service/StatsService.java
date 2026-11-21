@@ -29,8 +29,10 @@ public class StatsService {
     public record Kpi(String key, String label, String value, String hint, String target) {
     }
 
+    /** {@code demoRecords} – ile kart w katalogu to fikcyjne przykłady; mierniki liczone na nich nie opisują prawdziwej pracy. */
     public record Stats(List<Kpi> kpis, Map<String, Long> byStatus, Map<String, Long> byArea, Map<String, Long> bySector,
-                        Map<String, Long> byInstitutionType, Map<String, Long> bySource) {
+                        Map<String, Long> byInstitutionType, Map<String, Long> bySource, long demoRecords,
+                        long demoAssessments) {
     }
 
     public Stats stats() {
@@ -98,7 +100,10 @@ public class StatsService {
         visible.stream()
                 .map(i -> i.getSourceName() != null ? i.getSourceName() : i.getSource().getLabel())
                 .forEach(name -> bySource.merge(name, 1L, Long::sum));
-        return new Stats(kpis, byStatus, byArea, bySector, byInst, bySource);
+        long demoRecords = visible.stream().filter(i -> i.getSource() == Source.ANALITYK).count();
+        long demoAssessments = assessments.findAll().stream()
+                .filter(a -> a.isApproved() && a.getInnovation().getSource() == Source.ANALITYK).count();
+        return new Stats(kpis, byStatus, byArea, bySector, byInst, bySource, demoRecords, demoAssessments);
     }
 
     private static String pct(long a, long b) {
