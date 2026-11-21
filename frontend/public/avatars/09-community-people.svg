@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="1024" height="1024">
+  <!-- Soft circular background badge -->
+  <circle cx="256" cy="256" r="216" fill="#F8F9FA" stroke="#E9ECEF" stroke-width="8" />
+
+  <!-- Three Connected Figures (Blue, Yellow/Orange, Teal) -->
+  <!-- Left Person (Blue) -->
+  <circle cx="144" cy="176" r="32" fill="#0077B6" />
+  <!-- Right Person (Teal/Cyan) -->
+  <circle cx="368" cy="176" r="32" fill="#00B4D8" />
+  <!-- Center Person (Warm Orange/Gold) -->
+  <circle cx="256" cy="152" r="36" fill="#F77F00" />
+
+  <!-- Interlinked Arms & Shoulders Arch -->
+  <path d="M 84 268 C 104 226, 148 220, 188 244" fill="none" stroke="#0077B6" stroke-width="26" stroke-linecap="round" />
+  <path d="M 324 244 C 364 220, 408 226, 428 268" fill="none" stroke="#00B4D8" stroke-width="26" stroke-linecap="round" />
+  <path d="M 176 248 C 212 212, 300 212, 336 248" fill="none" stroke="#F77F00" stroke-width="28" stroke-linecap="round" />
+
+  <!-- Pillars / Bodies forming a supportive M-like community structure -->
+  <rect x="128" y="246" width="32" height="128" rx="16" fill="#0077B6" />
+  <rect x="240" y="232" width="32" height="142" rx="16" fill="#F77F00" />
+  <rect x="352" y="246" width="32" height="128" rx="16" fill="#00B4D8" />
+
+  <!-- Caring Smile / Supporting Base Curve underneath -->
+  <path d="M 116 392 C 186 436, 326 436, 396 392" fill="none" stroke="#90BE6D" stroke-width="20" stroke-linecap="round" />
+</svg>

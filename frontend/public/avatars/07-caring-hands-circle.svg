@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="1024" height="1024">
+  <!-- Outer Green Ring & Circle -->
+  <circle cx="256" cy="256" r="216" fill="#0F7A54" />
+  <circle cx="256" cy="256" r="196" fill="none" stroke="#FFFFFF" stroke-width="10" />
+
+  <!-- Top Protective Hand (White silhouette curving over the top) -->
+  <path d="M 392 134
+           C 350 96, 290 84, 232 98
+           L 142 132
+           C 126 138, 128 156, 146 154
+           L 226 136
+           L 124 166
+           C 108 172, 114 190, 132 186
+           L 228 164
+           L 148 192
+           C 134 198, 140 214, 158 210
+           L 252 186
+           L 206 212
+           C 194 220, 204 234, 220 226
+           L 296 192
+           C 332 178, 366 168, 392 134 Z" fill="#FFFFFF" />
+
+  <!-- Bottom Supporting Hand (White silhouette cupping from below) -->
+  <path d="M 120 378
+           C 162 416, 222 428, 280 414
+           L 370 380
+           C 386 374, 384 356, 366 358
+           L 286 376
+           L 388 346
+           C 404 340, 398 322, 380 326
+           L 284 348
+           L 364 320
+           C 378 314, 372 298, 354 302
+           L 260 326
+           L 306 300
+           C 318 292, 308 278, 292 286
+           L 216 320
+           C 180 334, 146 344, 120 378 Z" fill="#FFFFFF" />
+
+  <!-- Warm Heart in the center space between the hands -->
+  <path d="M 256 296
+           C 256 296, 204 264, 204 234
+           C 204 214, 220 202, 236 202
+           C 246 202, 252 208, 256 216
+           C 260 208, 266 202, 276 202
+           C 292 202, 308 214, 308 234
+           C 308 264, 256 296, 256 296 Z" fill="#FFFFFF" />
+</svg>

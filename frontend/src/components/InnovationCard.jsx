@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { api } from '../api.js'
 import { useApp } from '../context.jsx'
 import { formatDate } from '../format.js'
-import SectorAvatar from './SectorAvatar.jsx'
+import InstitutionLogo from './InstitutionLogo.jsx'
 import { Badge, ScoreRing, StatusBadge, Tag } from './ui.jsx'
 
 export default function InnovationCard({ card, extra, index = 0 }) {
@@ -34,7 +34,7 @@ export default function InnovationCard({ card, extra, index = 0 }) {
   return (
     <article className="card innovation-card pop" style={{ '--i': Math.min(index, 12) }}>
       <div className="card-top">
-        <SectorAvatar sector={card.sector} />
+        <InstitutionLogo institution={card.institution} sector={card.sector} />
         <div className="card-title">
           <h3>
             <Link to={`/innovations/${card.id}`}>{card.title}</Link>

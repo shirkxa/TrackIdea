@@ -2013,3 +2013,39 @@ textarea:focus {
 .account-name {
   font-size: 0.85rem;
 }
+
+.search-inst {
+  flex: 0 1 300px;
+}
+
+@media (max-width: 760px) {
+  .toolbar {
+    flex-wrap: wrap;
+  }
+
+  .toolbar .search:first-child {
+    flex-basis: 100%;
+  }
+
+  .search-inst {
+    flex: 1 1 auto;
+  }
+}
+
+/* ---------- emblemat instytucji jako „zdjęcie profilowe” innowacji ---------- */
+
+.inst-logo {
+  display: inline-grid;
+  place-items: center;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 0 1px var(--line);
+  overflow: hidden;
+}
+
+.inst-logo img {
+  width: 86%;
+  height: 86%;
+  object-fit: contain;
+}

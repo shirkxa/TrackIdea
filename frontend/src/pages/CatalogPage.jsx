@@ -5,6 +5,7 @@ import Icon from '../components/Icon.jsx'
 import InnovationCard from '../components/InnovationCard.jsx'
 import { Empty, ErrorBox, Loading, SelectEnum } from '../components/ui.jsx'
 import { useApp } from '../context.jsx'
+import { useFetch } from '../useFetch.js'
 
 const TILES = [
   { to: '/submit', icon: 'idea', label: 'Zgłoś innowację' },
@@ -29,6 +30,9 @@ export default function CatalogPage() {
   const [panelOpen, setPanelOpen] = useState(false)
   const [q, setQ] = useState('')
   const [debouncedQ, setDebouncedQ] = useState('')
+  const [inst, setInst] = useState('')
+  const [debouncedInst, setDebouncedInst] = useState('')
+  const institutions = useFetch('/institutions')
   const [cards, setCards] = useState(null)
   const [error, setError] = useState(null)
 
@@ -38,14 +42,21 @@ export default function CatalogPage() {
   }, [q])
 
   useEffect(() => {
+    const t = setTimeout(() => setDebouncedInst(inst.trim()), 300)
+    return () => clearTimeout(t)
+  }, [inst])
+
+  const params = { ...filters, q: debouncedQ, institution: debouncedInst }
+
+  useEffect(() => {
     api
-      .get(`/innovations${query({ ...filters, q: debouncedQ })}`)
+      .get(`/innovations${query({ ...filters, q: debouncedQ, institution: debouncedInst })}`)
       .then((d) => {
         setCards(d)
         setError(null)
       })
       .catch((e) => setError(e.message))
-  }, [filters, debouncedQ])
+  }, [filters, debouncedQ, debouncedInst])
 
   const set = (key) => (value) => setFilters((f) => ({ ...f, [key]: value }))
   const statuses = meta.statuses.filter((s) => !s.draft && s.step > 0).map((s) => ({ value: s.value, label: s.label }))
@@ -61,7 +72,10 @@ export default function CatalogPage() {
   const active = panelFilters
     .filter((f) => filters[f.key])
     .map((f) => ({ ...f, valueLabel: f.options.find((o) => o.value === filters[f.key])?.label }))
-  const clearAll = () => setFilters((f) => ({ sort: f.sort, type: f.type }))
+  const clearAll = () => {
+    setFilters((f) => ({ sort: f.sort, type: f.type }))
+    setInst('')
+  }
   const sortLabel = debouncedQ && filters.sort === 'newest' ? 'Najtrafniejsze' : null
 
   return (
@@ -87,6 +101,20 @@ export default function CatalogPage() {
             onChange={(e) => setQ(e.target.value)}
             aria-label="Szukaj innowacji"
           />
+        </label>
+        <label className="search search-inst">
+          <Icon name="building" size={20} />
+          <input
+            type="search"
+            list="institution-names"
+            placeholder="Instytucja lub firma"
+            value={inst}
+            onChange={(e) => setInst(e.target.value)}
+            aria-label="Szukaj po nazwie instytucji lub firmy"
+          />
+          <datalist id="institution-names">
+            {institutions.data?.map((i) => <option key={i.id} value={i.name} />)}
+          </datalist>
         </label>
         <button type="button" className={`filter-toggle ${panelOpen || active.length ? 'on' : ''}`}
           onClick={() => setPanelOpen((o) => !o)} aria-expanded={panelOpen}>
@@ -120,7 +148,7 @@ export default function CatalogPage() {
 
       <div className="results-bar">
         <span className="muted small results-count">{cards ? `${cards.length} wyników` : ''}</span>
-        <a className="link-button export-link" href={`${import.meta.env.VITE_API_URL ?? ''}/api/innovations/export${query({ ...filters, q: debouncedQ })}`}
+        <a className="link-button export-link" href={`${import.meta.env.VITE_API_URL ?? ''}/api/innovations/export${query(params)}`}
           download title="Pobierz wyniki jako CSV (Excel)">
           <Icon name="download" size={16} /> CSV
         </a>
@@ -134,8 +162,13 @@ export default function CatalogPage() {
         </label>
       </div>
 
-      {active.length > 0 && (
+      {(active.length > 0 || debouncedInst) && (
         <div className="active-filters">
+          {debouncedInst && (
+            <button type="button" className="chip chip-on" onClick={() => setInst('')} title="Usuń filtr">
+              Instytucja: {debouncedInst} ✕
+            </button>
+          )}
           {active.map((f) => (
             <button key={f.key} type="button" className="chip chip-on" onClick={() => set(f.key)(null)}
               title="Usuń filtr">

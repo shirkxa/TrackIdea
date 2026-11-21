@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="1024" height="1024">
+  <!-- Outer badge circles -->
+  <circle cx="256" cy="256" r="220" fill="#0F2C59" />
+  <circle cx="256" cy="256" r="202" fill="none" stroke="#E5A93C" stroke-width="6" />
+  <circle cx="256" cy="256" r="184" fill="#FFFFFF" />
+  <circle cx="256" cy="256" r="172" fill="none" stroke="#1B4965" stroke-width="4" stroke-dasharray="10 6" />
+
+  <!-- Golden Laurel Wreath arcs -->
+  <g fill="#E5A93C">
+    <!-- Left wreath -->
+    <path d="M 135 310 C 105 255, 115 185, 160 140 C 145 185, 140 245, 165 300 Z" />
+    <ellipse cx="126" cy="260" rx="10" ry="22" transform="rotate(-25 126 260)" />
+    <ellipse cx="122" cy="220" rx="10" ry="22" transform="rotate(-10 122 220)" />
+    <ellipse cx="132" cy="180" rx="10" ry="22" transform="rotate(15 132 180)" />
+    <ellipse cx="152" cy="148" rx="9" ry="20" transform="rotate(35 152 148)" />
+    <!-- Right wreath -->
+    <path d="M 377 310 C 407 255, 397 185, 352 140 C 367 185, 372 245, 347 300 Z" />
+    <ellipse cx="386" cy="260" rx="10" ry="22" transform="rotate(25 386 260)" />
+    <ellipse cx="390" cy="220" rx="10" ry="22" transform="rotate(10 390 220)" />
+    <ellipse cx="380" cy="180" rx="10" ry="22" transform="rotate(-15 380 180)" />
+    <ellipse cx="360" cy="148" rx="9" ry="20" transform="rotate(-35 360 148)" />
+  </g>
+
+  <!-- Open Book Pages (swooshing wings style) -->
+  <path d="M 256 355 C 215 320, 160 305, 115 310 C 150 285, 205 290, 256 330 C 307 290, 362 285, 397 310 C 352 305, 297 320, 256 355 Z" fill="#1B6CA8" />
+  <path d="M 256 332 C 220 295, 170 280, 130 282 C 165 260, 215 268, 256 306 C 297 268, 347 260, 382 282 C 342 280, 292 295, 256 332 Z" fill="#2D93AD" />
+  <path d="M 256 376 C 210 342, 150 328, 105 335 C 148 312, 205 320, 256 358 C 307 320, 364 312, 407 335 C 362 328, 302 342, 256 376 Z" fill="#0F2C59" />
+
+  <!-- Graduation Cap (Mortarboard) -->
+  <polygon points="256,138 346,174 256,210 166,174" fill="#0F2C59" />
+  <path d="M 204 198 L 204 242 C 204 258, 230 270, 256 270 C 282 270, 308 258, 308 242 L 308 198 L 256 220 Z" fill="#1B4965" />
+  <!-- Tassel -->
+  <path d="M 256 174 L 328 190 L 328 238" fill="none" stroke="#E5A93C" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" />
+  <circle cx="256" cy="174" r="7" fill="#E5A93C" />
+  <circle cx="328" cy="242" r="8" fill="#E5A93C" />
+</svg>

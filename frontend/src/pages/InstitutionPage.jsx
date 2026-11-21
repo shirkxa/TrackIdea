@@ -1,5 +1,6 @@
 import { Link, useParams } from 'react-router-dom'
 import InnovationCard from '../components/InnovationCard.jsx'
+import InstitutionLogo from '../components/InstitutionLogo.jsx'
 import { Badge, Empty, ErrorBox, Loading, Section } from '../components/ui.jsx'
 import { useFetch } from '../useFetch.js'
 
@@ -17,7 +18,7 @@ export default function InstitutionPage() {
   return (
     <>
       <section className="card profile-head">
-        <span className="avatar avatar-big avatar-inst">{institution.name.replace(/[^A-ZĄĆĘŁŃÓŚŹŻ]/g, '').slice(0, 2)}</span>
+        <InstitutionLogo institution={institution} size={96} />
         <div className="profile-main">
           <h1>{institution.name}</h1>
           <p className="muted">

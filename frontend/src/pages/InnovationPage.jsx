@@ -8,6 +8,7 @@ import {
 import { useApp } from '../context.jsx'
 import { useFetch } from '../useFetch.js'
 import MatchRow from '../components/MatchRow.jsx'
+import InstitutionLogo from '../components/InstitutionLogo.jsx'
 import { targetLink } from '../links.js'
 
 export default function InnovationPage() {
@@ -67,6 +68,7 @@ export default function InnovationPage() {
   return (
     <div className="innovation-page">
       <header className="innovation-head card">
+        <InstitutionLogo institution={card.institution} sector={card.sector} size={88} />
         <div className="head-main">
           <div className="card-badges">
             <StatusBadge status={card.status} />

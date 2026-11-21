@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="1024" height="1024">
+  <!-- Navy Blue & Gold Badge -->
+  <circle cx="256" cy="256" r="216" fill="#0B2545" stroke="#DDA15E" stroke-width="12" />
+  <circle cx="256" cy="256" r="168" fill="#134074" stroke="#DDA15E" stroke-width="6" />
+
+  <!-- Decorative 5-point Stars on left and right -->
+  <polygon points="88,236 93,250 108,250 96,259 100,273 88,264 76,273 80,259 68,250 83,250" fill="#DDA15E" />
+  <polygon points="424,236 429,250 444,250 432,259 436,273 424,264 412,273 416,259 404,250 419,250" fill="#DDA15E" />
+
+  <!-- Inner Golden Wreath -->
+  <path d="M 256 386 C 172 376, 128 308, 138 220" fill="none" stroke="#DDA15E" stroke-width="10" stroke-linecap="round" stroke-dasharray="14 10" />
+  <path d="M 256 386 C 340 376, 384 308, 374 220" fill="none" stroke="#DDA15E" stroke-width="10" stroke-linecap="round" stroke-dasharray="14 10" />
+
+  <!-- Open Book Outline -->
+  <path d="M 172 212 L 246 226 L 246 318 L 172 304 Z" fill="#0B2545" stroke="#DDA15E" stroke-width="8" stroke-linejoin="round" />
+  <path d="M 340 212 L 266 226 L 266 318 L 340 304 Z" fill="#0B2545" stroke="#DDA15E" stroke-width="8" stroke-linejoin="round" />
+
+  <!-- Flaming Torch in front of the Book -->
+  <polygon points="242,226 270,226 262,346 250,346" fill="#DDA15E" />
+  <rect x="236" y="214" width="40" height="12" rx="6" fill="#DDA15E" />
+  <!-- Flame -->
+  <path d="M 256 124 C 230 156, 228 188, 246 206 C 238 186, 248 168, 260 154 C 256 176, 268 188, 266 206 C 284 192, 282 156, 256 124 Z" fill="#F4A261" />
+</svg>

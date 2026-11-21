@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="1024" height="1024">
+  <!-- Bottom Brown Book Cover -->
+  <path d="M 256 416 C 195 362, 125 342, 52 350 C 115 316, 190 332, 256 382 C 322 332, 397 316, 460 350 C 387 342, 317 362, 256 416 Z" fill="#8D6346" />
+
+  <!-- Magenta Book Pages (Layer 1) -->
+  <path d="M 256 376 C 202 320, 140 296, 76 298 C 132 266, 198 284, 256 344 C 314 284, 380 266, 436 298 C 372 296, 310 320, 256 376 Z" fill="#9E1946" />
+
+  <!-- Vivid Pink/Purple Book Pages (Layer 2) -->
+  <path d="M 256 342 C 210 286, 154 256, 98 252 C 150 226, 206 248, 256 312 C 306 248, 362 226, 414 252 C 358 256, 302 286, 256 342 Z" fill="#DE3C4B" />
+
+  <!-- Green Arching Swooshes / Leaves enclosing the student -->
+  <path d="M 248 310 C 175 245, 155 155, 225 96 C 175 155, 195 235, 248 292 Z" fill="#70AE3E" />
+  <path d="M 264 310 C 337 245, 357 155, 287 96 C 337 155, 317 235, 264 292 Z" fill="#70AE3E" />
+
+  <!-- Side decorative leaf buds -->
+  <path d="M 140 218 C 145 195, 162 185, 182 192 C 168 208, 155 216, 140 218 Z" fill="#70AE3E" />
+  <path d="M 372 218 C 367 195, 350 185, 330 192 C 344 208, 357 216, 372 218 Z" fill="#70AE3E" />
+
+  <!-- Stylized Student Figure inside the arch -->
+  <circle cx="256" cy="166" r="24" fill="#3B28CC" />
+  <path d="M 188 182 C 216 206, 240 214, 256 214 C 272 214, 296 206, 324 182 C 302 218, 276 246, 256 292 C 236 246, 210 218, 188 182 Z" fill="#3B28CC" />
+</svg>

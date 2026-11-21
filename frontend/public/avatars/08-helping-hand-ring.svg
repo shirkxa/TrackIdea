@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="1024" height="1024">
+  <defs>
+    <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#D90429" />
+      <stop offset="45%" stop-color="#7209B7" />
+      <stop offset="100%" stop-color="#00509D" />
+    </linearGradient>
+  </defs>
+
+  <!-- Outer Gradient Ring -->
+  <circle cx="256" cy="256" r="196" fill="url(#ringGrad)" />
+
+  <!-- White inner circle shifted slightly up-left to create crescent base -->
+  <circle cx="246" cy="236" r="154" fill="#FFFFFF" />
+
+  <!-- Stylized Open Palm / Helping Hand rising from the bottom-right blue arc -->
+  <path d="M 164 366
+           C 210 356, 246 334, 276 296
+           L 322 238
+           C 332 226, 348 236, 338 250
+           L 302 298
+           L 348 248
+           C 358 236, 374 248, 362 262
+           L 320 310
+           L 364 268
+           C 374 258, 388 270, 376 284
+           L 334 328
+           L 372 296
+           C 382 288, 394 300, 382 312
+           C 352 346, 314 388, 256 396
+           C 214 402, 184 386, 164 366 Z" fill="#00296B" />
+
+  <!-- Subtle second hand / heart accent above palm -->
+  <circle cx="248" cy="212" r="28" fill="url(#ringGrad)" />
+  <path d="M 212 268 C 218 244, 234 238, 248 238 C 262 238, 278 244, 284 268" fill="none" stroke="url(#ringGrad)" stroke-width="14" stroke-linecap="round" />
+</svg>

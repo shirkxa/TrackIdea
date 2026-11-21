@@ -53,7 +53,7 @@ public class InnovationController {
      * scope=public (domyślnie) – tylko potwierdzone; scope=mine – moje i mojej instytucji (też szkice).
      */
     @GetMapping
-    @Operation(summary = "Katalog innowacji", description = "Wyszukiwanie semantyczne (q), filtry i sortowanie: newest, score, popular, forks, relevance.")
+    @Operation(summary = "Katalog innowacji", description = "Wyszukiwanie semantyczne (q), filtr po nazwie instytucji lub firmy (institution), pozostałe filtry i sortowanie: newest, score, popular, forks, relevance.")
     public List<Dto.InnovationCard> list(@RequestParam(required = false) String q,
                                          @RequestParam(required = false) InnovationType type,
                                          @RequestParam(required = false) Sector sector,
@@ -62,6 +62,7 @@ public class InnovationController {
                                          @RequestParam(required = false) InstitutionType institutionType,
                                          @RequestParam(required = false) InnovationStatus status,
                                          @RequestParam(required = false) Long institutionId,
+                                         @RequestParam(required = false) String institution,
                                          @RequestParam(defaultValue = "newest") String sort,
                                          @RequestParam(defaultValue = "public") String scope,
                                          @RequestParam(defaultValue = "false") boolean includeForks) {
@@ -83,6 +84,12 @@ public class InnovationController {
         if (status != null) stream = stream.filter(i -> i.getStatus() == status);
         if (institutionId != null) stream = stream.filter(i -> i.getInstitution() != null && i.getInstitution().getId().equals(institutionId));
         if (institutionType != null) stream = stream.filter(i -> i.getInstitution() != null && i.getInstitution().getType() == institutionType);
+        if (institution != null && !institution.isBlank()) {
+            // wyszukiwanie po nazwie instytucji lub firmy (bez wielkości liter i polskich znaków)
+            String needle = TextVectorizer.normalize(institution.trim());
+            stream = stream.filter(i -> i.getInstitution() != null
+                    && TextVectorizer.normalize(i.getInstitution().getName()).contains(needle));
+        }
         List<Innovation> found = stream.toList();
 
         Map<Long, Double> relevance = new HashMap<>();
@@ -131,9 +138,10 @@ public class InnovationController {
                                          @RequestParam(required = false) InstitutionType institutionType,
                                          @RequestParam(required = false) InnovationStatus status,
                                          @RequestParam(required = false) Long institutionId,
+                                         @RequestParam(required = false) String institution,
                                          @RequestParam(defaultValue = "newest") String sort) {
         List<Dto.InnovationCard> cards = list(q, type, sector, maturity, transferModel, institutionType, status,
-                institutionId, sort, "public", false);
+                institutionId, institution, sort, "public", false);
         StringBuilder csv = new StringBuilder("\uFEFF");
         csv.append(String.join(";", "ID", "Tytuł", "Instytucja", "Typ instytucji", "Powiat", "Typ innowacji",
                 "Sektor", "Etap", "Model transferu", "Status", "Wynik (0-100)", "Głosy", "Obserwujący", "Forki",

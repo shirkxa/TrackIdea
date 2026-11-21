@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="1024" height="1024">
+  <!-- Friendly Blue Brush-Stroke Ground -->
+  <path d="M 76 420 C 165 408, 345 408, 436 420" fill="none" stroke="#2EC4B6" stroke-width="24" stroke-linecap="round" />
+
+  <!-- Left House (Red Roof & Accent) -->
+  <path d="M 104 408 L 104 216 L 154 144 L 204 216 L 204 408 Z" fill="#FFFFFF" stroke="#E71D36" stroke-width="8" stroke-linejoin="round" />
+  <path d="M 104 216 L 154 144 L 204 216 Z" fill="#FFCCD5" stroke="#E71D36" stroke-width="8" stroke-linejoin="round" />
+  <!-- Left house windows -->
+  <g fill="#E71D36">
+    <rect x="124" y="238" width="20" height="26" rx="4" />
+    <rect x="164" y="238" width="20" height="26" rx="4" />
+    <rect x="124" y="284" width="20" height="26" rx="4" />
+    <rect x="164" y="284" width="20" height="26" rx="4" />
+    <rect x="124" y="330" width="20" height="26" rx="4" />
+    <rect x="164" y="330" width="20" height="26" rx="4" />
+    <!-- Door -->
+    <path d="M 142 408 L 142 374 C 142 364, 166 364, 166 374 L 166 408 Z" />
+  </g>
+
+  <!-- Right House (Blue Roof & Accent) -->
+  <path d="M 308 408 L 308 204 L 358 136 L 408 204 L 408 408 Z" fill="#FFFFFF" stroke="#0077B6" stroke-width="8" stroke-linejoin="round" />
+  <path d="M 308 204 L 358 136 L 408 204 Z" fill="#CAF0F8" stroke="#0077B6" stroke-width="8" stroke-linejoin="round" />
+  <!-- Right house windows -->
+  <g fill="#0077B6">
+    <rect x="328" y="228" width="20" height="24" rx="4" />
+    <rect x="368" y="228" width="20" height="24" rx="4" />
+    <rect x="328" y="272" width="20" height="24" rx="4" />
+    <rect x="368" y="272" width="20" height="24" rx="4" />
+    <rect x="328" y="316" width="20" height="24" rx="4" />
+    <rect x="368" y="316" width="20" height="24" rx="4" />
+    <path d="M 346 408 L 346 372 C 346 362, 370 362, 370 372 L 370 408 Z" />
+  </g>
+
+  <!-- Center Tall House (Warm Yellow/Gold Roof & Accent, overlapping in front) -->
+  <path d="M 204 408 L 204 168 L 256 88 L 308 168 L 308 408 Z" fill="#FFFFFF" stroke="#FF9F1C" stroke-width="8" stroke-linejoin="round" />
+  <path d="M 204 168 L 256 88 L 308 168 Z" fill="#FFE5B4" stroke="#FF9F1C" stroke-width="8" stroke-linejoin="round" />
+  <!-- Attic round window -->
+  <circle cx="256" cy="142" r="12" fill="#FF9F1C" />
+  <!-- Center house windows -->
+  <g fill="#FF9F1C">
+    <rect x="224" y="192" width="22" height="28" rx="4" />
+    <rect x="266" y="192" width="22" height="28" rx="4" />
+    <rect x="224" y="242" width="22" height="28" rx="4" />
+    <rect x="266" y="242" width="22" height="28" rx="4" />
+    <rect x="224" y="292" width="22" height="28" rx="4" />
+    <rect x="266" y="292" width="22" height="28" rx="4" />
+    <!-- Arched Door -->
+    <path d="M 242 408 L 242 362 C 242 348, 270 348, 270 362 L 270 408 Z" fill="#333333" />
+  </g>
+</svg>

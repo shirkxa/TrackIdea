@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="1024" height="1024">
+  <!-- Side Green Leaves -->
+  <g fill="#8CC63F">
+    <path d="M 135 280 C 95 255, 70 220, 62 185 C 98 198, 125 230, 145 265 Z" />
+    <path d="M 122 315 C 80 302, 52 280, 42 252 C 78 256, 108 280, 128 302 Z" />
+    <path d="M 377 280 C 417 255, 442 220, 450 185 C 414 198, 387 230, 367 265 Z" />
+    <path d="M 390 315 C 432 302, 460 280, 470 252 C 434 256, 404 280, 384 302 Z" />
+  </g>
+
+  <!-- Central Blue Crescent Arch -->
+  <path d="M 256 412 C 155 375, 118 235, 185 142 C 138 232, 175 352, 256 388 C 337 352, 374 232, 327 142 C 394 235, 357 375, 256 412 Z" fill="#2E3192" />
+
+  <!-- Bottom Blue Lotus Petals / Open Pages -->
+  <path d="M 256 422 C 195 375, 130 345, 58 348 C 110 398, 180 426, 256 426 C 332 426, 402 398, 454 348 C 382 345, 317 375, 256 422 Z" fill="#1B1464" />
+  <path d="M 256 422 C 202 385, 140 362, 76 364" fill="none" stroke="#8CC63F" stroke-width="4" stroke-dasharray="6 6" />
+  <path d="M 256 422 C 310 385, 372 362, 436 364" fill="none" stroke="#8CC63F" stroke-width="4" stroke-dasharray="6 6" />
+
+  <!-- Orange Open Book in the center -->
+  <path d="M 192 204 L 252 238 L 252 332 L 192 298 Z" fill="#F7931E" />
+  <path d="M 320 204 L 260 238 L 260 332 L 320 298 Z" fill="#F15A24" />
+
+  <!-- Reader Head above the book -->
+  <circle cx="256" cy="186" r="24" fill="#F7931E" />
+</svg>

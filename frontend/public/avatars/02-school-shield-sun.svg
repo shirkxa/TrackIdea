@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="1024" height="1024">
+  <!-- Outer Laurel Branches -->
+  <g fill="#2B4C65">
+    <path d="M 110 360 C 75 280, 80 190, 115 120" fill="none" stroke="#2B4C65" stroke-width="6" stroke-linecap="round" />
+    <path d="M 402 360 C 437 280, 432 190, 397 120" fill="none" stroke="#2B4C65" stroke-width="6" stroke-linecap="round" />
+    <!-- Left leaves -->
+    <ellipse cx="90" cy="310" rx="8" ry="18" transform="rotate(-35 90 310)" />
+    <ellipse cx="82" cy="265" rx="8" ry="18" transform="rotate(-25 82 265)" />
+    <ellipse cx="82" cy="220" rx="8" ry="18" transform="rotate(-10 82 220)" />
+    <ellipse cx="90" cy="175" rx="8" ry="18" transform="rotate(10 90 175)" />
+    <ellipse cx="105" cy="135" rx="8" ry="18" transform="rotate(25 105 135)" />
+    <!-- Right leaves -->
+    <ellipse cx="422" cy="310" rx="8" ry="18" transform="rotate(35 422 310)" />
+    <ellipse cx="430" cy="265" rx="8" ry="18" transform="rotate(25 430 265)" />
+    <ellipse cx="430" cy="220" rx="8" ry="18" transform="rotate(10 430 220)" />
+    <ellipse cx="422" cy="175" rx="8" ry="18" transform="rotate(-10 422 175)" />
+    <ellipse cx="407" cy="135" rx="8" ry="18" transform="rotate(-25 407 135)" />
+  </g>
+
+  <!-- Classic Heraldic Shield -->
+  <path d="M 126 76 C 170 88, 214 88, 256 68 C 298 88, 342 88, 386 76 L 386 276 C 386 364, 314 416, 256 446 C 198 416, 126 364, 126 276 Z" fill="#2B5876" stroke="#E5A93C" stroke-width="10" stroke-linejoin="round" />
+  <path d="M 144 96 C 180 106, 218 106, 256 88 C 294 106, 332 106, 368 96 L 368 272 C 368 348, 304 394, 256 422 C 208 394, 144 348, 144 272 Z" fill="none" stroke="#89B0AE" stroke-width="3" stroke-dasharray="8 6" />
+
+  <!-- Sun & Rays inside Shield -->
+  <g stroke="#F4A261" stroke-width="4" stroke-linecap="round">
+    <line x1="256" y1="112" x2="256" y2="142" />
+    <line x1="256" y1="226" x2="256" y2="246" />
+    <line x1="190" y1="178" x2="216" y2="178" />
+    <line x1="296" y1="178" x2="322" y2="178" />
+    <line x1="208" y1="130" x2="228" y2="150" />
+    <line x1="284" y1="150" x2="304" y2="130" />
+    <line x1="208" y1="226" x2="228" y2="206" />
+    <line x1="284" y1="206" x2="304" y2="226" />
+  </g>
+  <circle cx="256" cy="178" r="32" fill="#F4A261" />
+
+  <!-- Open Book -->
+  <path d="M 172 262 C 200 254, 232 258, 252 272 L 252 344 C 232 330, 200 326, 172 334 Z" fill="#F4A261" stroke="#1D3557" stroke-width="6" stroke-linejoin="round" />
+  <path d="M 340 262 C 312 254, 280 258, 260 272 L 260 344 C 280 330, 312 326, 340 334 Z" fill="#F4A261" stroke="#1D3557" stroke-width="6" stroke-linejoin="round" />
+  <path d="M 164 348 C 198 338, 230 344, 256 358 C 282 344, 314 338, 348 348" fill="none" stroke="#E5A93C" stroke-width="6" stroke-linecap="round" />
+
+  <!-- Fountain Pen Nib at bottom of book -->
+  <path d="M 256 346 L 274 378 L 266 406 L 246 406 L 238 378 Z" fill="#89B0AE" stroke="#1D3557" stroke-width="4" stroke-linejoin="round" />
+  <line x1="256" y1="346" x2="256" y2="378" stroke="#1D3557" stroke-width="4" />
+  <circle cx="256" cy="378" r="5" fill="#1D3557" />
+</svg>
