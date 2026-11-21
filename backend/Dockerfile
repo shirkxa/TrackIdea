@@ -17,7 +17,10 @@ RUN --mount=type=cache,target=/root/.m2 ./mvnw -B -q package -DskipTests \
 # --- Runtime ---
 FROM eclipse-temurin:21-jre
 WORKDIR /app
-RUN useradd --system --uid 10001 --no-create-home spring
+# /data – trwała baza (plik H2); podłącz wolumen, żeby dane przeżyły wymianę kontenera
+RUN useradd --system --uid 10001 --no-create-home spring \
+    && mkdir /data && chown spring /data
+VOLUME /data
 USER spring
 
 COPY --from=build /app/extracted/dependencies/ ./

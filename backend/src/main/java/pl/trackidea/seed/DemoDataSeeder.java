@@ -20,6 +20,7 @@ import tools.jackson.databind.json.JsonMapper;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.security.SecureRandom;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
@@ -63,6 +64,7 @@ public class DemoDataSeeder implements ApplicationRunner {
     private final RadarService radar;
     private final PasswordEncoder passwordEncoder;
     private final String demoPassword;
+    private final boolean demoData;
 
     private final Map<String, Institution> inst = new HashMap<>();
 
@@ -70,7 +72,9 @@ public class DemoDataSeeder implements ApplicationRunner {
                           InnovationEventRepository events, NeedRepository needs, PriorArtRepository priorArt,
                           AssessmentRepository assessments, AssessmentService assessmentService, RadarService radar,
                           PasswordEncoder passwordEncoder,
-                          @Value("${trackidea.demo-password:demo123}") String demoPassword) {
+                          @Value("${trackidea.demo-password:demo123}") String demoPassword,
+                          @Value("${trackidea.demo-data:true}") boolean demoData) {
+        this.demoData = demoData;
         this.institutions = institutions;
         this.people = people;
         this.innovations = innovations;
@@ -88,6 +92,7 @@ public class DemoDataSeeder implements ApplicationRunner {
     @Transactional
     public void run(ApplicationArguments args) {
         if (institutions.count() > 0) {
+            syncPasswords();
             return;
         }
         Instant now = Instant.now();
@@ -97,7 +102,7 @@ public class DemoDataSeeder implements ApplicationRunner {
         }
 
         // konta zespołu PCI mają to samo hasło demo (trackidea.demo-password), zapisane jako hash BCrypt
-        String passwordHash = passwordEncoder.encode(demoPassword);
+        String passwordHash = passwordEncoder.encode(initialPassword());
         Person analyst = null;
         for (PersonSeed s : read("seed/people.json", new TypeReference<List<PersonSeed>>() { })) {
             Person p = new Person();
@@ -111,6 +116,12 @@ public class DemoDataSeeder implements ApplicationRunner {
             if (s.role() == Role.EKSPERT && analyst == null) {
                 analyst = p;
             }
+        }
+        if (!demoData) {
+            // bez fikcyjnych przykładów: zostają konta PCI, katalog wypełnia Radar
+            radar.scanInitial();
+            log.info("Dane startowe: {} kont PCI, bez danych przykładowych", people.count());
+            return;
         }
         priorArt.saveAll(read("seed/prior_art.json", new TypeReference<List<PriorArt>>() { }));
 
@@ -141,6 +152,33 @@ public class DemoDataSeeder implements ApplicationRunner {
                 innovations.count(), needs.count());
     }
 
+    /**
+     * Hasło kont przy pierwszym starcie: z konfiguracji albo – gdy go nie ustawiono (produkcja bez
+     * TRACKIDEA_PASSWORD) – losowe, wypisane raz w logu. Dzięki temu znane hasło demo nie trafia na produkcję.
+     */
+    private String initialPassword() {
+        if (demoPassword != null && !demoPassword.isBlank()) {
+            return demoPassword;
+        }
+        byte[] random = new byte[12];
+        new SecureRandom().nextBytes(random);
+        String generated = Base64.getUrlEncoder().withoutPadding().encodeToString(random);
+        log.warn("Nie ustawiono hasła kont PCI (TRACKIDEA_PASSWORD) – wygenerowano jednorazowe: {}", generated);
+        return generated;
+    }
+
+    /** Baza trwała: zmiana hasła w konfiguracji obowiązuje od następnego startu. */
+    private void syncPasswords() {
+        if (demoPassword == null || demoPassword.isBlank()) {
+            return;
+        }
+        for (Person p : people.findAll()) {
+            if (p.getPasswordHash() == null || !passwordEncoder.matches(demoPassword, p.getPasswordHash())) {
+                p.setPasswordHash(passwordEncoder.encode(demoPassword));
+            }
+        }
+    }
+
     private Innovation createInnovation(InnovationSeed s, Instant now) {
         Innovation inn = new Innovation();
         inn.setTitle(s.title());
@@ -161,14 +199,16 @@ public class DemoDataSeeder implements ApplicationRunner {
         inn.setSource(Source.ANALITYK);
         inn.setSourceName(s.sourceName());
         inn.setStatus(s.status());
-        // TRL w danych demo jest szacowany automatycznie; zweryfikowane karty mają go potwierdzonego
-        inn.setTrl(s.trl() != null ? s.trl()
-                : Trl.estimate(s.maturity(), TextVectorizer.normalize(s.solution() + " " + s.results())));
-        if (s.trl() == null && s.status() != InnovationStatus.OCENIONA) {
-            inn.getEstimated().add("trl");
-        }
         inn.setArea(Area.derive(s.type(), s.sector(),
                 inn.getInstitution() == null ? null : inn.getInstitution().getType()));
+        // TRL dotyczy rozwiązań technologicznych; w danych demo jest szacowany, zweryfikowane karty mają go potwierdzonego
+        if (s.trl() != null || inn.getArea() == Area.TECHNOLOGICZNY) {
+            inn.setTrl(s.trl() != null ? s.trl()
+                    : Trl.estimate(s.maturity(), TextVectorizer.normalize(s.solution() + " " + s.results())));
+            if (s.trl() == null && s.status() != InnovationStatus.OCENIONA) {
+                inn.getEstimated().add("trl");
+            }
+        }
         if (s.paths() != null) inn.getChosenPaths().addAll(s.paths());
         Instant created = now.minus(Duration.ofDays(s.daysAgo()));
         inn.setCreatedAt(created);
