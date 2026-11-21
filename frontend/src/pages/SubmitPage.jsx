@@ -133,11 +133,11 @@ function SubmitForm({ id, initial }) {
 
   return (
     <div className="submit-page">
-      <h1>{editing ? 'Edycja karty innowacji' : 'Zgłoś innowację'}</h1>
+      <h1 className="page-title">{editing ? 'Edycja karty' : 'Zgłoś innowację'}</h1>
       {!editing && (
         <ol className="wizard">
-          <li className={step === 1 ? 'on' : 'done'}>1. Opisz własnymi słowami</li>
-          <li className={step === 2 ? 'on' : ''}>2. Sprawdź i uzupełnij kartę</li>
+          <li className={step === 1 ? 'on' : 'done'}>1. Opis</li>
+          <li className={step === 2 ? 'on' : ''}>2. Karta</li>
         </ol>
       )}
       <ErrorBox>{error}</ErrorBox>
@@ -145,28 +145,25 @@ function SubmitForm({ id, initial }) {
       <div className="two-col">
         <div className="col-main">
           {step === 1 ? (
-            <Section title="Opisz pomysł" subtitle="Wystarczy kilka zdań: jaki problem rozwiązuje, na czym polega, jakie są efekty.">
+            <Section title="Opisz pomysł własnymi słowami">
               <textarea rows={10} value={description} onChange={(e) => setDescription(e.target.value)}
                 placeholder="Np. W naszej szkole uczniowie pierwszych klas mieli problem z… Wprowadziliśmy… Efekt: …" />
               <div className="examples">
-                <span className="muted small">Przykłady do demo:</span>
+                <span className="muted small">Przykłady:</span>
                 {EXAMPLES.map((ex) => (
                   <button key={ex.label} className="btn btn-small" onClick={() => setDescription(ex.text)}>{ex.label}</button>
                 ))}
               </div>
               <div className="actions">
                 <button className="btn btn-primary" disabled={busy || description.trim().length < 20} onClick={runAssistant}>
-                  {busy ? 'Asystent analizuje opis…' : '✦ Wypełnij kartę asystentem'}
+                  {busy ? 'Analizuję…' : '✦ Wypełnij kartę asystentem'}
                 </button>
                 <button className="btn" onClick={() => setStep(2)}>Wypełnię ręcznie</button>
               </div>
-              <p className="muted small">
-                Asystent: {meta.aiEnabled ? 'model Claude' : 'reguły offline (ustaw ANTHROPIC_API_KEY w backendzie, by użyć Claude)'}.
-                Tylko proponuje – każde pole możesz poprawić.
-              </p>
+              <p className="muted small">Asystent: {meta.aiEnabled ? 'Claude' : 'tryb offline'}</p>
             </Section>
           ) : (
-            <Section title="Karta innowacji" subtitle="Pola oznaczone * są potrzebne do oceny.">
+            <Section title="Karta innowacji">
               {draftInfo && (
                 <div className="notice small">
                   <Badge tone={draftInfo.engine === 'CLAUDE' ? 'accent' : 'muted'}>{draftInfo.engine === 'CLAUDE' ? 'Claude' : 'Reguły offline'}</Badge>{' '}
@@ -221,15 +218,6 @@ function SubmitForm({ id, initial }) {
         </div>
         <aside className="col-side">
           <SimilarPanel similar={longEnough ? similar : null} />
-          <Section title="Co dalej po zgłoszeniu?">
-            <ol className="steps small">
-              <li>Autor potwierdza zgłoszenie (jeśli zgłosił je ktoś inny).</li>
-              <li>Gdy karta jest kompletna, autor prosi o ocenę.</li>
-              <li>System proponuje ocenę według 6 jawnych kryteriów, ekspert PCI ją zatwierdza.</li>
-              <li>Ekspert wskazuje ścieżkę: replikacja, rozwój w PCI, grant, B+R lub komercjalizacja.</li>
-              <li>Platforma poleca instytucje, partnerów i inwestorów. Wdrożenie w innym miejscu to fork.</li>
-            </ol>
-          </Section>
         </aside>
       </div>
     </div>
@@ -239,9 +227,9 @@ function SubmitForm({ id, initial }) {
 function SimilarPanel({ similar }) {
   const top = similar?.innovations?.[0]
   return (
-    <Section title="Podobne rozwiązania" subtitle="Sprawdzamy na bieżąco, czy ktoś już tego nie zrobił">
+    <Section title="Podobne rozwiązania">
       {!similar ? (
-        <p className="muted small">Zacznij pisać – pokażemy podobne innowacje i patenty.</p>
+        <p className="muted small">Pojawią się w trakcie pisania.</p>
       ) : (
         <>
           {top && top.similarityPercent >= 60 && (

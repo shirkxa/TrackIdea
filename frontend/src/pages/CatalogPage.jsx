@@ -1,9 +1,18 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { api, query } from '../api.js'
+import Icon from '../components/Icon.jsx'
 import InnovationCard from '../components/InnovationCard.jsx'
 import { Empty, ErrorBox, Loading, SelectEnum } from '../components/ui.jsx'
 import { useApp } from '../context.jsx'
+
+const TILES = [
+  { to: '/submit', icon: 'idea', label: 'Zgłoś innowację' },
+  { to: '/needs', icon: 'needs', label: 'Tablica potrzeb' },
+  { to: '/pci', icon: 'radar', label: 'Radar' },
+  { to: '/pci', icon: 'chart', label: 'Mierniki' },
+  { to: '/me', icon: 'user', label: 'Moje' },
+]
 
 const SORTS = [
   { value: 'newest', label: 'Najnowsze / trafność' },
@@ -40,50 +49,46 @@ export default function CatalogPage() {
 
   return (
     <>
-      <section className="hero">
-        <img src="/logo-white.png" alt="" className="hero-logo" />
-        <div className="hero-text">
-          <h1>Ukryte innowacje z sektora publicznego w jednym miejscu</h1>
-          <p>
-            Każdy dobry pomysł ze szkoły, uczelni czy gminy dostaje kartę, przejrzystą ocenę i ścieżkę rozwoju.
-            Wdrożenie w kolejnej instytucji to po prostu <strong>fork</strong>.
-          </p>
-        </div>
-        <div className="hero-actions">
-          <Link className="btn btn-primary" to="/submit">Zgłoś innowację</Link>
-          <Link className="btn" to="/needs">Opisz swoją potrzebę</Link>
-        </div>
-      </section>
+      <h1 className="page-title">Katalog innowacji</h1>
 
-      <div className="search">
+      <nav className="tiles" aria-label="Na skróty">
+        {TILES.map((t) => (
+          <Link key={t.label} to={t.to} className="tile">
+            <Icon name={t.icon} size={36} />
+            <span>{t.label}</span>
+          </Link>
+        ))}
+      </nav>
+
+      <label className="search">
+        <Icon name="search" size={20} />
         <input
           type="search"
-          placeholder="Szukaj problemu lub rozwiązania, np. „kolejki w urzędzie”, „adaptacja pierwszoklasistów”…"
+          placeholder="Szukaj problemu lub rozwiązania, np. kolejki w urzędzie"
           value={q}
           onChange={(e) => setQ(e.target.value)}
           aria-label="Szukaj innowacji"
         />
-        <span className="muted small">Wyszukiwanie semantyczne: znajdzie też opisy innymi słowami</span>
-      </div>
+      </label>
 
       <div className="filters">
-        <SelectEnum label="Typ" value={filters.type} onChange={set('type')} options={meta.types} />
-        <SelectEnum label="Sektor" value={filters.sector} onChange={set('sector')} options={meta.sectors} />
-        <SelectEnum label="Etap" value={filters.maturity} onChange={set('maturity')} options={meta.maturities} />
-        <SelectEnum label="Model transferu" value={filters.transferModel} onChange={set('transferModel')} options={meta.transferModels} />
-        <SelectEnum label="Instytucja" value={filters.institutionType} onChange={set('institutionType')} options={meta.institutionTypes.filter((t) => ['SZKOLA', 'UCZELNIA', 'JST', 'INSTYTUCJA_PUBLICZNA'].includes(t.value))} />
-        <SelectEnum label="Status" value={filters.status} onChange={set('status')} options={statuses} />
-        <SelectEnum label="Sortuj" value={filters.sort} onChange={(v) => set('sort')(v ?? 'newest')} options={SORTS} placeholder="Domyślnie" />
+        <SelectEnum compact label="Typ" value={filters.type} onChange={set('type')} options={meta.types} />
+        <SelectEnum compact label="Sektor" value={filters.sector} onChange={set('sector')} options={meta.sectors} />
+        <SelectEnum compact label="Etap" value={filters.maturity} onChange={set('maturity')} options={meta.maturities} />
+        <SelectEnum compact label="Transfer" value={filters.transferModel} onChange={set('transferModel')} options={meta.transferModels} />
+        <SelectEnum compact label="Instytucja" value={filters.institutionType} onChange={set('institutionType')} options={meta.institutionTypes.filter((t) => ['SZKOLA', 'UCZELNIA', 'JST', 'INSTYTUCJA_PUBLICZNA'].includes(t.value))} />
+        <SelectEnum compact label="Status" value={filters.status} onChange={set('status')} options={statuses} />
+        <SelectEnum compact label="Sortuj: najnowsze" value={filters.sort === 'newest' ? null : filters.sort} onChange={(v) => set('sort')(v ?? 'newest')} options={SORTS.slice(1)} />
       </div>
 
       <ErrorBox>{error}</ErrorBox>
       {!cards ? (
         <Loading />
       ) : cards.length === 0 ? (
-        <Empty>Nic nie znaleziono. Może warto opisać ten problem na <Link to="/needs">tablicy potrzeb</Link>?</Empty>
+        <Empty>Nic nie znaleziono. <Link to="/needs">Opisz problem na tablicy potrzeb</Link>.</Empty>
       ) : (
         <>
-          <p className="muted small">Znaleziono: {cards.length}</p>
+          <p className="muted small results-count">{cards.length} wyników</p>
           <div className="grid">
             {cards.map((c) => (
               <InnovationCard key={c.id} card={c} />

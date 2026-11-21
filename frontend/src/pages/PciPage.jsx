@@ -37,11 +37,7 @@ export default function PciPage() {
     <>
       <section className="page-head">
         <div>
-          <h1>{isPci ? 'Panel PCI' : 'Radar i mierniki'}</h1>
-          <p className="muted">
-            Jak skutecznie TrackIdea odnajduje ukryte innowacje i przenosi je do kolejnych instytucji.
-            {!isPci && ' Wybierz eksperta PCI w nagłówku, żeby zobaczyć kolejkę ocen i uruchomić Radar.'}
-          </p>
+          <h1 className="page-title">{isPci ? 'Panel PCI' : 'Radar i mierniki'}</h1>
         </div>
       </section>
 
@@ -54,7 +50,7 @@ export default function PciPage() {
                 <span className="kpi-label">{k.label}</span>
                 <strong className="kpi-value">{k.value}</strong>
                 <span className="muted small">{k.hint}</span>
-                {k.target !== '–' && <span className="kpi-target">cel pilotażu: {k.target}</span>}
+                {k.target !== '–' && <span className="kpi-target">cel: {k.target}</span>}
               </div>
             ))}
           </div>
@@ -72,7 +68,6 @@ export default function PciPage() {
 
       <Section
         title="Radar"
-        subtitle="Automatyczne wykrywanie innowacji w otwartych bazach. Każdy wykryty rekord trafia do autora lub opiekuna instytucji do potwierdzenia."
         actions={isPci && (
           <button className="btn btn-primary" disabled={scanning} onClick={scan}>
             {scanning ? 'Skanowanie…' : '◎ Uruchom skan Radaru'}
@@ -84,10 +79,6 @@ export default function PciPage() {
             {radar.data.sources.map((s) => <li key={s}>{s}</li>)}
           </ul>
         )}
-        <p className="muted small">
-          Przetwarzanie: import → ekstrakcja pól → wyszukanie podobnych (duplikat od 75%) → przypisanie instytucji → status „Wykryta”.
-          W prototypie Radar czyta próbki eksportów z plików JSON; docelowo każde źródło to osobny importer.
-        </p>
         {lastScan && (
           <p className="notice small">
             Ostatni skan: przejrzane rekordy {lastScan.scanned}, nowe innowacje {lastScan.created},
@@ -170,19 +161,18 @@ function Distribution({ title, data }) {
 
 function QueueSection({ queue }) {
   const groups = [
-    ['toApprove', 'Oceny do zatwierdzenia', 'Propozycja oceny czeka na Ciebie'],
-    ['toChoosePath', 'Ocenione bez ścieżki', 'Wskaż ścieżkę rozwoju'],
-    ['drafts', 'Do potwierdzenia przez autorów', 'Wykryte przez Radar lub zgłoszone przez zwiadowców'],
-    ['readyForAssessment', 'Gotowe do oceny', 'Karta kompletna – autor może poprosić o ocenę'],
+    ['toApprove', 'Do zatwierdzenia'],
+    ['toChoosePath', 'Bez ścieżki'],
+    ['drafts', 'Czekają na autorów'],
+    ['readyForAssessment', 'Gotowe do oceny'],
   ]
   return (
-    <Section title="Kolejka pracy" subtitle="Co czeka na eksperta PCI – nic nie utknie bez właściciela">
+    <Section title="Kolejka pracy">
       {!queue.data ? <Loading /> : (
         <div className="queue">
-          {groups.map(([key, title, hint]) => (
+          {groups.map(([key, title]) => (
             <div key={key} className="queue-col">
               <h3>{title} <Badge tone={queue.data[key].length > 0 && key === 'toApprove' ? 'warn' : 'muted'}>{queue.data[key].length}</Badge></h3>
-              <p className="muted small">{hint}</p>
               {queue.data[key].length === 0 ? <p className="muted small">Pusto.</p> : (
                 <ul className="queue-list">
                   {queue.data[key].map((c) => (

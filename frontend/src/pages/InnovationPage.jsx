@@ -104,7 +104,7 @@ export default function InnovationPage() {
           <div className="head-buttons">
             <button className={`btn btn-small ${viewer.voted ? 'btn-on' : ''}`} disabled={!user} onClick={() => toggle('vote')}
               title="Głos jak w Banku Pomysłów: przydałoby się u nas">
-              ▲ Przydałoby się u nas · {card.votes}
+              ▲ Przydałoby się · {card.votes}
             </button>
             <button className={`btn btn-small ${viewer.following ? 'btn-on' : ''}`} disabled={!user} onClick={() => toggle('follow')}>
               ☆ {viewer.following ? 'Obserwujesz' : 'Obserwuj'} · {card.followers}
@@ -115,7 +115,6 @@ export default function InnovationPage() {
 
       <div className="card pipeline-card">
         <Pipeline statuses={meta.statuses} current={card.status} />
-        <p className="muted small center">{card.status.description}</p>
       </div>
 
       <ActionPanel data={data} user={user} busy={busy} act={act} />
@@ -190,11 +189,10 @@ function ActionPanel({ data, user, busy, act }) {
   }
 
   const hints = []
-  if (!user) hints.push('Wybierz użytkownika demo w nagłówku, żeby głosować, forkować albo prosić o kontakt.')
-  if (card.status.draft) hints.push('To zgłoszenie nie jest jeszcze publiczne – czeka na potwierdzenie autora lub opiekuna instytucji.')
-  if (card.status.value === 'W_OCENIE' && !viewer.canApprove) hints.push('Propozycja oceny czeka na eksperta PCI.')
-  if (viewer.canApprove) hints.push('Jako ekspert PCI sprawdź propozycję oceny poniżej i zatwierdź ją.')
-  if (viewer.canChoosePaths && card.status.value === 'OCENIONA') hints.push('Ocena zatwierdzona – wybierz ścieżkę rozwoju w sekcji „Ścieżki”.')
+  if (card.status.draft) hints.push('Niepubliczne – czeka na potwierdzenie autora.')
+  if (card.status.value === 'W_OCENIE' && !viewer.canApprove) hints.push('Ocena czeka na eksperta PCI.')
+  if (viewer.canApprove) hints.push('Sprawdź i zatwierdź ocenę poniżej.')
+  if (viewer.canChoosePaths && card.status.value === 'OCENIONA') hints.push('Wybierz ścieżkę rozwoju poniżej.')
 
   if (actions.length === 0 && hints.length === 0 && completeness.percent === 100) return null
 
@@ -238,7 +236,7 @@ function CardSection({ data }) {
     ['Efekty', data.results],
   ]
   return (
-    <Section title="Karta innowacji" subtitle="Ustandaryzowany opis – jak README repozytorium">
+    <Section title="Opis">
       <dl className="readme">
         {rows.map(([label, value]) => (
           <div key={label}>
@@ -285,11 +283,11 @@ function AssessmentSection({ data, busy, act }) {
 
   if (!assessment) {
     return (
-      <Section title="Ocena potencjału" subtitle="6 kryteriów, jawne wagi, uzasadnienie każdej oceny">
+      <Section title="Ocena potencjału">
         <Empty>
           {card.status.step < 3
-            ? 'Ocena będzie możliwa po potwierdzeniu i uzupełnieniu karty.'
-            : 'Innowacja nie była jeszcze oceniana.'}
+            ? 'Najpierw potwierdź i uzupełnij kartę.'
+            : 'Jeszcze nieoceniona.'}
         </Empty>
       </Section>
     )
@@ -308,7 +306,7 @@ function AssessmentSection({ data, busy, act }) {
       title="Ocena potencjału"
       subtitle={assessment.approved
         ? `Zatwierdzona przez ${assessment.approvedBy?.name ?? 'eksperta PCI'} · ${formatDate(assessment.approvedAt)}`
-        : 'Propozycja automatyczna – czeka na weryfikację eksperta PCI'}
+        : 'Propozycja – czeka na eksperta PCI'}
       actions={<ScoreRing score={total} size={64} />}
     >
       <table className="score-table">
@@ -362,7 +360,7 @@ function AssessmentSection({ data, busy, act }) {
         </tbody>
       </table>
       <p className="muted small">
-        Wynik = Σ waga × (ocena − 1) / 4 × 100. Głosy społeczności liczymy osobno, żeby popularność nie zagłuszyła jakości.
+        Wynik = Σ waga × (ocena − 1) / 4 × 100
       </p>
       {editing && (
         <button className="btn btn-primary" disabled={busy}
@@ -396,7 +394,7 @@ function PathsSection({ data, busy, act, version }) {
   const choosing = viewer.canChoosePaths
 
   return (
-    <Section title="Ścieżki rozwoju" subtitle="Rekomendacje z jawnych reguł – ekspert PCI wybiera i zatwierdza">
+    <Section title="Ścieżki rozwoju">
       {data.chosenPaths.length > 0 && (
         <p>Zatwierdzona ścieżka: {data.chosenPaths.map((p) => <Badge key={p.value} tone="accent">{p.label}</Badge>)}</p>
       )}
@@ -417,7 +415,6 @@ function PathsSection({ data, busy, act, version }) {
           </header>
           <p className="small"><span className="muted">Reguła:</span> {r.rule}</p>
           <p className="small"><span className="muted">Dlaczego:</span> {r.reasons.join(' · ')}</p>
-          <p className="small"><span className="muted">Do kogo:</span> {r.audience}</p>
           <ol className="steps small">{r.nextSteps.map((s) => <li key={s}>{s}</li>)}</ol>
           {r.targets.length > 0 && (
             <div className="targets">
@@ -443,12 +440,12 @@ function PathsSection({ data, busy, act, version }) {
 function MatchesSection({ id, version }) {
   const { data } = useFetch(`/innovations/${id}/matches`, [version])
   return (
-    <Section title="Polecane połączenia" subtitle="Kto może to wdrożyć, rozwinąć lub sfinansować">
+    <Section title="Polecane">
       {!data ? <Loading /> : (
         <>
-          <h3 className="sub">Potrzeby z tablicy</h3>
+          <h3 className="sub">Potrzeby</h3>
           {data.needs.length === 0 ? <p className="muted small">Brak dopasowanych potrzeb.</p> : data.needs.map((m) => <MatchRow key={`n${m.id}`} m={m} />)}
-          <h3 className="sub">Partnerzy i inwestorzy</h3>
+          <h3 className="sub">Partnerzy</h3>
           {data.partners.length === 0 ? <p className="muted small">Brak dopasowanych partnerów.</p> : data.partners.map((m) => <MatchRow key={`p${m.id}`} m={m} />)}
         </>
       )}
@@ -459,7 +456,7 @@ function MatchesSection({ id, version }) {
 function SimilarSection({ id }) {
   const { data } = useFetch(`/innovations/${id}/similar`)
   return (
-    <Section title="Podobne rozwiązania" subtitle="Ogranicza dublowanie prac i zasila kryterium „Nowość”">
+    <Section title="Podobne">
       {!data ? <Loading /> : (
         <>
           {data.innovations.length === 0 && data.priorArt.length === 0 && <p className="muted small">Nie znaleziono podobnych.</p>}
@@ -502,7 +499,7 @@ function ForksSection({ forks, deployments }) {
 
 function TimelineSection({ events }) {
   return (
-    <Section title="Oś czasu" subtitle="Historia zmian – jak commity w repozytorium">
+    <Section title="Oś czasu">
       <ol className="timeline">
         {[...events].reverse().map((e) => (
           <li key={e.id}>

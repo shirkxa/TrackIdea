@@ -42,7 +42,7 @@ export default function ProfilePage() {
       </section>
 
       {isPartner && (
-        <Section title="Czego szuka" subtitle="Na tej podstawie TrackIdea poleca innowacje (polecajki)">
+        <Section title="Czego szuka">
           <div className="facts">
             <div className="fact">
               <span className="muted small">Sektory</span>
@@ -57,7 +57,7 @@ export default function ProfilePage() {
         </Section>
       )}
 
-      <Section title={`Innowacje: ${innovations.length}`} subtitle="Opublikowane innowacje, których jest autorem lub autorką">
+      <Section title={`Innowacje: ${innovations.length}`}>
         {innovations.length === 0 ? <Empty>Brak opublikowanych innowacji.</Empty> : (
           <div className="grid">{innovations.map((c) => <InnovationCard key={c.id} card={c} />)}</div>
         )}

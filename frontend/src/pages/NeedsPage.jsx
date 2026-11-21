@@ -52,11 +52,7 @@ export default function NeedsPage() {
     <>
       <section className="page-head">
         <div>
-          <h1>Tablica potrzeb</h1>
-          <p className="muted">
-            Szkoły, uczelnie, samorządy i firmy opisują problemy, a TrackIdea dopasowuje do nich istniejące innowacje.
-            Zamiast wymyślać od nowa – sprawdź, kto już to rozwiązał.
-          </p>
+          <h1 className="page-title">Tablica potrzeb</h1>
         </div>
         {user?.institution && (
           <button className="btn btn-primary" onClick={() => setOpen((o) => !o)}>
@@ -65,10 +61,9 @@ export default function NeedsPage() {
         )}
       </section>
 
-      {!user && <p className="notice small">Wybierz użytkownika demo z instytucji lub firmy, żeby opublikować potrzebę.</p>}
 
       {open && (
-        <Section title="Nowa potrzeba" subtitle={`Publikujesz jako ${user.name} · ${user.institution.name}`}>
+        <Section title="Nowa potrzeba">
           <ErrorBox>{formError}</ErrorBox>
           <div className="form">
             <label className="field wide">
@@ -77,7 +72,7 @@ export default function NeedsPage() {
                 placeholder="Np. Długie kolejki w wydziale komunikacji" />
             </label>
             <label className="field wide">
-              <span>Opis – kogo dotyczy, co już próbowaliście, czego szukacie</span>
+              <span>Opis</span>
               <textarea rows={4} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
             </label>
             <SelectEnum label="Sektor" value={form.sector} onChange={(v) => setForm({ ...form, sector: v })}
@@ -107,11 +102,8 @@ export default function NeedsPage() {
       )}
 
       <div className="filters filters-narrow">
-        <label className="field">
-          <span>Szukaj</span>
-          <input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="problem, instytucja…" />
-        </label>
-        <SelectEnum label="Sektor" value={sector} onChange={setSector} options={meta.sectors} />
+        <input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Szukaj problemu lub instytucji" aria-label="Szukaj" />
+        <SelectEnum compact label="Sektor" value={sector} onChange={setSector} options={meta.sectors} />
       </div>
 
       <ErrorBox>{error}</ErrorBox>
@@ -127,7 +119,7 @@ export default function NeedsPage() {
                 <div className="card-badges">
                   {need.sector && <Badge tone="muted">{need.sector.label}</Badge>}
                   <Badge tone={need.wantsReadySolution ? 'info' : 'radar'}>
-                    {need.wantsReadySolution ? 'Szuka gotowego rozwiązania' : 'Szuka partnera do rozwoju'}
+                    {need.wantsReadySolution ? 'Gotowe rozwiązanie' : 'Partner B+R'}
                   </Badge>
                   {need.institution && !need.institution.publicSector && <Badge tone="warn">{need.institution.type.label}</Badge>}
                 </div>
@@ -141,7 +133,7 @@ export default function NeedsPage() {
               <div className="need-matches">
                 <h4>{matches.length} {plural(matches.length, 'pasująca innowacja', 'pasujące innowacje', 'pasujących innowacji')}</h4>
                 {matches.length === 0
-                  ? <p className="muted small">Na razie brak – to może być pomysł na nową innowację.</p>
+                  ? <p className="muted small">Brak.</p>
                   : matches.slice(0, 3).map((m) => <MatchRow key={m.id} m={m} />)}
               </div>
             </article>

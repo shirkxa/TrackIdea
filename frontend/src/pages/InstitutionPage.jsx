@@ -41,7 +41,7 @@ export default function InstitutionPage() {
             )}
           </Section>
           {forks.length > 0 && (
-            <Section title="Wdrożone u nas (forki)" subtitle="Rozwiązania innych instytucji przeniesione tutaj">
+            <Section title="Wdrożone u nas (forki)">
               <div className="grid">{forks.map((c) => <InnovationCard key={c.id} card={c} />)}</div>
             </Section>
           )}

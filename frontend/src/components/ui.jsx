@@ -97,18 +97,22 @@ export function Section({ title, subtitle, children, actions, id }) {
   )
 }
 
-export function SelectEnum({ label, value, onChange, options, placeholder = 'Wszystkie' }) {
+export function SelectEnum({ label, value, onChange, options, placeholder = 'Wszystkie', compact = false }) {
+  const select = (
+    <select value={value ?? ''} onChange={(e) => onChange(e.target.value || null)} aria-label={label}>
+      <option value="">{compact ? label : placeholder}</option>
+      {options?.map((o) => (
+        <option key={o.value} value={o.value}>
+          {o.label}
+        </option>
+      ))}
+    </select>
+  )
+  if (compact) return select
   return (
     <label className="field">
       <span>{label}</span>
-      <select value={value ?? ''} onChange={(e) => onChange(e.target.value || null)}>
-        <option value="">{placeholder}</option>
-        {options?.map((o) => (
-          <option key={o.value} value={o.value}>
-            {o.label}
-          </option>
-        ))}
-      </select>
+      {select}
     </label>
   )
 }

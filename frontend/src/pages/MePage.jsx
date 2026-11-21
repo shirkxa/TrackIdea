@@ -32,7 +32,7 @@ function MyDashboard({ user }) {
     <>
       <section className="page-head">
         <div>
-          <h1>Cześć, {user.name.split(' ').filter((w) => !w.endsWith('.'))[0]}</h1>
+          <h1 className="page-title">Cześć, {user.name.split(' ').filter((w) => !w.endsWith('.'))[0]}</h1>
           <p className="muted">
             {user.role.label}{user.institution && <> · {user.institution.name}</>} ·{' '}
             <Link to={`/people/${user.id}`}>zobacz swój profil</Link>
@@ -42,7 +42,7 @@ function MyDashboard({ user }) {
       </section>
 
       {drafts.length > 0 && (
-        <Section title="Czekają na potwierdzenie" subtitle="Wykryte przez Radar lub zgłoszone przez zwiadowców w Twojej instytucji. Sprawdź, czy to Twoje, i potwierdź.">
+        <Section title="Czekają na potwierdzenie">
           <div className="grid">{drafts.map((c) => <InnovationCard key={c.id} card={c} />)}</div>
         </Section>
       )}
@@ -52,9 +52,6 @@ function MyDashboard({ user }) {
       {showRecs && (
         <Section
           title="Polecane dla Ciebie"
-          subtitle={user.role.value === 'PARTNER'
-            ? 'Innowacje pasujące do Twoich zainteresowań, sektorów i szukanych etapów'
-            : 'Innowacje, które odpowiadają na potrzeby Twojej instytucji z tablicy potrzeb'}
         >
           {!recs.data ? <Loading /> : recs.data.length === 0 ? (
             <Empty>Brak poleceń. {user.role.value === 'OPIEKUN' && <>Opisz problem na <Link to="/needs">tablicy potrzeb</Link>, a dopasujemy innowacje.</>}</Empty>
@@ -62,7 +59,7 @@ function MyDashboard({ user }) {
         </Section>
       )}
 
-      <Section title="Moje innowacje" subtitle="Twoje i Twojej instytucji – także forki, czyli wdrożenia cudzych rozwiązań">
+      <Section title="Moje innowacje">
         {!mine.data ? <Loading /> : published.length === 0 ? (
           <Empty>Nie masz jeszcze opublikowanych innowacji. <Link to="/submit">Zgłoś pierwszą</Link>.</Empty>
         ) : (
@@ -96,7 +93,7 @@ function ContactsSection({ user, contacts }) {
 
   if (contacts.data && list.length === 0) return null
   return (
-    <Section title="Prośby o kontakt" subtitle="Adres e-mail drugiej strony pojawia się dopiero po akceptacji">
+    <Section title="Prośby o kontakt">
       {!contacts.data ? <Loading /> : (
         <div className="contacts">
           {incoming.length > 0 && <h3 className="sub">Do Ciebie</h3>}
