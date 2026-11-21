@@ -37,7 +37,7 @@ public class RadarService {
     /** Stan jednego źródła pokazywany w panelu PCI. */
     public record SourceStatus(String name, String description, String homepage, boolean live, boolean active,
                                Instant lastRunAt, int lastFetched, int lastCreated, int lastDuplicates,
-                               int lastUpdated, long totalRecords, String lastError) {
+                               int lastUpdated, long totalRecords, String lastError, String preparing) {
     }
 
     private final List<SourceImporter> importers;
@@ -92,9 +92,10 @@ public class RadarService {
             long total = records.countBySource(imp.name());
             out.add(s == null
                     ? new SourceStatus(imp.name(), imp.description(), imp.homepage(), imp.live(), isActive(imp),
-                    null, 0, 0, 0, 0, total, null)
+                    null, 0, 0, 0, 0, total, null, null)
                     : new SourceStatus(s.name(), s.description(), s.homepage(), s.live(), s.active(), s.lastRunAt(),
-                    s.lastFetched(), s.lastCreated(), s.lastDuplicates(), s.lastUpdated(), total, s.lastError()));
+                    s.lastFetched(), s.lastCreated(), s.lastDuplicates(), s.lastUpdated(), total, s.lastError(),
+                    s.preparing()));
         }
         return out;
     }
@@ -122,18 +123,23 @@ public class RadarService {
             List<SourceRecord> incoming;
             try {
                 incoming = imp.fetch();
+            } catch (pl.trackidea.radar.SourceNotReady e) {
+                log.info("Radar: {} – {}", imp.name(), e.getMessage());
+                status.put(imp.name(), new SourceStatus(imp.name(), imp.description(), imp.homepage(), imp.live(), true,
+                        Instant.now(), 0, 0, 0, 0, 0, null, e.getMessage()));
+                continue;
             } catch (Exception e) {
                 String msg = e.getMessage() == null ? e.getClass().getSimpleName() : e.getMessage();
                 log.warn("Radar: źródło {} niedostępne: {}", imp.name(), msg);
                 errors.add(imp.name() + ": " + msg);
                 status.put(imp.name(), new SourceStatus(imp.name(), imp.description(), imp.homepage(), imp.live(), true,
-                        Instant.now(), 0, 0, 0, 0, 0, "Źródło niedostępne: " + msg));
+                        Instant.now(), 0, 0, 0, 0, 0, "Źródło niedostępne: " + msg, null));
                 continue;
             }
             int[] counts = new int[4]; // created, duplicates, updated, skipped
             for (SourceRecord r : incoming) {
                 try {
-                    RadarRecord rec = tx.execute(t -> ingest(r, counts));
+                    RadarRecord rec = tx.execute(t -> ingest(r, counts, false));
                     if (rec != null) touched.add(rec);
                 } catch (RuntimeException e) {
                     log.warn("Radar: pominięto rekord {} {}: {}", r.source(), r.ref(), e.getMessage());
@@ -146,7 +152,7 @@ public class RadarService {
             updated += counts[2];
             skipped += counts[3];
             status.put(imp.name(), new SourceStatus(imp.name(), imp.description(), imp.homepage(), imp.live(), true,
-                    Instant.now(), incoming.size(), counts[0], counts[1], counts[2], 0, null));
+                    Instant.now(), incoming.size(), counts[0], counts[1], counts[2], 0, null, null));
             log.info("Radar: {} – pobrano {}, nowe {}, duplikaty {}, zaktualizowane {}", imp.name(), incoming.size(),
                     counts[0], counts[1], counts[2]);
         }
@@ -155,7 +161,17 @@ public class RadarService {
     }
 
     /** Jeden rekord: nowy → karta, znany → odświeżenie, bardzo podobny do istniejącej innowacji → duplikat. */
-    private RadarRecord ingest(SourceRecord r, int[] counts) {
+    /**
+     * Rekord wskazany przez analityka (strona lub dokument): ta sama ścieżka co import,
+     * ale pola karty wyodrębnia asystent AI (gdy jest klucz API) zamiast samych reguł.
+     */
+    public synchronized RadarRecord analyze(SourceRecord r) {
+        int[] counts = new int[4];
+        RadarRecord rec = tx.execute(t -> ingest(r, counts, true));
+        return rec != null ? rec : records.findFirstBySourceAndRef(r.source(), r.ref()).orElseThrow();
+    }
+
+    private RadarRecord ingest(SourceRecord r, int[] counts, boolean useAi) {
         int hash = Objects.hash(r.title(), r.abstractText(), r.facts());
         Optional<RadarRecord> known = records.findFirstBySourceAndRef(r.source(), r.ref());
         if (known.isPresent()) {
@@ -192,29 +208,37 @@ public class RadarService {
             counts[1]++;
         } else {
             rec.setOutcome(RadarRecord.Outcome.NOWA_INNOWACJA);
-            rec.setInnovation(createDetected(r));
+            rec.setInnovation(createDetected(r, useAi));
+            rec.setTitle(rec.getInnovation().getTitle());
             counts[0]++;
         }
         return records.save(rec);
     }
 
-    private Innovation createDetected(SourceRecord r) {
-        AssistantService.Draft d = assistant.heuristic(r.title() + ". " + r.abstractText());
+    private Innovation createDetected(SourceRecord r, boolean useAi) {
+        String text = (r.title().isBlank() ? "" : r.title() + ". ") + r.abstractText();
+        AssistantService.Draft d = useAi ? assistant.draft(text) : assistant.heuristic(text);
         Innovation inn = new Innovation();
-        inn.setTitle(r.title());
+        inn.setTitle(useAi && d.title() != null && !d.title().isBlank() ? d.title() : r.title());
         inn.setSummary(d.summary());
-        inn.setProblem(d.problem().isEmpty() ? null : d.problem());
-        inn.setSolution(d.solution().isEmpty() ? r.abstractText() : d.solution());
-        inn.setResults(d.results().isEmpty() ? null : d.results());
+        inn.setProblem(blank(d.problem()) ? null : d.problem());
+        inn.setSolution(blank(d.solution()) ? r.abstractText() : d.solution());
+        inn.setResults(blank(d.results()) ? null : d.results());
+        inn.setRequirements(blank(d.requirements()) ? null : d.requirements());
         inn.setType(r.typeHint() != null ? r.typeHint() : d.type());
         inn.setSector(r.sectorHint() != null ? r.sectorHint() : d.sector());
         inn.setMaturity(r.maturityHint() != null ? r.maturityHint() : d.maturity());
         inn.setTrl(Trl.estimate(inn.getMaturity(), TextVectorizer.normalize(r.title() + " " + r.abstractText())));
-        inn.setArea(Area.derive(inn.getType(), inn.getSector(), r.institutionType()));
+        inn.setArea(r.areaHint() != null ? r.areaHint() : Area.derive(inn.getType(), inn.getSector(), r.institutionType()));
         // klasyfikacja pochodzi z automatu – to szacunek, dopóki analityk jej nie potwierdzi
         inn.getEstimated().addAll(List.of("area", "type", "sector", "maturity", "trl"));
         inn.setSourceYear(r.year());
         inn.getSourceFacts().addAll(r.facts());
+        if (useAi) {
+            inn.getSourceFacts().add("Pola karty wyodrębnione automatycznie: "
+                    + ("CLAUDE".equals(d.engine()) ? "model AI Claude" : "reguły offline") + " – do sprawdzenia");
+            d.tags().stream().limit(6).forEach(t -> inn.getTags().add(t.toLowerCase()));
+        }
         r.keywords().stream().filter(k -> k != null && !k.isBlank()).forEach(k -> inn.getTags().add(k.toLowerCase()));
         if (r.url() != null) {
             inn.getLinks().add(r.url());
@@ -235,5 +259,9 @@ public class RadarService {
         innovationService.log(inn, EventType.WYKRYTO, "Wykryto w źródle " + r.source() + " (" + r.ref()
                 + (r.year() != null ? ", " + r.year() : "") + ")." + auto + " Czeka na weryfikację analityka PCI.", null);
         return inn;
+    }
+
+    private static boolean blank(String s) {
+        return s == null || s.isBlank();
     }
 }

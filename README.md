@@ -58,9 +58,14 @@ npm run dev
 
 Otwórz **http://localhost:5173**. Restart backendu przywraca czyste dane demo.
 
-**Źródła Radaru.** Po starcie backend pobiera prawdziwe rekordy z **OpenAlex** (publikacje polskich uczelni
-i instytutów) i **CORDIS** (projekty UE z udziałem polskich gmin, szkół, uczelni i firm), a potem odświeża je
-co 6 godzin. Bez internetu Radar może wczytać próbki z plików:
+**Źródła Radaru.** Po starcie backend pobiera prawdziwe rekordy i odświeża je co 6 godzin:
+
+- **OpenAlex** – publikacje polskich uczelni i instytutów,
+- **CORDIS** – projekty UE z udziałem polskich gmin, szkół, uczelni i firm,
+- **Fundusze Europejskie 2021–2027** (dane.gov.pl) – w tym projekty PARP i NCBR oraz programów regionalnych; Podkarpacie na początku.
+
+Analityk PCI może też dodać rekord ze **strony** (gminy, szkoły, uczelni) albo z **treści dokumentu** – Radar wyciąga
+pola karty (model Claude, gdy jest klucz; bez niego reguły) i oznacza je jako szacunek. Bez internetu Radar może wczytać próbki z plików:
 
 ```bash
 ./mvnw spring-boot:run -Dspring-boot.run.arguments=--trackidea.radar.live=false
@@ -79,12 +84,12 @@ cd backend
 ./mvnw test
 ```
 
-31 testów (JUnit 5): jednostkowe dla wzoru oceny i wag, podobieństwa tekstów po polsku, reguł dopasowań,
-analizy tekstu offline, parsowania danych ze źródeł Radaru, skali TRL i obszarów oraz testy integracyjne logowania, CSRF, uprawnień zespołu PCI i automatycznej oceny kart.
+38 testów (JUnit 5): jednostkowe dla wzoru oceny i wag, podobieństwa tekstów po polsku, reguł dopasowań,
+analizy tekstu offline, parsowania danych ze źródeł Radaru (w tym pliku XLSX Funduszy Europejskich), ochrony przed pobieraniem adresów wewnętrznych, skali TRL i obszarów oraz testy integracyjne logowania, CSRF, uprawnień zespołu PCI, automatycznej oceny kart i analizy dokumentu.
 
 ## Dane, bezpieczeństwo i ograniczenia
 
-- **Dane:** OpenAlex i CORDIS przez otwarte API (bez kluczy); kolejne źródła z listy PCI dodaje się jako nowy importer.
+- **Dane:** OpenAlex, CORDIS i dane.gov.pl przez otwarte API (bez kluczy); kolejne źródła (np. bazy patentowe) dodaje się jako nowy importer. Strony wskazane przez analityka są pobierane tylko z publicznych adresów http/https.
 - **Ocena:** jawne reguły i wagi; AI i reguły tylko proponują, decyzję zatwierdza ekspert PCI.
 - **Prywatność:** Radar nie zbiera danych osobowych użytkowników; autorzy innowacji są podawani tak, jak w źródle.
 - **Bezpieczeństwo:** logowanie Spring Security (sesja HttpOnly, CSRF, hasła BCrypt), uprawnienia sprawdzane

@@ -62,6 +62,25 @@ class SecurityFlowTest {
     }
 
     @Test
+    void analystTurnsPastedDocumentIntoDetectedCard() throws Exception {
+        String text = "Gmina wdrożyła system zgłaszania usterek oświetlenia ulicznego przez aplikację mobilną. "
+                + "Mieszkańcy dodają zdjęcie i lokalizację, a zgłoszenie trafia od razu do wykonawcy. "
+                + "Rozwiązanie działa od 2024 roku, czas naprawy skrócił się z 9 do 3 dni.";
+        String body = "{\"title\":\"Zgłoś usterkę oświetlenia\",\"institution\":\"Gmina Tyczyn\",\"text\":\"" + text + "\"}";
+        mvc.perform(post("/api/radar/analyze").with(csrf()).contentType(MediaType.APPLICATION_JSON).content(body))
+                .andExpect(status().isUnauthorized());
+        MockHttpSession session = login(ANALYST, "demo123");
+        mvc.perform(post("/api/radar/analyze").session(session).with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON).content(body))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.source").value("Analiza dokumentu"))
+                .andExpect(jsonPath("$.outcome").value("NOWA_INNOWACJA"));
+        mvc.perform(post("/api/radar/analyze").session(session).with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"url\":\"http://127.0.0.1:8080/api/stats\"}"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
     void requestsWithoutCsrfTokenAreRejected() throws Exception {
         MockHttpSession session = login(ANALYST, "demo123");
         mvc.perform(post("/api/radar/scan").session(session)).andExpect(status().is4xxClientError());

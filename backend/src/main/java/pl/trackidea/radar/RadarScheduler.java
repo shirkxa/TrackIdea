@@ -17,6 +17,14 @@ public class RadarScheduler {
         this.liveEnabled = liveEnabled;
     }
 
+    /** Gdy źródło skończy pobierać dane w tle, skan jest robiony od razu, bez czekania 6 godzin. */
+    @org.springframework.context.event.EventListener
+    public void onSourceReady(SourceReadyEvent event) {
+        if (liveEnabled) {
+            Thread.ofVirtual().name("radar-" + event.source()).start(radar::scan);
+        }
+    }
+
     @Scheduled(initialDelayString = "${trackidea.radar.initial-delay:PT5S}",
             fixedDelayString = "${trackidea.radar.refresh-interval:PT6H}")
     public void refresh() {

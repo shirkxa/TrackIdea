@@ -4,6 +4,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.*;
 import pl.trackidea.domain.InnovationStatus;
 import pl.trackidea.domain.Person;
+import pl.trackidea.radar.ManualSource;
+import pl.trackidea.radar.SourceRecord;
 import pl.trackidea.repo.InnovationRepository;
 import pl.trackidea.repo.RadarRecordRepository;
 import pl.trackidea.service.DomainException;
@@ -24,9 +26,11 @@ public class PciController {
     private final InnovationRepository innovations;
     private final Views views;
     private final CurrentUser currentUser;
+    private final ManualSource manual;
 
     public PciController(StatsService stats, RadarService radar, RadarRecordRepository radarRecords,
-                         InnovationRepository innovations, Views views, CurrentUser currentUser) {
+                         InnovationRepository innovations, Views views, CurrentUser currentUser, ManualSource manual) {
+        this.manual = manual;
         this.stats = stats;
         this.radar = radar;
         this.radarRecords = radarRecords;
@@ -65,12 +69,41 @@ public class PciController {
         return out;
     }
 
-    @PostMapping("/radar/scan")
-    public Map<String, Object> scan() {
+    /** Strona (adres) albo wklejona treść dokumentu do analizy. */
+    public record AnalyzeRequest(String url, String text, String title, String institution) {
+    }
+
+    /**
+     * Analityk wskazuje stronę samorządu, szkoły, uczelni lub treść raportu – Radar pobiera tekst,
+     * wyodrębnia pola karty (AI, gdy dostępne), wykrywa duplikat i tworzy kartę „Wykryta” ze źródłem.
+     */
+    @PostMapping("/radar/analyze")
+    public Dto.RadarRecordView analyze(@RequestBody AnalyzeRequest req) {
+        requireStaff("Analizę strony lub dokumentu uruchamia analityk PCI.");
+        SourceRecord record;
+        try {
+            record = req.text() != null && !req.text().isBlank()
+                    ? manual.fromText(req.title(), req.text(), req.institution(), req.url())
+                    : manual.fromPage(req.url(), req.institution());
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw DomainException.badRequest("Przerwano pobieranie strony.");
+        } catch (Exception e) {
+            throw DomainException.badRequest(e.getMessage() == null ? "Nie udało się pobrać strony." : e.getMessage());
+        }
+        return Dto.RadarRecordView.of(radar.analyze(record));
+    }
+
+    private void requireStaff(String message) {
         Person actor = currentUser.get();
         if (actor == null || !actor.hasRole(pl.trackidea.domain.Role.EKSPERT, pl.trackidea.domain.Role.ADMIN)) {
-            throw DomainException.forbidden("Skan Radaru uruchamia ekspert lub administrator PCI.");
+            throw DomainException.forbidden(message);
         }
+    }
+
+    @PostMapping("/radar/scan")
+    public Map<String, Object> scan() {
+        requireStaff("Skan Radaru uruchamia ekspert lub administrator PCI.");
         RadarService.ScanResult r = radar.scan();
         Map<String, Object> out = new LinkedHashMap<>();
         out.put("scanned", r.scanned());

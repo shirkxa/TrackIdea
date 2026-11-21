@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { api } from '../api.js'
 import { Badge, Empty, ErrorBox, Loading, Section, StatusBadge } from '../components/ui.jsx'
 import { useApp } from '../context.jsx'
@@ -90,8 +90,8 @@ export default function PciPage() {
                 <div key={s.name} className={`source-card ${s.lastError ? 'source-error' : ''}`}>
                   <div className="source-head">
                     <strong>{s.homepage ? <a href={s.homepage} target="_blank" rel="noreferrer">{s.name}</a> : s.name}</strong>
-                    <Badge tone={s.lastError ? 'warn' : s.lastRunAt ? 'good' : 'muted'}>
-                      {s.lastError ? 'błąd' : s.lastRunAt ? 'działa' : 'czeka na skan'}
+                    <Badge tone={s.lastError ? 'warn' : s.preparing ? 'info' : s.lastRunAt ? 'good' : 'muted'}>
+                      {s.lastError ? 'błąd' : s.preparing ? 'pobiera dane' : s.lastRunAt ? 'działa' : 'czeka na skan'}
                     </Badge>
                   </div>
                   <p className="muted small">{s.description}</p>
@@ -100,11 +100,13 @@ export default function PciPage() {
                     {s.lastRunAt && <> · ostatnio pobrano {s.lastFetched}, nowe {s.lastCreated}, zaktualizowane {s.lastUpdated}</>}
                   </p>
                   {s.lastError && <p className="small">{s.lastError}</p>}
+                  {s.preparing && <p className="small muted">{s.preparing}</p>}
                 </div>
               ))}
             </div>
           </>
         )}
+        {isPci && <AnalyzeForm onDone={() => setVersion((v) => v + 1)} />}
         {lastScan && (
           <p className="notice small">
             Skan: przejrzane {lastScan.scanned}, nowe {lastScan.created}, zaktualizowane {lastScan.updated},
@@ -214,5 +216,89 @@ function QueueSection({ queue }) {
         </div>
       )}
     </Section>
+  )
+}
+
+/** Analityk wskazuje stronę lub wkleja treść dokumentu – Radar robi z tego kartę ze źródłem. */
+function AnalyzeForm({ onDone }) {
+  const { meta, notify } = useApp()
+  const navigate = useNavigate()
+  const [open, setOpen] = useState(false)
+  const [mode, setMode] = useState('url')
+  const [form, setForm] = useState({ url: '', text: '', title: '', institution: '' })
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState(null)
+  const field = (key) => ({ value: form[key], onChange: (e) => setForm((f) => ({ ...f, [key]: e.target.value })) })
+
+  async function analyze() {
+    setBusy(true)
+    setError(null)
+    try {
+      const body = mode === 'url' ? { url: form.url, institution: form.institution } : form
+      const r = await api.post('/radar/analyze', body)
+      onDone()
+      if (r.outcome === 'DUPLIKAT') {
+        notify(`To już jest w bazie (podobieństwo ${Math.round(r.duplicateSimilarity)}%).`)
+        navigate(`/innovations/${r.duplicateOf.id}`)
+      } else {
+        notify('Utworzono kartę – sprawdź pola oznaczone jako szacunek.')
+        navigate(`/innovations/${r.innovation.id}`)
+      }
+    } catch (e) {
+      setError(e.message)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  if (!open) {
+    return (
+      <p className="small">
+        <button type="button" className="link-button" onClick={() => setOpen(true)}>
+          + Dodaj ze strony lub dokumentu
+        </button>{' '}
+        <span className="muted">– np. opis projektu na stronie gminy, szkoły albo fragment raportu</span>
+      </p>
+    )
+  }
+  const ready = mode === 'url' ? form.url.trim() : form.text.trim().length >= 200
+  return (
+    <div className="analyze card">
+      <div className="type-tabs" role="tablist" aria-label="Rodzaj źródła">
+        <button type="button" role="tab" aria-selected={mode === 'url'} className={mode === 'url' ? 'on' : ''}
+          onClick={() => setMode('url')}>Strona internetowa</button>
+        <button type="button" role="tab" aria-selected={mode === 'text'} className={mode === 'text' ? 'on' : ''}
+          onClick={() => setMode('text')}>Treść dokumentu</button>
+      </div>
+      <ErrorBox>{error}</ErrorBox>
+      <div className="form">
+        {mode === 'url' ? (
+          <label className="field wide"><span>Adres strony *</span>
+            <input type="url" placeholder="https://www.gmina.pl/aktualnosci/nowa-e-usluga" {...field('url')} />
+          </label>
+        ) : (
+          <>
+            <label className="field wide"><span>Tytuł (opcjonalnie)</span><input {...field('title')} maxLength={200} /></label>
+            <label className="field wide"><span>Treść (min. 200 znaków) *</span>
+              <textarea rows={6} placeholder="Wklej opis rozwiązania z raportu, PDF-u lub strony" {...field('text')} />
+            </label>
+            <label className="field wide"><span>Link do dokumentu (opcjonalnie)</span><input type="url" {...field('url')} /></label>
+          </>
+        )}
+        <label className="field wide"><span>Instytucja (opcjonalnie)</span>
+          <input placeholder="np. Gmina Tyczyn" {...field('institution')} />
+        </label>
+      </div>
+      <p className="muted small">
+        {meta.aiEnabled ? 'Pola karty wyodrębni model AI Claude' : 'Pola karty wyodrębnią reguły offline (bez klucza AI)'};
+        wszystko trafi na kartę jako szacunek do sprawdzenia, z linkiem do źródła.
+      </p>
+      <div className="actions">
+        <button type="button" className="btn btn-primary" disabled={busy || !ready} onClick={analyze}>
+          {busy ? 'Analizuję…' : 'Analizuj'}
+        </button>
+        <button type="button" className="btn" onClick={() => setOpen(false)}>Anuluj</button>
+      </div>
+    </div>
   )
 }

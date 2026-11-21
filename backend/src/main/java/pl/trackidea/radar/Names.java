@@ -36,6 +36,16 @@ final class Names {
         return out.toString();
     }
 
+    /** Typ instytucji z nazwy (gmina, szkoła, uczelnia, firma); gdy nie wiadomo – {@code fallback}. */
+    static pl.trackidea.domain.InstitutionType institutionType(String name, pl.trackidea.domain.InstitutionType fallback) {
+        String n = name == null ? "" : name.toUpperCase(Locale.ROOT);
+        if (n.matches(".*(SZKOŁ|LICEUM|TECHNIKUM|PRZEDSZKOL|SZKOL).*")) return pl.trackidea.domain.InstitutionType.SZKOLA;
+        if (n.matches(".*(UNIWERSYTET|POLITECHNIK|AKADEMIA|UCZELNIA|INSTYTUT|ŁUKASIEWICZ).*")) return pl.trackidea.domain.InstitutionType.UCZELNIA;
+        if (n.matches(".*(GMINA|POWIAT|MIASTO|URZĄD|URZAD|WOJEWÓDZTW|STAROSTWO|ZWIĄZEK).*")) return pl.trackidea.domain.InstitutionType.JST;
+        if (n.matches(".*(SP\\. Z O\\.O\\.|S\\.A\\.|SPÓŁKA|FIRMA|P\\.?P\\.?H\\.?U).*")) return pl.trackidea.domain.InstitutionType.FIRMA;
+        return fallback;
+    }
+
     static String shorten(String s, int max) {
         if (s == null) {
             return null;

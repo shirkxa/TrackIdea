@@ -2248,3 +2248,12 @@ textarea:focus {
   margin: 0 0 12px;
   color: var(--link);
 }
+
+/* ---------- Analiza strony / dokumentu ---------- */
+.analyze {
+  margin: 12px 0;
+}
+
+.analyze .type-tabs {
+  margin-bottom: 8px;
+}

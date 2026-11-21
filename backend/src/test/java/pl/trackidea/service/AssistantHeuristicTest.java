@@ -40,6 +40,14 @@ class AssistantHeuristicTest {
     }
 
     @Test
+    void recognisesSolutionAlreadyInUse() {
+        AssistantService.Draft d = assistant.heuristic(
+                "Gmina uruchomiła w 2024 roku wypożyczalnię rowerów przy szkołach. Po roku działania liczba uczniów "
+                        + "dojeżdżających rowerem wzrosła o 40%.");
+        assertThat(d.maturity()).isEqualTo(Maturity.STOSOWANE);
+    }
+
+    @Test
     void recognisesTechnicalInnovationAndTestStage() {
         AssistantService.Draft d = assistant.heuristic(
                 "Dron z kamerą wielospektralną wykrywa choroby upraw. Prototyp testowano w gospodarstwach.");

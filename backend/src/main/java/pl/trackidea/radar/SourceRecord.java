@@ -1,5 +1,6 @@
 package pl.trackidea.radar;
 
+import pl.trackidea.domain.Area;
 import pl.trackidea.domain.InnovationType;
 import pl.trackidea.domain.InstitutionType;
 import pl.trackidea.domain.Maturity;
@@ -16,10 +17,19 @@ public record SourceRecord(String source, String ref, String title, String abstr
                            InstitutionType institutionType, String city, String county, String region,
                            String authors, Integer year, List<String> keywords, String url,
                            InnovationType typeHint, Sector sectorHint, Maturity maturityHint,
-                           List<String> facts) {
+                           List<String> facts, Area areaHint) {
 
     public SourceRecord {
         keywords = keywords == null ? List.of() : keywords;
         facts = facts == null ? List.of() : facts;
+    }
+
+    /** Rekord bez wskazanego obszaru – obszar rozpozna Radar z typu, sektora i instytucji. */
+    public SourceRecord(String source, String ref, String title, String abstractText, String institution,
+                        InstitutionType institutionType, String city, String county, String region,
+                        String authors, Integer year, List<String> keywords, String url,
+                        InnovationType typeHint, Sector sectorHint, Maturity maturityHint, List<String> facts) {
+        this(source, ref, title, abstractText, institution, institutionType, city, county, region, authors, year,
+                keywords, url, typeHint, sectorHint, maturityHint, facts, null);
     }
 }
