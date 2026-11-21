@@ -56,10 +56,11 @@ class AssessmentTest {
         assertThat(Trl.toScore(7)).isEqualTo(4);
         assertThat(Trl.toScore(9)).isEqualTo(5);
 
-        assertThat(Trl.estimate(Maturity.POMYSL, "")).isEqualTo(2);
-        assertThat(Trl.estimate(Maturity.PROTOTYP, "tested in laboratory")).isEqualTo(4);
-        assertThat(Trl.estimate(Maturity.PILOTAZ, "pilot in real environment")).isEqualTo(7);
-        assertThat(Trl.estimate(Maturity.DZIALA_W_WIELU, "")).isEqualTo(9);
+        assertThat(Trl.estimate(Maturity.KONCEPCJA, "")).isEqualTo(2);
+        assertThat(Trl.estimate(Maturity.PROTOTYP, "")).isEqualTo(4);
+        assertThat(Trl.estimate(Maturity.TESTY, "tested in laboratory")).isEqualTo(5);
+        assertThat(Trl.estimate(Maturity.PILOTAZ, "")).isEqualTo(7);
+        assertThat(Trl.estimate(Maturity.STOSOWANE, "used in several institutions")).isEqualTo(9);
         assertThat(Trl.label(9)).isEqualTo("Rozwiązanie sprawdzone w działaniu, stosowane");
     }
 

@@ -30,15 +30,19 @@ export function Badge({ children, tone = 'info', title }) {
   return <span className={`badge badge-${tone}`} title={title}>{children}</span>
 }
 
-export function ScoreRing({ score, size = 56, label = 'wynik' }) {
+export function ScoreRing({ score, size = 56, label = 'wynik', estimated = false }) {
   if (score === null || score === undefined) {
     return <div className="score-ring empty-score" style={{ width: size, height: size }} title="Jeszcze nie oceniono"><span>–</span></div>
   }
   const deg = Math.round((score / 100) * 360)
+  const title = estimated
+    ? `Ocena automatyczna ${Math.round(score)}/100 – szacunek, czeka na weryfikację analityka PCI`
+    : `Ocena zweryfikowana przez analityka PCI: ${Math.round(score)}/100`
   return (
-    <div className="score-ring" style={{ width: size, height: size, '--deg': `${deg}deg` }} title={`Wynik merytoryczny ${Math.round(score)}/100`}>
-      <span>{Math.round(score)}</span>
-      {size >= 70 && <small>{label}</small>}
+    <div className={`score-ring ${estimated ? 'score-estimated' : ''}`} style={{ width: size, height: size, '--deg': `${deg}deg` }}
+      title={title} aria-label={title}>
+      <span>{estimated ? '≈' : ''}{Math.round(score)}</span>
+      {size >= 70 && <small>{estimated ? 'szacunek' : label}</small>}
     </div>
   )
 }

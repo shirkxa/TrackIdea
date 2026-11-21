@@ -107,8 +107,8 @@ public class CordisImporter implements SourceImporter {
         String start = p.path("startDate").asString("");
         Integer year = start.length() >= 4 ? Integer.valueOf(start.substring(0, 4)) : null;
         String status = p.path("status").asString("");
-        // szacunek: zakończony projekt = rozwiązanie przetestowane w pilotażu, trwający = prototyp
-        Maturity maturity = "CLOSED".equals(status) ? Maturity.PILOTAZ : Maturity.PROTOTYP;
+        // szacunek: zakończony projekt = rozwiązanie po wdrożeniu pilotażowym, trwający = etap testów
+        Maturity maturity = "CLOSED".equals(status) ? Maturity.PILOTAZ : Maturity.TESTY;
         String acronym = p.path("acronym").asString("");
         List<String> facts = new ArrayList<>();
         facts.add("Status projektu: " + statusLabel(status));

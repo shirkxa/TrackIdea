@@ -75,7 +75,7 @@ public class AssistantService {
 
     public Draft draft(String text) {
         if (text == null || text.isBlank()) {
-            throw DomainException.badRequest("Wpisz opis pomysłu własnymi słowami.");
+            throw DomainException.badRequest("Wpisz opis rozwiązania.");
         }
         if (client != null) {
             try {
@@ -244,13 +244,14 @@ public class AssistantService {
     }
 
     private static Maturity maturity(String n) {
-        if (n.matches("(?s).*(w kilku|w wielu|w \\d+ (szkol|gmin|urzed|placow|instytuc)|widely used|several institutions).*")) return Maturity.DZIALA_W_WIELU;
-        if (n.matches("(?s).*(dziala od|od roku|od \\d+ lat|stosujemy|wdrozon|funkcjonuje|prowadzimy od).*")) return Maturity.DZIALA_W_JEDNYM;
-        if (n.contains("deployed") || n.contains("implemented in") || n.contains("in operation")) return Maturity.DZIALA_W_JEDNYM;
-        if (n.contains("pilotaz") || n.contains("testuj") || n.contains("testow") || n.contains("pilot")
-                || n.contains("field test") || n.contains("case study")) return Maturity.PILOTAZ;
+        if (n.matches("(?s).*(w kilku|w wielu|w \\d+ (szkol|gmin|urzed|placow|instytuc)|widely used|several institutions).*")) return Maturity.STOSOWANE;
+        if (n.matches("(?s).*(dziala od|od roku|od \\d+ lat|stosujemy|wdrozon|funkcjonuje|prowadzimy od).*")) return Maturity.STOSOWANE;
+        if (n.contains("deployed") || n.contains("implemented in") || n.contains("in operation")) return Maturity.STOSOWANE;
+        if (n.contains("pilotaz") || n.contains("pilot") || n.contains("case study")) return Maturity.PILOTAZ;
+        if (n.contains("testuj") || n.contains("testow") || n.contains("field test") || n.contains("tested")
+                || n.contains("trial") || n.contains("evaluat")) return Maturity.TESTY;
         if (n.contains("prototyp") || n.contains("model") || n.contains("prototype")) return Maturity.PROTOTYP;
-        return Maturity.POMYSL;
+        return Maturity.KONCEPCJA;
     }
 
     private static List<String> tags(String text) {

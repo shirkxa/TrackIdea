@@ -52,6 +52,18 @@ public class AssessmentService {
         return latest(inn).orElseGet(() -> propose(inn));
     }
 
+    /**
+     * Ocena automatyczna zapisywana od razu po wykryciu: karta ma wynik (szacunek), zanim zajmie się nią analityk.
+     * Zatwierdzonej oceny nie nadpisuje.
+     */
+    @Transactional
+    public Optional<Assessment> autoAssess(Innovation inn) {
+        if (latest(inn).filter(Assessment::isApproved).isPresent()) {
+            return Optional.empty();
+        }
+        return Optional.of(assessments.save(propose(inn)));
+    }
+
     public Assessment propose(Innovation inn) {
         Assessment a = new Assessment();
         a.setInnovation(inn);
@@ -64,7 +76,7 @@ public class AssessmentService {
     }
 
     private CriterionScore deployment(Innovation inn) {
-        Maturity m = inn.getMaturity() == null ? Maturity.POMYSL : inn.getMaturity();
+        Maturity m = inn.getMaturity() == null ? Maturity.KONCEPCJA : inn.getMaturity();
         String why = "Etap wdrożenia: " + m.getLabel() + estimateNote(inn, "maturity") + ".";
         return new CriterionScore(Criterion.WDROZENIE, clamp(m.getLevel()), why);
     }

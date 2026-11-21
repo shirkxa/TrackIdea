@@ -47,6 +47,7 @@ public class RadarService {
     private final SimilarityService similarity;
     private final AssistantService assistant;
     private final InnovationService innovationService;
+    private final AssessmentService assessmentService;
     private final TransactionTemplate tx;
     private final boolean liveEnabled;
     private final Duration refreshInterval;
@@ -55,7 +56,8 @@ public class RadarService {
 
     public RadarService(List<SourceImporter> importers, RadarRecordRepository records, InnovationRepository innovations,
                         InstitutionRepository institutions, SimilarityService similarity, AssistantService assistant,
-                        InnovationService innovationService, TransactionTemplate tx,
+                        InnovationService innovationService, AssessmentService assessmentService,
+                        TransactionTemplate tx,
                         @Value("${trackidea.radar.live:true}") boolean liveEnabled,
                         @Value("${trackidea.radar.refresh-interval:PT6H}") Duration refreshInterval) {
         this.importers = importers;
@@ -65,6 +67,7 @@ public class RadarService {
         this.similarity = similarity;
         this.assistant = assistant;
         this.innovationService = innovationService;
+        this.assessmentService = assessmentService;
         this.tx = tx;
         this.liveEnabled = liveEnabled;
         this.refreshInterval = refreshInterval;
@@ -166,6 +169,7 @@ public class RadarService {
                 inn.getSourceFacts().addAll(r.facts());
                 inn.touch();
                 innovationService.log(inn, EventType.EDYCJA, "Zaktualizowano na podstawie zmian w źródle " + r.source() + ".", null);
+                assessmentService.autoAssess(inn);
                 rec.setContentHash(hash);
                 counts[2]++;
                 return rec;
@@ -226,8 +230,10 @@ public class RadarService {
         inn.setSourceAuthors(r.authors());
         inn.setStatus(InnovationStatus.WYKRYTA);
         innovations.save(inn);
+        String auto = assessmentService.autoAssess(inn)
+                .map(a -> " Ocena automatyczna: " + Math.round(a.proposedTotal()) + "/100 (szacunek).").orElse("");
         innovationService.log(inn, EventType.WYKRYTO, "Wykryto w źródle " + r.source() + " (" + r.ref()
-                + (r.year() != null ? ", " + r.year() : "") + "). Czeka na weryfikację analityka PCI.", null);
+                + (r.year() != null ? ", " + r.year() : "") + ")." + auto + " Czeka na weryfikację analityka PCI.", null);
         return inn;
     }
 }

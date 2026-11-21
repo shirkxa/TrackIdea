@@ -113,6 +113,8 @@ public class InnovationService {
         }
         inn.touch();
         log(inn, EventType.EDYCJA, "Analityk poprawił kartę innowacji.", actor);
+        // niezatwierdzona ocena automatyczna jest liczona od nowa z poprawionych danych
+        assessmentService.autoAssess(inn);
         return inn;
     }
 

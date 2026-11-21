@@ -27,8 +27,8 @@ a instytucje niezależnie budują podobne rzeczy.
 | Etap | Co robi TrackIdea |
 |---|---|
 | **Wyszukaj** | Radar importuje rekordy z otwartych źródeł i przypisuje je do obszaru: technologiczny, edukacyjny lub administracyjny (definicja innowacji wg Podręcznika Oslo 2018). |
-| **Uporządkuj** | Każdy rekord to karta: opis, instytucja, źródło, etap wdrożenia. Duplikaty z wielu źródeł są wykrywane. Do 4 innowacji można porównać obok siebie. |
-| **Oceń** | Kryteria z FAQ: poziom wdrożenia, TRL 1–9, innowacyjność, potencjał zastosowania, wiarygodność – z wagami i uzasadnieniem. Szacunki automatu są oznaczone i odróżnione od faktów ze źródła; zatwierdza analityk PCI. |
+| **Uporządkuj** | Każdy rekord to karta: opis, instytucja, źródło, etap wdrożenia. Duplikaty z wielu źródeł są wykrywane. Do 4 innowacji można porównać obok siebie. Gotowe widoki dla grup odbiorców: inwestorzy, samorządy, uczelnie, szkoły, startupy, wynalazcy. |
+| **Oceń** | Każda karta od razu dostaje ocenę automatyczną (szacunek) według kryteriów z FAQ: poziom wdrożenia (koncepcja → stosowane w praktyce), TRL 1–9, innowacyjność, potencjał zastosowania, wiarygodność. Szacunki są oznaczone i odróżnione od faktów ze źródła; analityk PCI je weryfikuje. |
 | **Wskaż zastosowanie** | Reguły podpowiadają, gdzie rozwiązanie może zostać użyte; zapytania „szukam rozwiązania” dostają dopasowania. |
 
 ```
@@ -79,8 +79,8 @@ cd backend
 ./mvnw test
 ```
 
-30 testów (JUnit 5): jednostkowe dla wzoru oceny i wag, podobieństwa tekstów po polsku, reguł dopasowań,
-analizy tekstu offline parsowania danych ze źródeł Radaru skali TRL i obszarów oraz test integracyjny logowania, CSRF i uprawnień zespołu PCI.
+31 testów (JUnit 5): jednostkowe dla wzoru oceny i wag, podobieństwa tekstów po polsku, reguł dopasowań,
+analizy tekstu offline, parsowania danych ze źródeł Radaru, skali TRL i obszarów oraz testy integracyjne logowania, CSRF, uprawnień zespołu PCI i automatycznej oceny kart.
 
 ## Dane, bezpieczeństwo i ograniczenia
 

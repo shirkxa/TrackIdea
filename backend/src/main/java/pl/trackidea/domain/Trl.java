@@ -38,12 +38,12 @@ public final class Trl {
     /** Szacunek TRL z etapu wdrożenia i sygnałów w opisie (zawsze oznaczany jako szacunek). */
     public static int estimate(Maturity maturity, String normalizedText) {
         String t = normalizedText == null ? "" : normalizedText;
-        int base = switch (maturity == null ? Maturity.POMYSL : maturity) {
-            case POMYSL -> has(t, "proof of concept", "eksperyment", "experiment", "potwierdz") ? 3 : 2;
-            case PROTOTYP -> has(t, "laborator", "laboratory", "symulac", "simulat") ? 4 : 5;
-            case PILOTAZ -> has(t, "real environment", "rzeczywist", "operational", "w praktyce", "wdrozon") ? 7 : 6;
-            case DZIALA_W_JEDNYM -> 8;
-            case DZIALA_W_WIELU -> 9;
+        int base = switch (maturity == null ? Maturity.KONCEPCJA : maturity) {
+            case KONCEPCJA -> has(t, "proof of concept", "eksperyment", "experiment", "potwierdz") ? 3 : 2;
+            case PROTOTYP -> has(t, "zweryfikow", "validated", "validation") ? 5 : 4;
+            case TESTY -> has(t, "laborator", "laboratory", "symulac", "simulat") ? 5 : 6;
+            case PILOTAZ -> 7;
+            case STOSOWANE -> has(t, "w wielu", "w kilku", "widely", "several", "many institutions") ? 9 : 8;
         };
         return base;
     }

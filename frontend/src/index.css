@@ -2228,3 +2228,23 @@ textarea:focus {
   padding-left: 16px;
   font-size: 0.85rem;
 }
+
+/* ocena automatyczna – przerywany obrys odróżnia szacunek od oceny analityka */
+.score-ring.score-estimated {
+  outline: 2px dashed var(--warn-text);
+  outline-offset: 2px;
+}
+
+/* ---------- Widoki dla grup docelowych ---------- */
+.groups {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 6px;
+}
+
+.group-hint {
+  margin: 0 0 12px;
+  color: var(--link);
+}

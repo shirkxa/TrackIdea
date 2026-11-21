@@ -18,7 +18,7 @@ export default function InnovationCard({ card, extra, index = 0 }) {
           </h3>
           <p className="muted small">{card.institution?.name}</p>
         </div>
-        <ScoreRing score={card.score} size={42} />
+        <ScoreRing score={card.score} size={42} estimated={card.scoreEstimated} />
       </div>
       <div className="card-badges">
         <StatusBadge status={card.status} />

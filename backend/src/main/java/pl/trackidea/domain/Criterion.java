@@ -2,8 +2,8 @@ package pl.trackidea.domain;
 
 /** Kryteria oceny z FAQ wyzwania „Radar innowacji” – jawne wagi (suma 100%). */
 public enum Criterion implements Labeled {
-    WDROZENIE("Poziom wdrożenia", 20, "Gdzie i w jakiej skali rozwiązanie już działa?",
-            "Pomysł lub koncepcja", "Działa w wielu miejscach"),
+    WDROZENIE("Poziom wdrożenia", 20, "Koncepcja, prototyp, testy, wdrożenie pilotażowe czy stosowane w praktyce?",
+            "Koncepcja", "Stosowane w praktyce w wielu miejscach"),
     TRL("Gotowość technologiczna (TRL)", 15, "Na jakim poziomie TRL 1–9 jest rozwiązanie?",
             "TRL 1–2", "TRL 8–9"),
     INNOWACYJNOSC("Innowacyjność", 25, "Czy rozwiązanie jest nowe na tle podobnych (baza, patenty, publikacje)?",

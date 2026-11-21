@@ -1,11 +1,12 @@
 package pl.trackidea.domain;
 
+/** Poziom wdrożenia – pięć etapów z FAQ wyzwania „Radar innowacji”. */
 public enum Maturity implements Labeled {
-    POMYSL("Pomysł", 1),
+    KONCEPCJA("Koncepcja", 1),
     PROTOTYP("Prototyp", 2),
-    PILOTAZ("Pilotaż", 3),
-    DZIALA_W_JEDNYM("Działa w 1 miejscu", 4),
-    DZIALA_W_WIELU("Działa w wielu miejscach", 5);
+    TESTY("Testy", 3),
+    PILOTAZ("Wdrożenie pilotażowe", 4),
+    STOSOWANE("Stosowane w praktyce", 5);
 
     private final String label;
     private final int level;

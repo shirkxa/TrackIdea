@@ -55,7 +55,7 @@ public final class Dto {
                                  EnumValue maturity, EnumValue transferModel, StatusView status,
                                  InstitutionView institution, String authors, Set<String> tags, Double score,
                                  Instant createdAt, Instant updatedAt, EnumValue source, String sourceName,
-                                 TrlView trl, Set<String> estimated) {
+                                 TrlView trl, Set<String> estimated, boolean scoreEstimated) {
     }
 
     /** Poziom gotowości technologicznej z opisem. */

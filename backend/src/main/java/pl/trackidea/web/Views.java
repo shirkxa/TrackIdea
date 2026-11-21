@@ -8,6 +8,7 @@ import pl.trackidea.service.AssessmentService;
 import pl.trackidea.service.InnovationService;
 
 import java.util.List;
+import java.util.Optional;
 
 /** Składa widoki innowacji (karty, szczegóły) razem z uprawnieniami oglądającego. */
 @Component
@@ -26,20 +27,22 @@ public class Views {
     }
 
     public Dto.InnovationCard card(Innovation i) {
-        Double score = assessmentService.latest(i).filter(Assessment::isApproved).map(Assessment::total).orElse(null);
+        // zatwierdzona ocena analityka albo ocena automatyczna (szacunek)
+        Optional<Assessment> latest = assessmentService.latest(i);
+        Double score = latest.map(a -> a.isApproved() ? a.total() : a.proposedTotal()).orElse(null);
+        boolean scoreEstimated = latest.map(a -> !a.isApproved()).orElse(false);
         return new Dto.InnovationCard(i.getId(), i.getTitle(), i.getSummary(), Dto.EnumValue.of(i.getArea()),
                 Dto.EnumValue.of(i.getType()),
                 Dto.EnumValue.of(i.getSector()), Dto.EnumValue.of(i.getMaturity()), Dto.EnumValue.of(i.getTransferModel()),
                 Dto.StatusView.of(i.getStatus()), Dto.InstitutionView.of(i.getInstitution()), i.getSourceAuthors(),
                 i.getTags(), score, i.getCreatedAt(), i.getUpdatedAt(), Dto.EnumValue.of(i.getSource()), i.getSourceName(),
-                Dto.TrlView.of(i.getTrl()), i.getEstimated());
+                Dto.TrlView.of(i.getTrl()), i.getEstimated(), scoreEstimated);
     }
 
     public Dto.InnovationDetail detail(Innovation i, Person viewer) {
         boolean staff = innovationService.isStaff(viewer);
-        // Propozycja w toku widoczna dla zespołu PCI; po zatwierdzeniu – dla wszystkich.
+        // ocena widoczna dla wszystkich; niezatwierdzona jest oznaczona jako szacunek automatyczny
         Dto.AssessmentView assessment = assessmentService.latest(i)
-                .filter(a -> a.isApproved() || staff)
                 .map(a -> Dto.AssessmentView.of(a, false))
                 .orElse(null);
         List<Dto.EventView> timeline = events.findByInnovationOrderByCreatedAtAscIdAsc(i).stream()

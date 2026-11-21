@@ -22,10 +22,45 @@ const SORTS = [
 
 const PUBLIC_INSTITUTIONS = ['SZKOLA', 'UCZELNIA', 'JST', 'INSTYTUCJA_PUBLICZNA']
 
+/** Grupy docelowe z FAQ – każda ustawia filtry i kolejność pod swoje potrzeby. */
+const GROUPS = [
+  {
+    key: 'investors', label: 'Inwestor / firma komercyjna',
+    filters: { area: 'TECHNOLOGICZNY', minTrl: '7', sort: 'score' },
+    hint: 'Technologie bliskie rynku (TRL 7+), od najlepiej ocenionych.',
+  },
+  {
+    key: 'public', label: 'Samorząd / instytucja publiczna',
+    filters: { area: 'ADMINISTRACYJNY', sort: 'trl' },
+    hint: 'Usprawnienia administracji – najpierw te sprawdzone w praktyce.',
+  },
+  {
+    key: 'science', label: 'Uczelnia / jednostka naukowa',
+    filters: { area: 'TECHNOLOGICZNY', institutionType: 'UCZELNIA', sort: 'newest' },
+    hint: 'Najnowsze wyniki prac uczelni i instytutów – potencjalni partnerzy B+R.',
+  },
+  {
+    key: 'schools', label: 'Szkoła / placówka edukacyjna',
+    filters: { area: 'EDUKACYJNY', sort: 'trl' },
+    hint: 'Metody i narzędzia edukacyjne, które już działają w innych szkołach.',
+  },
+  {
+    key: 'startups', label: 'Startup / przedsiębiorstwo',
+    filters: { area: 'TECHNOLOGICZNY', minTrl: '4', sort: 'score' },
+    hint: 'Technologie do licencji lub wspólnego rozwoju (TRL 4+).',
+  },
+  {
+    key: 'inventors', label: 'Innowator / wynalazca',
+    filters: { sort: 'newest' }, focusSearch: true,
+    hint: 'Opisz swój pomysł w wyszukiwarce i sprawdź, czy podobne rozwiązanie już istnieje.',
+  },
+]
+
 export default function CatalogPage() {
   const { meta } = useApp()
   const [filters, setFilters] = useState({ sort: 'newest' })
   const [panelOpen, setPanelOpen] = useState(false)
+  const [group, setGroup] = useState(null)
   const [q, setQ] = useState('')
   const [debouncedQ, setDebouncedQ] = useState('')
   const [inst, setInst] = useState('')
@@ -75,7 +110,15 @@ export default function CatalogPage() {
   const clearAll = () => {
     setFilters((f) => ({ sort: f.sort, area: f.area }))
     setInst('')
+    setGroup(null)
   }
+  const chooseGroup = (g) => {
+    setGroup(g?.key ?? null)
+    setFilters(g ? { ...g.filters } : { sort: 'newest' })
+    setInst('')
+    if (g?.focusSearch) document.getElementById('catalog-search')?.focus()
+  }
+  const currentGroup = GROUPS.find((g) => g.key === group)
   const sortLabel = debouncedQ && filters.sort === 'newest' ? 'Najtrafniejsze' : null
 
   return (
@@ -102,10 +145,24 @@ export default function CatalogPage() {
         ))}
       </nav>
 
+      <div className="groups" role="group" aria-label="Widok dla grupy odbiorców">
+        <span className="muted small">Szukam jako:</span>
+        <button type="button" className={`chip ${!group ? 'chip-on' : ''}`} aria-pressed={!group}
+          onClick={() => chooseGroup(null)}>Wszyscy</button>
+        {GROUPS.map((g) => (
+          <button key={g.key} type="button" className={`chip ${group === g.key ? 'chip-on' : ''}`}
+            aria-pressed={group === g.key} onClick={() => chooseGroup(g)} title={g.hint}>
+            {g.label}
+          </button>
+        ))}
+      </div>
+      {currentGroup && <p className="group-hint small">{currentGroup.hint}</p>}
+
       <div className="toolbar">
         <label className="search">
           <Icon name="search" size={20} />
           <input
+            id="catalog-search"
             type="search"
             placeholder="Szukaj problemu lub rozwiązania, np. kolejki w urzędzie"
             value={q}
@@ -145,12 +202,12 @@ export default function CatalogPage() {
       <div className="list-bar">
         <div className="type-tabs" role="tablist" aria-label="Obszar innowacji">
           <button type="button" role="tab" aria-selected={!filters.area} className={!filters.area ? 'on' : ''}
-            onClick={() => set('area')(null)}>
+            onClick={() => { set('area')(null); setGroup(null) }}>
             Wszystkie
           </button>
           {meta.areas.map((t) => (
             <button key={t.value} type="button" role="tab" aria-selected={filters.area === t.value}
-              className={filters.area === t.value ? 'on' : ''} onClick={() => set('area')(t.value)}
+              className={filters.area === t.value ? 'on' : ''} onClick={() => { set('area')(t.value); setGroup(null) }}
               title={t.description}>
               {t.label}
             </button>

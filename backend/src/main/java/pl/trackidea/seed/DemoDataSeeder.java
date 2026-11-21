@@ -182,6 +182,7 @@ public class DemoDataSeeder implements ApplicationRunner {
         event(inn, EventType.UTWORZONO, "Dodana przez analityka PCI na podstawie źródła: " + s.sourceName() + ".",
                 analyst, created, InnovationStatus.WYKRYTA);
         if (s.status() == InnovationStatus.WYKRYTA) {
+            assessmentService.autoAssess(inn).ifPresent(auto -> auto.setCreatedAt(created));
             return;
         }
         int assessDay = s.assessAfterDays() == null ? Math.max(1, s.daysAgo() / 3) : s.assessAfterDays();

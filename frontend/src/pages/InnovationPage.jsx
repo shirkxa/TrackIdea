@@ -66,7 +66,7 @@ export default function InnovationPage() {
           )}
         </div>
         <div className="head-side">
-          <ScoreRing score={card.score} size={84} />
+          <ScoreRing score={card.score} size={84} estimated={card.scoreEstimated} />
         </div>
       </header>
 
@@ -105,8 +105,8 @@ function ActionPanel({ data, busy, act }) {
   if (viewer.canPropose) {
     actions.push(
       <button key="propose" className="btn btn-primary" disabled={busy}
-        onClick={() => act('/propose-assessment', {}, 'Przygotowano propozycję oceny.')}>
-        {card.status.value === 'OCENIONA' ? 'Oceń ponownie' : 'Przygotuj ocenę'}
+        onClick={() => act('/propose-assessment', {}, 'Ocena gotowa do weryfikacji.')}>
+        {card.status.value === 'OCENIONA' ? 'Oceń ponownie' : 'Zweryfikuj ocenę'}
       </button>,
     )
   }
@@ -246,8 +246,10 @@ function AssessmentSection({ data, busy, act }) {
       title="Ocena potencjału"
       subtitle={assessment.approved
         ? `Zatwierdzona przez ${assessment.approvedBy?.name ?? 'analityka PCI'} · ${formatDate(assessment.approvedAt)}`
-        : 'Propozycja systemu (reguły) – czeka na analityka PCI'}
-      actions={<ScoreRing score={total} size={64} />}
+        : data.card.status.value === 'W_OCENIE'
+          ? 'Propozycja systemu – analityk PCI sprawdza i zatwierdza'
+          : 'Ocena automatyczna (szacunek) – jeszcze niezweryfikowana przez analityka PCI'}
+      actions={<ScoreRing score={total} size={64} estimated={!assessment.approved} />}
     >
       <table className="score-table">
         <thead>

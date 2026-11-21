@@ -11,7 +11,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
-/** Karta innowacji – „README” repozytorium pomysłu. */
+/** Karta innowacji – opis istniejącego rozwiązania ze źródłami. */
 @Entity
 @Getter
 @Setter

@@ -51,6 +51,17 @@ class SecurityFlowTest {
     }
 
     @Test
+    void everyDetectedCardHasAutomaticEstimatedScore() throws Exception {
+        // FAQ: Radar sam ocenia potencjał – wynik jest od razu, oznaczony jako szacunek do weryfikacji
+        mvc.perform(get("/api/innovations").param("status", "WYKRYTA"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[*].score", org.hamcrest.Matchers.everyItem(org.hamcrest.Matchers.notNullValue())))
+                .andExpect(jsonPath("$[*].scoreEstimated", org.hamcrest.Matchers.everyItem(org.hamcrest.Matchers.is(true))));
+        mvc.perform(get("/api/innovations").param("status", "OCENIONA"))
+                .andExpect(jsonPath("$[*].scoreEstimated", org.hamcrest.Matchers.everyItem(org.hamcrest.Matchers.is(false))));
+    }
+
+    @Test
     void requestsWithoutCsrfTokenAreRejected() throws Exception {
         MockHttpSession session = login(ANALYST, "demo123");
         mvc.perform(post("/api/radar/scan").session(session)).andExpect(status().is4xxClientError());

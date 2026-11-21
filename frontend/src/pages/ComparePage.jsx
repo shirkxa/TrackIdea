@@ -15,9 +15,14 @@ export default function ComparePage() {
 
   useEffect(() => {
     if (!key) return
-    Promise.all(key.split(',').map((id) => api.get(`/innovations/${id}`)))
-      .then((items) => setResult({ key, items, error: null }))
-      .catch((e) => setResult({ key, items: null, error: e.message }))
+    // karty usunięte z bazy (np. po restarcie wersji demo) pomijamy zamiast pokazywać błąd
+    Promise.allSettled(key.split(',').map((id) => api.get(`/innovations/${id}`)))
+      .then((res) => {
+        const items = res.filter((r) => r.status === 'fulfilled').map((r) => r.value)
+        setResult(items.length > 0
+          ? { key, items, error: null }
+          : { key, items: null, error: 'Nie udało się wczytać wybranych innowacji.' })
+      })
   }, [key])
 
   const remove = (id) => {

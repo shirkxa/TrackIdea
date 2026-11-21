@@ -9,7 +9,7 @@
     "results": "640 zgłoszeń w pierwszym roku. Średni czas naprawy skrócił się z 21 do 9 dni. 87% ankietowanych mieszkańców ocenia usługę dobrze.",
     "type": "PROCESOWA",
     "sector": "ADMINISTRACJA",
-    "maturity": "DZIALA_W_JEDNYM",
+    "maturity": "STOSOWANE",
     "transferModel": "OTWARTA_REPLIKACJA",
     "ipStatus": "Kod na licencji open source (MIT)",
     "tags": [
@@ -39,7 +39,7 @@
     "results": "Średnia ocen z matematyki uczestników wzrosła o 0,6. W programie wzięło udział 48 uczniów.",
     "type": "EDUKACYJNA",
     "sector": "EDUKACJA",
-    "maturity": "DZIALA_W_JEDNYM",
+    "maturity": "STOSOWANE",
     "transferModel": "OTWARTA_REPLIKACJA",
     "tags": [
       "tutoring",
@@ -66,7 +66,7 @@
     "results": "11 spotkań w roku szkolnym, średnio 35 uczestników.",
     "type": "EDUKACYJNA",
     "sector": "EDUKACJA",
-    "maturity": "DZIALA_W_JEDNYM",
+    "maturity": "STOSOWANE",
     "transferModel": "OTWARTA_REPLIKACJA",
     "tags": [
       "absolwenci",
@@ -113,7 +113,7 @@
     "results": "Oszczędność ok. 4 godzin pracy tygodniowo. Liczba nieobsadzonych dyżurów spadła o 90%.",
     "type": "ORGANIZACYJNA",
     "sector": "EDUKACJA",
-    "maturity": "DZIALA_W_WIELU",
+    "maturity": "STOSOWANE",
     "transferModel": "OTWARTA_REPLIKACJA",
     "tags": [
       "dyżury",
@@ -140,7 +140,7 @@
     "results": "Ponad 150 seniorów przeszkolonych w 3 miejscowościach. 70% uczestników samodzielnie korzysta z e-recepty. Nagroda wojewódzka w konkursie bibliotek.",
     "type": "SPOLECZNA",
     "sector": "JAKOSC_ZYCIA",
-    "maturity": "DZIALA_W_WIELU",
+    "maturity": "STOSOWANE",
     "transferModel": "OTWARTA_REPLIKACJA",
     "tags": [
       "seniorzy",
@@ -168,7 +168,7 @@
     "results": "Średni czas oczekiwania spadł z 47 do 8 minut. 30% mniej powtórnych wizyt.",
     "type": "PROCESOWA",
     "sector": "ADMINISTRACJA",
-    "maturity": "DZIALA_W_JEDNYM",
+    "maturity": "STOSOWANE",
     "transferModel": "OTWARTA_REPLIKACJA",
     "tags": [
       "kolejki",
@@ -216,7 +216,7 @@
     "results": "Koszty energii w budynkach gminnych spadły o 18% w pierwszym roku.",
     "type": "TECHNICZNA",
     "sector": "ENERGETYKA",
-    "maturity": "DZIALA_W_JEDNYM",
+    "maturity": "STOSOWANE",
     "transferModel": "LICENCJA",
     "tags": [
       "energia",
@@ -263,7 +263,7 @@
     "results": "Wydrukowano 85 modeli dla 9 uczniów z 4 szkół. Ankieta nauczycieli: 100% chce kontynuacji.",
     "type": "EDUKACYJNA",
     "sector": "EDUKACJA",
-    "maturity": "DZIALA_W_JEDNYM",
+    "maturity": "STOSOWANE",
     "transferModel": "OTWARTA_REPLIKACJA",
     "tags": [
       "druk 3d",
@@ -310,7 +310,7 @@
     "results": "Zajęcia w 23 szkołach dla ponad 1100 uczniów w roku szkolnym.",
     "type": "EDUKACYJNA",
     "sector": "EDUKACJA",
-    "maturity": "DZIALA_W_WIELU",
+    "maturity": "STOSOWANE",
     "transferModel": "WSPOLPRACA_BR",
     "tags": [
       "chemia",
@@ -337,7 +337,7 @@
     "results": "Badania laboratoryjne potwierdziły wytrzymałość 70% materiału pierwotnego. Odzysk do 40% odpadów.",
     "type": "TECHNICZNA",
     "sector": "LOTNICTWO",
-    "maturity": "DZIALA_W_JEDNYM",
+    "maturity": "STOSOWANE",
     "transferModel": "KOMERCJALIZACJA",
     "ipStatus": "Zgłoszenie patentowe w UPRP",
     "tags": [
@@ -365,7 +365,7 @@
     "results": "Projekt koncepcyjny, brak jeszcze efektów.",
     "type": "TECHNICZNA",
     "sector": "MOTORYZACJA",
-    "maturity": "POMYSL",
+    "maturity": "KONCEPCJA",
     "transferModel": "WSPOLPRACA_BR",
     "tags": [
       "elektromobilność",
@@ -388,7 +388,7 @@
     "results": "Ćwiczenia: wszyscy rodzice powiadomieni w 9 minut (wcześniej ponad godzina).",
     "type": "ORGANIZACYJNA",
     "sector": "EDUKACJA",
-    "maturity": "DZIALA_W_JEDNYM",
+    "maturity": "STOSOWANE",
     "transferModel": "OTWARTA_REPLIKACJA",
     "tags": [
       "bezpieczeństwo",
@@ -412,7 +412,7 @@
     "results": "Liczba pacjentów z kategorią „zielony” na SOR spadła o 22%.",
     "type": "PROCESOWA",
     "sector": "ZDROWIE",
-    "maturity": "DZIALA_W_JEDNYM",
+    "maturity": "STOSOWANE",
     "transferModel": "OTWARTA_REPLIKACJA",
     "tags": [
       "sor",

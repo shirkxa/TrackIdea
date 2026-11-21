@@ -36,16 +36,16 @@ class AssistantHeuristicTest {
         assertThat(d.requirements()).contains("koordynatora");
         assertThat(d.type()).isEqualTo(InnovationType.EDUKACYJNA);
         assertThat(d.sector()).isEqualTo(Sector.EDUKACJA);
-        assertThat(d.maturity()).isEqualTo(Maturity.DZIALA_W_JEDNYM);
+        assertThat(d.maturity()).isEqualTo(Maturity.STOSOWANE);
     }
 
     @Test
-    void recognisesTechnicalInnovationAndPilotStage() {
+    void recognisesTechnicalInnovationAndTestStage() {
         AssistantService.Draft d = assistant.heuristic(
                 "Dron z kamerą wielospektralną wykrywa choroby upraw. Prototyp testowano w gospodarstwach.");
         assertThat(d.type()).isEqualTo(InnovationType.TECHNICZNA);
         assertThat(d.sector()).isIn(Sector.LOTNICTWO, Sector.ROLNICTWO);
-        assertThat(d.maturity()).isEqualTo(Maturity.PILOTAZ);
+        assertThat(d.maturity()).isEqualTo(Maturity.TESTY);
     }
 
     @Test
