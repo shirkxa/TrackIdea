@@ -42,7 +42,8 @@ public class FunduszeImporter implements SourceImporter {
                     Pattern.compile("e-?\\s?usług|platform|cyfrow|system|aplikac|elektroniczn", Pattern.CASE_INSENSITIVE),
                     InnovationType.PROCESOWA, Sector.ADMINISTRACJA, Area.ADMINISTRACYJNY),
             new Query("edukacja", List.of("149", "150", "151"),
-                    Pattern.compile("innowac|nowatorsk|cyfrow|STEM|robotyk|programowan|laborator|nowoczesn", Pattern.CASE_INSENSITIVE),
+                    // samo „nowoczesna szkoła” to zwykle zajęcia dodatkowe i doposażenie, a nie nowa metoda
+                    Pattern.compile("innowac|nowatorsk|cyfrow|STEA?M|robotyk|programowan|laborator|dualn", Pattern.CASE_INSENSITIVE),
                     InnovationType.EDUKACYJNA, Sector.EDUKACJA, Area.EDUKACYJNY),
             new Query("badania", List.of("002", "004", "010", "012", "029"),
                     Pattern.compile("B\\+R|badawcz|innowac|prototyp|technologi", Pattern.CASE_INSENSITIVE),
@@ -210,8 +211,8 @@ public class FunduszeImporter implements SourceImporter {
         facts.add("Kategoria wsparcia: " + text(r, "S", s).replaceFirst("^\\S+\\s+", ""));
         facts.add("Numer umowy: " + contract);
         if (raw.isBlank()) facts.add("Źródło nie podaje nazwy beneficjenta");
-        if (start != null) facts.add("Okres realizacji: " + start + (end == null ? "" : " – " + end));
-        facts.add("Status projektu: " + (done ? "zakończony" : "w realizacji"));
+        // źródło podaje tylko daty; to, czy projekt się zakończył, Radar wylicza sam i pokazuje jako szacunek etapu
+        if (start != null) facts.add("Okres realizacji według umowy: " + start + (end == null ? "" : " – " + end));
         String value = number(r, "L");
         if (value != null) facts.add("Wartość projektu: " + value + " zł");
         String eu = number(r, "N");

@@ -45,7 +45,7 @@ class ImporterFetchTest {
     void openAlexTurnsWorksOfPolishInstitutionsIntoRecords() throws Exception {
         FakeHttp http = new FakeHttp().on("api.openalex.org", OPENALEX);
 
-        List<SourceRecord> records = new OpenAlexImporter(http, 4, "2023-01-01").fetch();
+        List<SourceRecord> records = new OpenAlexImporter(http, 4, "2023-01-01", "").fetch();
 
         // trzy zapytania (technologie, edukacja, administracja) × dwie prace z polską instytucją
         assertThat(records).hasSize(6);
@@ -80,7 +80,7 @@ class ImporterFetchTest {
 
     @Test
     void openAlexDescribesItselfAndLabelsPublicationKinds() {
-        OpenAlexImporter importer = new OpenAlexImporter(new FakeHttp(), 8, "2023-01-01");
+        OpenAlexImporter importer = new OpenAlexImporter(new FakeHttp(), 8, "2023-01-01", "");
         assertThat(importer.name()).isEqualTo("OpenAlex");
         assertThat(importer.live()).isTrue();
         assertThat(importer.homepage()).startsWith("https://");
@@ -97,7 +97,7 @@ class ImporterFetchTest {
     void sourceErrorIsPassedToRadar() {
         FakeHttp http = new FakeHttp();
         http.failure = new IOException("HTTP 429 z api.openalex.org");
-        assertThatThrownBy(() -> new OpenAlexImporter(http, 4, "2023-01-01").fetch())
+        assertThatThrownBy(() -> new OpenAlexImporter(http, 4, "2023-01-01", "").fetch())
                 .isInstanceOf(IOException.class).hasMessageContaining("429");
     }
 

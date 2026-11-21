@@ -145,8 +145,9 @@ class FunduszeImporterTest {
         assertThat(admin.facts()).containsExactly(
                 "Program: Fundusze Europejskie dla Podkarpacia 2021-2027", "Działanie: 1.2 Cyfryzacja",
                 "Kategoria wsparcia: Rozwiązania TIK, usługi elektroniczne", "Numer umowy: FEPK.01.02-IP.01-0001/23",
-                "Okres realizacji: " + FunduszeImporter.excelDate("45000") + " – " + FunduszeImporter.excelDate("45500"),
-                "Status projektu: zakończony", "Wartość projektu: 1 234 568 zł", "Dofinansowanie UE: 1 000 000 zł",
+                // status „zakończony” Radar wylicza sam z dat – to szacunek etapu, a nie fakt ze źródła
+                "Okres realizacji według umowy: " + FunduszeImporter.excelDate("45000") + " – " + FunduszeImporter.excelDate("45500"),
+                "Wartość projektu: 1 234 568 zł", "Dofinansowanie UE: 1 000 000 zł",
                 "Miejsce realizacji: Tyczyn, pow. rzeszowski, woj. podkarpackie");
 
         SourceRecord research = records.get(1);
@@ -156,8 +157,8 @@ class FunduszeImporterTest {
         assertThat(research.city()).isNull();
         assertThat(research.maturityHint()).isEqualTo(Maturity.PROTOTYP);
         assertThat(research.areaHint()).isEqualTo(Area.TECHNOLOGICZNY);
-        assertThat(research.facts()).contains("Źródło nie podaje nazwy beneficjenta", "Status projektu: w realizacji",
-                "Miejsce realizacji: woj. mazowieckie");
+        assertThat(research.facts()).contains("Źródło nie podaje nazwy beneficjenta", "Miejsce realizacji: woj. mazowieckie");
+        assertThat(research.facts()).noneMatch(f -> f.startsWith("Status projektu"));
         assertThat(importer.name()).isEqualTo("Fundusze Europejskie");
         assertThat(importer.live()).isTrue();
         assertThat(importer.homepage()).isEqualTo(FunduszeImporter.DATASET);

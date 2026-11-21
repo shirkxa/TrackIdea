@@ -159,7 +159,15 @@ public class RadonImporter implements SourceImporter {
     /** Zgłoszenia w Urzędzie Patentowym RP mają publiczną kartę w e-Wyszukiwarce UPRP. */
     static String url(JsonNode p) {
         String ref = ref(p);
-        return ref.matches("[PW]\\.\\d{6}") ? "https://ewyszukiwarka.pue.uprp.gov.pl/search/pwp-details/" + ref : PAGE;
+        if (ref.matches("[PW]\\.\\d{6}")) {
+            return "https://ewyszukiwarka.pue.uprp.gov.pl/search/pwp-details/" + ref;
+        }
+        // zgłoszenie w Europejskim Urzędzie Patentowym: publiczna karta w rejestrze EPO
+        String number = text(p.path("applicationNumber")).replaceAll("\\D", "");
+        if (text(p.path("grantingInstitutionName")).contains("Europejski Urząd Patentowy") && number.length() == 8) {
+            return "https://register.epo.org/application?number=EP" + number;
+        }
+        return PAGE;
     }
 
     static String title(JsonNode p) {

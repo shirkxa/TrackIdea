@@ -91,7 +91,7 @@ public class CordisImporter implements SourceImporter {
         if (org == null) {
             org = polishOrganization(orgs);
         }
-        if (title.isBlank() || objective.isBlank() || org == null) {
+        if (title.isBlank() || objective.isBlank() || org == null || researchCareerProgramme(p)) {
             return null;
         }
         // obszar z zapytania przypisujemy tylko, gdy w projekcie faktycznie jest gmina / szkoła
@@ -145,6 +145,21 @@ public class CordisImporter implements SourceImporter {
         } catch (NumberFormatException e) {
             return amount + " €";
         }
+    }
+
+    /**
+     * Działania Marie Skłodowskiej-Curie (staże, doktoraty, wymiana kadr) i granty ERC (badania podstawowe)
+     * finansują ludzi i badania, a nie konkretne rozwiązanie – nie trafiają do katalogu innowacji.
+     */
+    static boolean researchCareerProgramme(JsonNode p) {
+        for (JsonNode prog : asList(p.path("relations").path("associations").path("programme"))) {
+            String t = (prog.path("title").asString("") + " " + prog.path("code").asString("")).toLowerCase(Locale.ROOT);
+            if (t.contains("marie sk") || t.contains("msca") || t.contains("european research council")
+                    || t.contains("-erc")) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static String programme(JsonNode p) {

@@ -33,13 +33,16 @@ public class OpenAlexImporter implements SourceImporter {
     private final HttpJson http;
     private final int perQuery;
     private final String since;
+    private final String apiKey;
 
     public OpenAlexImporter(HttpJson http,
                             @Value("${trackidea.radar.openalex.per-query:8}") int perQuery,
-                            @Value("${trackidea.radar.openalex.since:2023-01-01}") String since) {
+                            @Value("${trackidea.radar.openalex.since:2023-01-01}") String since,
+                            @Value("${trackidea.radar.openalex.api-key:}") String apiKey) {
         this.http = http;
         this.perQuery = perQuery;
         this.since = since;
+        this.apiKey = apiKey == null ? "" : apiKey.trim();
     }
 
     @Override
@@ -68,8 +71,21 @@ public class OpenAlexImporter implements SourceImporter {
         for (Query q : QUERIES) {
             String url = "https://api.openalex.org/works?filter=institutions.country_code:pl,from_publication_date:" + since
                     + ",has_abstract:true,type:article&search=" + URLEncoder.encode(q.search(), StandardCharsets.UTF_8)
-                    + "&per-page=" + perQuery + "&select=" + SELECT;
-            for (JsonNode w : http.get(url).path("results")) {
+                    + "&per-page=" + perQuery + "&select=" + SELECT
+                    + (apiKey.isEmpty() ? "" : "&api_key=" + URLEncoder.encode(apiKey, StandardCharsets.UTF_8));
+            JsonNode page;
+            try {
+                page = http.get(url);
+            } catch (java.io.IOException e) {
+                if (e.getMessage() != null && e.getMessage().contains("HTTP 429")) {
+                    // bez klucza limit jest wspólny dla całego adresu IP (np. sieci uczelni lub biura)
+                    throw new java.io.IOException(apiKey.isEmpty()
+                            ? "HTTP 429 – wyczerpany dzienny limit zapytań bez klucza; ustaw bezpłatny klucz OPENALEX_API_KEY"
+                            : "HTTP 429 – wyczerpany dzienny limit klucza OpenAlex; źródło wróci po północy UTC");
+                }
+                throw e;
+            }
+            for (JsonNode w : page.path("results")) {
                 SourceRecord r = toRecord(w, q);
                 if (r != null) {
                     out.add(r);
