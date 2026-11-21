@@ -5,11 +5,12 @@ import org.springframework.transaction.annotation.Transactional;
 import pl.trackidea.domain.*;
 import pl.trackidea.repo.AssessmentRepository;
 import pl.trackidea.repo.InnovationRepository;
+import pl.trackidea.repo.RadarRecordRepository;
 
 import java.util.*;
 
 /**
- * Propozycja oceny według 6 jawnych kryteriów. Reguły są proste i opisane w uzasadnieniu,
+ * Propozycja oceny według 5 jawnych kryteriów z FAQ (wdrożenie, TRL, innowacyjność, potencjał, wiarygodność). Reguły są proste i opisane w uzasadnieniu,
  * żeby ekspert PCI mógł je szybko sprawdzić i poprawić.
  */
 @Service
@@ -30,13 +31,16 @@ public class AssessmentService {
     private final MatchingService matching;
     private final InnovationRepository innovations;
     private final AssessmentRepository assessments;
+    private final RadarRecordRepository radarRecords;
 
     public AssessmentService(SimilarityService similarity, MatchingService matching,
-                             InnovationRepository innovations, AssessmentRepository assessments) {
+                             InnovationRepository innovations, AssessmentRepository assessments,
+                             RadarRecordRepository radarRecords) {
         this.similarity = similarity;
         this.matching = matching;
         this.innovations = innovations;
         this.assessments = assessments;
+        this.radarRecords = radarRecords;
     }
 
     public Optional<Assessment> latest(Innovation inn) {
@@ -51,36 +55,24 @@ public class AssessmentService {
     public Assessment propose(Innovation inn) {
         Assessment a = new Assessment();
         a.setInnovation(inn);
-        a.getScores().add(scale(inn));
+        a.getScores().add(deployment(inn));
+        a.getScores().add(trl(inn));
         a.getScores().add(novelty(inn));
-        a.getScores().add(maturity(inn));
-        a.getScores().add(transferability(inn));
-        a.getScores().add(impact(inn));
-        a.getScores().add(team(inn));
+        a.getScores().add(potential(inn));
+        a.getScores().add(credibility(inn));
         return a;
     }
 
-    private CriterionScore scale(Innovation inn) {
-        List<MatchingService.Match> needs = matching.needsFor(inn);
-        long strong = needs.stream().filter(m -> m.score() >= 55).count();
-        String text = TextVectorizer.normalize(inn.getProblem() + " " + inn.getSummary());
-        boolean broad = SCALE_HINTS.stream().anyMatch(text::contains);
+    private CriterionScore deployment(Innovation inn) {
+        Maturity m = inn.getMaturity() == null ? Maturity.POMYSL : inn.getMaturity();
+        String why = "Etap wdrożenia: " + m.getLabel() + estimateNote(inn, "maturity") + ".";
+        return new CriterionScore(Criterion.WDROZENIE, clamp(m.getLevel()), why);
+    }
 
-        int score = 1 + (int) Math.min(3, strong) + (broad ? 1 : 0);
-        if (score == 1 && !needs.isEmpty()) {
-            score = 2;
-        }
-        StringBuilder why = new StringBuilder();
-        why.append("Pasujące potrzeby na tablicy: ").append(needs.size())
-                .append(" (mocne dopasowanie ≥55%: ").append(strong).append(")");
-        if (!needs.isEmpty()) {
-            why.append(", np. „").append(needs.getFirst().title()).append("” (").append(needs.getFirst().subtitle()).append(")");
-        }
-        why.append(".");
-        if (broad) {
-            why.append(" Opis problemu wskazuje na powszechne zjawisko.");
-        }
-        return new CriterionScore(Criterion.SKALA, clamp(score), why.toString());
+    private CriterionScore trl(Innovation inn) {
+        int level = trlOf(inn);
+        String why = "TRL " + level + " – " + Trl.label(level).toLowerCase() + estimateNote(inn, "trl") + ".";
+        return new CriterionScore(Criterion.TRL, Trl.toScore(level), why);
     }
 
     private CriterionScore novelty(Innovation inn) {
@@ -106,84 +98,91 @@ public class AssessmentService {
             }
             why = sb.toString().trim();
         }
-        return new CriterionScore(Criterion.NOWOSC, score, why);
+        return new CriterionScore(Criterion.INNOWACYJNOSC, score, why);
     }
 
-    private CriterionScore maturity(Innovation inn) {
-        Maturity m = inn.getMaturity() == null ? Maturity.POMYSL : inn.getMaturity();
-        int score = m.getLevel();
-        String why = "Etap wdrożenia według źródła: " + m.getLabel() + ".";
-        return new CriterionScore(Criterion.DOJRZALOSC, clamp(score), why);
-    }
-
-    private CriterionScore transferability(Innovation inn) {
-        InnovationType type = inn.getType() == null ? InnovationType.TECHNICZNA : inn.getType();
-        int score = type.isNonTechnical() ? 4 : 2;
+    /** Potencjał = skala (ile instytucji ma podobną potrzebę) + przenaszalność (koszt i warunki wdrożenia). */
+    private CriterionScore potential(Innovation inn) {
         List<String> why = new ArrayList<>();
-        why.add("Typ " + type.getLabel().toLowerCase() + (type.isNonTechnical()
-                ? " – zwykle nie wymaga specjalistycznego sprzętu" : " – wdrożenie zależy od technologii i zaplecza"));
-        String req = TextVectorizer.normalize(inn.getRequirements() + " " + inn.getSolution());
-        Optional<String> cheap = LOW_COST_HINTS.stream().filter(req::contains).findFirst();
-        Optional<String> costly = HIGH_COST_HINTS.stream().filter(req::contains).findFirst();
-        if (cheap.isPresent()) {
-            score++;
-            why.add("wymagania wskazują na niski koszt lub gotowe materiały");
+
+        List<MatchingService.Match> needs = matching.needsFor(inn);
+        long strong = needs.stream().filter(m -> m.score() >= 55).count();
+        String problem = TextVectorizer.normalize(inn.getProblem() + " " + inn.getSummary());
+        boolean broad = SCALE_HINTS.stream().anyMatch(problem::contains);
+        int scale = 1 + (int) Math.min(3, strong) + (broad ? 1 : 0);
+        if (scale == 1 && !needs.isEmpty()) {
+            scale = 2;
         }
-        if (costly.isPresent()) {
-            score--;
-            why.add("wymaga specjalistycznego zaplecza lub sprzętu");
+        why.add("zapytania „szukam rozwiązania” pasujące do innowacji: " + needs.size()
+                + " (mocne dopasowanie ≥55%: " + strong + ")");
+        if (broad) {
+            why.add("opis wskazuje na powszechny problem");
+        }
+
+        InnovationType type = inn.getType() == null ? InnovationType.TECHNICZNA : inn.getType();
+        int transfer = type.isNonTechnical() ? 4 : 2;
+        why.add("typ " + type.getLabel().toLowerCase() + (type.isNonTechnical()
+                ? " – zwykle bez specjalistycznego sprzętu" : " – wdrożenie zależy od technologii i zaplecza"));
+        String req = TextVectorizer.normalize(inn.getRequirements() + " " + inn.getSolution());
+        if (LOW_COST_HINTS.stream().anyMatch(req::contains)) {
+            transfer++;
+            why.add("niski koszt lub gotowe materiały");
+        }
+        if (HIGH_COST_HINTS.stream().anyMatch(req::contains)) {
+            transfer--;
+            why.add("wymaga specjalistycznego zaplecza");
         }
         if (inn.getTransferModel() == TransferModel.OTWARTA_REPLIKACJA) {
-            why.add("autor udostępnia rozwiązanie do otwartej replikacji");
+            transfer++;
+            why.add("rozwiązanie udostępnione do otwartej replikacji");
         }
-        return new CriterionScore(Criterion.PRZENASZALNOSC, clamp(score), String.join("; ", why) + ".");
+        int score = (int) Math.round((clamp(scale) + clamp(transfer)) / 2.0);
+        return new CriterionScore(Criterion.POTENCJAL, clamp(score), capitalize(String.join("; ", why)) + ".");
     }
 
-    private CriterionScore impact(Innovation inn) {
-        String results = inn.getResults() == null ? "" : inn.getResults().trim();
-        if (results.isEmpty()) {
-            return new CriterionScore(Criterion.WPLYW, 1, "Brak opisanych efektów – warto uzupełnić sekcję „Efekty”.");
-        }
-        int score = 2;
-        List<String> why = new ArrayList<>();
-        boolean numbers = results.matches("(?s).*\\d.*");
-        boolean percent = results.contains("%");
-        if (numbers) {
-            score++;
-            why.add("efekty opisane liczbowo");
-        } else {
-            why.add("efekty opisane jakościowo");
-        }
-        if (percent) {
-            score++;
-            why.add("podano zmianę procentową");
-        }
-        String norm = TextVectorizer.normalize(results);
-        if (norm.contains("nagrod") || norm.contains("wyroznien") || norm.contains("ankiet") || norm.contains("badani")) {
-            score++;
-            why.add("efekty potwierdzone (ankieta, badanie lub nagroda)");
-        }
-        return new CriterionScore(Criterion.WPLYW, clamp(score), capitalize(String.join("; ", why)) + ".");
-    }
-
-    private CriterionScore team(Innovation inn) {
+    /** Wiarygodność: link do źródła, fakty podane przez źródło, potwierdzenie w innych bazach, zmierzone efekty. */
+    private CriterionScore credibility(Innovation inn) {
         int score = 1;
         List<String> why = new ArrayList<>();
-        if (inn.getSourceAuthors() != null && !inn.getSourceAuthors().isBlank()) {
-            score++;
-            why.add("znani autorzy: " + inn.getSourceAuthors());
-        } else {
-            why.add("źródło nie podaje autorów");
-        }
         if (!inn.getLinks().isEmpty()) {
             score++;
-            why.add("dostępne materiały źródłowe (" + inn.getLinks().size() + ")");
+            why.add("jest link do źródła" + (inn.getSourceName() != null ? " (" + inn.getSourceName() + ")" : ""));
+        } else {
+            why.add("brak linku do źródła");
         }
-        if (inn.getInstitution() != null) {
-            score += inn.getInstitution().getType().isPublicSector() ? 2 : 1;
-            why.add("zaplecze instytucji: " + inn.getInstitution().getName());
+        if (!inn.getSourceFacts().isEmpty() || (inn.getSourceAuthors() != null && !inn.getSourceAuthors().isBlank())) {
+            score++;
+            why.add("źródło podaje autorów lub dane projektu");
         }
-        return new CriterionScore(Criterion.ZESPOL, clamp(score), capitalize(String.join("; ", why)) + ".");
+        List<RadarRecord> confirmations = radarRecords.findByDuplicateOf(inn);
+        if (!confirmations.isEmpty()) {
+            score++;
+            why.add("potwierdzone w innych źródłach: " + confirmations.stream().map(RadarRecord::getSource)
+                    .distinct().reduce((x, y) -> x + ", " + y).orElse(""));
+        }
+        String results = inn.getResults() == null ? "" : inn.getResults();
+        String norm = TextVectorizer.normalize(results);
+        if (results.matches("(?s).*\\d.*")) {
+            score++;
+            why.add("efekty opisane liczbowo");
+        } else if (!results.isBlank()) {
+            why.add("efekty opisane tylko jakościowo");
+        }
+        if (norm.contains("nagrod") || norm.contains("ankiet") || norm.contains("badani") || norm.contains("ewaluac")) {
+            score++;
+            why.add("efekty potwierdzone ankietą, badaniem lub nagrodą");
+        }
+        return new CriterionScore(Criterion.WIARYGODNOSC, clamp(score), capitalize(String.join("; ", why)) + ".");
+    }
+
+    public static int trlOf(Innovation inn) {
+        return inn.getTrl() != null ? inn.getTrl()
+                : Trl.estimate(inn.getMaturity(), TextVectorizer.normalize(inn.getSolution() + " " + inn.getResults()));
+    }
+
+    private static String estimateNote(Innovation inn, String field) {
+        return inn.getEstimated().contains(field) || ("trl".equals(field) && inn.getTrl() == null)
+                ? " (szacunek automatyczny – do potwierdzenia)" : "";
     }
 
     private static String kindLabel(String kind) {

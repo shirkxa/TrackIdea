@@ -525,6 +525,21 @@ textarea:focus {
   color: var(--radar);
 }
 
+/* szacunek automatu – przerywana ramka odróżnia go od faktów */
+.badge-estimate {
+  background: transparent;
+  color: var(--warn-text);
+  border: 1px dashed currentColor;
+  font-size: 0.7rem;
+  padding: 0 6px;
+}
+
+.badge-trl {
+  background: var(--neutral-soft);
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
 .tags {
   display: flex;
   flex-wrap: wrap;
@@ -989,6 +1004,22 @@ textarea:focus {
 .fact {
   display: flex;
   flex-direction: column;
+}
+
+.sub-title {
+  margin: 18px 0 0;
+  font-size: 0.95rem;
+}
+
+.legend {
+  margin: -4px 0 0;
+}
+
+.source-facts {
+  margin: 8px 0 0;
+  padding-left: 18px;
+  font-size: 0.9rem;
+  line-height: 1.6;
 }
 
 .links {

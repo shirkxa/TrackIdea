@@ -110,11 +110,52 @@ public class CordisImporter implements SourceImporter {
         // szacunek: zakończony projekt = rozwiązanie przetestowane w pilotażu, trwający = prototyp
         Maturity maturity = "CLOSED".equals(status) ? Maturity.PILOTAZ : Maturity.PROTOTYP;
         String acronym = p.path("acronym").asString("");
+        List<String> facts = new ArrayList<>();
+        facts.add("Status projektu: " + statusLabel(status));
+        String end = p.path("endDate").asString("");
+        if (!start.isBlank()) facts.add("Okres realizacji: " + start + (end.isBlank() ? "" : " – " + end));
+        String programme = programme(p);
+        if (programme != null) facts.add("Program: " + programme);
+        String eu = p.path("ecMaxContribution").asString("");
+        if (!eu.isBlank()) facts.add("Dofinansowanie UE: " + euro(eu));
+        facts.add("Polska organizacja w konsorcjum: " + name);
+        int results = asList(p.path("relations").path("associations").path("result")).size();
+        if (results > 0) facts.add("Opublikowane wyniki projektu w CORDIS: " + results);
         return new SourceRecord(name(), p.path("id").asString(""),
                 Names.shorten((acronym.isBlank() ? "" : acronym + ": ") + title, 240), Names.shorten(objective, 2500),
                 name, institutionType(org, name), Names.titleCase(org.path("address").path("city").asString(null)),
                 null, "Polska", "konsorcjum projektu " + (acronym.isBlank() ? "" : acronym), year, keywords,
-                "https://cordis.europa.eu/project/id/" + p.path("id").asString(""), type, sector, maturity);
+                "https://cordis.europa.eu/project/id/" + p.path("id").asString(""), type, sector, maturity, facts);
+    }
+
+    static String statusLabel(String status) {
+        return switch (status) {
+            case "CLOSED" -> "zakończony";
+            case "SIGNED" -> "w realizacji";
+            case "TERMINATED" -> "przerwany";
+            default -> status.isBlank() ? "brak informacji" : status.toLowerCase(Locale.ROOT);
+        };
+    }
+
+    /** Kwota w euro z separatorem tysięcy, np. „4 998 765 €”. */
+    static String euro(String amount) {
+        try {
+            long v = Math.round(Double.parseDouble(amount));
+            return String.format(Locale.ROOT, "%,d €", v).replace(',', ' ');
+        } catch (NumberFormatException e) {
+            return amount + " €";
+        }
+    }
+
+    private static String programme(JsonNode p) {
+        for (JsonNode prog : asList(p.path("relations").path("associations").path("programme"))) {
+            String fp = prog.path("frameworkProgramme").asString("");
+            String title = prog.path("title").asString("");
+            if (!fp.isBlank()) {
+                return fp.replace("HORIZON", "Horyzont Europa") + (title.isBlank() ? "" : " – " + title);
+            }
+        }
+        return null;
     }
 
     /** Polska organizacja, której nazwa zawiera jedno ze słów (np. gmina w projekcie z kilkoma uczelniami). */

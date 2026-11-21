@@ -6,7 +6,9 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 
 /** Karta innowacji – „README” repozytorium pomysłu. */
@@ -48,6 +50,13 @@ public class Innovation {
     @Enumerated(EnumType.STRING)
     private Maturity maturity;
 
+    /** Gotowość technologiczna 1–9. */
+    private Integer trl;
+
+    /** Pola ustalone automatycznie (szacunek), jeszcze niepotwierdzone przez analityka: type, sector, maturity, trl. */
+    @ElementCollection(fetch = FetchType.EAGER)
+    private Set<String> estimated = new LinkedHashSet<>();
+
     @Enumerated(EnumType.STRING)
     private TransferModel transferModel;
 
@@ -72,6 +81,14 @@ public class Innovation {
 
     /** Autorzy według źródła (tekst – Radar nie zakłada kont twórcom). */
     private String sourceAuthors;
+
+    private Integer sourceYear;
+
+    /** Fakty podane wprost przez źródło (np. status projektu, finansowanie UE, liczba cytowań). */
+    @ElementCollection(fetch = FetchType.EAGER)
+    @OrderColumn
+    @Column(length = 300)
+    private List<String> sourceFacts = new ArrayList<>();
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

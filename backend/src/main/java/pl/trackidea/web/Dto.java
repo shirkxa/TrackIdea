@@ -54,7 +54,15 @@ public final class Dto {
     public record InnovationCard(Long id, String title, String summary, EnumValue type, EnumValue sector,
                                  EnumValue maturity, EnumValue transferModel, StatusView status,
                                  InstitutionView institution, String authors, Set<String> tags, Double score,
-                                 Instant createdAt, Instant updatedAt, EnumValue source, String sourceName) {
+                                 Instant createdAt, Instant updatedAt, EnumValue source, String sourceName,
+                                 TrlView trl, Set<String> estimated) {
+    }
+
+    /** Poziom gotowości technologicznej z opisem. */
+    public record TrlView(int level, String label) {
+        public static TrlView of(Integer level) {
+            return level == null ? null : new TrlView(level, Trl.label(level));
+        }
     }
 
     public record CriterionView(String value, String label, int weight, String question, String low, String high) {
@@ -98,7 +106,7 @@ public final class Dto {
                                    String results, String ipStatus, Set<String> links, String sourceRef,
                                    InnovationService.Completeness completeness, AssessmentView assessment,
                                    List<EnumValue> chosenPaths, List<EventView> events, Permissions viewer,
-                                   Ref mergedInto) {
+                                   Ref mergedInto, Integer sourceYear, List<String> sourceFacts) {
     }
 
     public record NeedView(Long id, String title, String description, InstitutionView institution,

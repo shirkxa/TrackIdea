@@ -152,6 +152,7 @@ function ActionPanel({ data, busy, act }) {
 
 function CardSection({ data }) {
   const { card } = data
+  const est = new Set(card.estimated ?? [])
   const rows = [
     ['Problem', data.problem],
     ['Rozwiązanie', data.solution],
@@ -168,12 +169,30 @@ function CardSection({ data }) {
           </div>
         ))}
       </dl>
+      <h3 className="sub-title">Klasyfikacja</h3>
       <div className="facts">
-        <Fact label="Etap wdrożenia">{card.maturity?.label}</Fact>
+        <Fact label="Typ innowacji" estimated={est.has('type')}>{card.type?.label}</Fact>
+        <Fact label="Sektor" estimated={est.has('sector')}>{card.sector?.label}</Fact>
+        <Fact label="Etap wdrożenia" estimated={est.has('maturity')}>{card.maturity?.label}</Fact>
+        <Fact label="Gotowość (TRL)" estimated={est.has('trl')}>
+          {card.trl && <>TRL {card.trl.level} <span className="muted small">· {card.trl.label}</span></>}
+        </Fact>
         <Fact label="Model transferu">{card.transferModel?.label}</Fact>
         <Fact label="Ochrona IP">{data.ipStatus}</Fact>
-        {data.sourceRef && <Fact label="Identyfikator w źródle">{card.sourceName} · {data.sourceRef}</Fact>}
       </div>
+      <p className="muted small legend">
+        <Badge tone="estimate">szacunek</Badge> ustalone automatycznie z opisu – do potwierdzenia przez analityka PCI;
+        pozostałe dane podało źródło lub potwierdził analityk.
+      </p>
+
+      <h3 className="sub-title">Fakty ze źródła</h3>
+      <ul className="source-facts">
+        {card.sourceName && <li>Źródło: <b>{card.sourceName}</b>{data.sourceRef && <> · {data.sourceRef}</>}</li>}
+        {card.institution && <li>Instytucja: <b>{card.institution.name}</b></li>}
+        {card.authors && <li>Autorzy: {card.authors}</li>}
+        {data.sourceYear && !data.sourceFacts?.some((f) => f.startsWith('Rok')) && <li>Rok: {data.sourceYear}</li>}
+        {data.sourceFacts?.filter((f) => !f.startsWith('Polska')).map((f) => <li key={f}>{f}</li>)}
+      </ul>
       {card.tags?.length > 0 && (
         <div className="tags">{[...card.tags].map((t) => <Tag key={t}>{t}</Tag>)}</div>
       )}
@@ -188,11 +207,13 @@ function CardSection({ data }) {
   )
 }
 
-function Fact({ label, children }) {
+function Fact({ label, estimated, children }) {
   if (!children) return null
   return (
     <div className="fact">
-      <span className="muted small">{label}</span>
+      <span className="muted small">
+        {label} {estimated && <Badge tone="estimate" title="Ustalone automatycznie – do potwierdzenia">szacunek</Badge>}
+      </span>
       <strong>{children}</strong>
     </div>
   )

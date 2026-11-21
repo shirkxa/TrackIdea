@@ -32,14 +32,35 @@ class AssessmentTest {
     @Test
     void expertScoreOverridesProposalButProposalIsKept() {
         Assessment a = withAll(3);
-        CriterionScore impact = a.getScores().stream().filter(s -> s.getCriterion() == Criterion.WPLYW).findFirst().orElseThrow();
-        impact.setFinalScore(5);
+        CriterionScore deployment = a.getScores().stream().filter(s -> s.getCriterion() == Criterion.WDROZENIE).findFirst().orElseThrow();
+        deployment.setFinalScore(5);
 
-        assertThat(a.score(Criterion.WPLYW)).isEqualTo(5);
+        assertThat(a.score(Criterion.WDROZENIE)).isEqualTo(5);
         assertThat(a.proposedTotal()).isEqualTo(50.0);
-        // wpływ ma wagę 20%: (5−1)/4 zamiast (3−1)/4 → +10 pkt
+        // poziom wdrożenia ma wagę 20%: (5−1)/4 zamiast (3−1)/4 → +10 pkt
         assertThat(a.total()).isEqualTo(60.0);
         assertThat(a.isApproved()).isFalse();
+    }
+
+    @Test
+    void criteriaFollowChallengeFaq() {
+        assertThat(Criterion.values()).containsExactly(Criterion.WDROZENIE, Criterion.TRL, Criterion.INNOWACYJNOSC,
+                Criterion.POTENCJAL, Criterion.WIARYGODNOSC);
+    }
+
+    @Test
+    void trlMapsToScoreAndIsEstimatedFromDeploymentStage() {
+        assertThat(Trl.toScore(1)).isEqualTo(1);
+        assertThat(Trl.toScore(4)).isEqualTo(2);
+        assertThat(Trl.toScore(6)).isEqualTo(3);
+        assertThat(Trl.toScore(7)).isEqualTo(4);
+        assertThat(Trl.toScore(9)).isEqualTo(5);
+
+        assertThat(Trl.estimate(Maturity.POMYSL, "")).isEqualTo(2);
+        assertThat(Trl.estimate(Maturity.PROTOTYP, "tested in laboratory")).isEqualTo(4);
+        assertThat(Trl.estimate(Maturity.PILOTAZ, "pilot in real environment")).isEqualTo(7);
+        assertThat(Trl.estimate(Maturity.DZIALA_W_WIELU, "")).isEqualTo(9);
+        assertThat(Trl.label(9)).isEqualTo("Rozwiązanie sprawdzone w działaniu, stosowane");
     }
 
     @Test

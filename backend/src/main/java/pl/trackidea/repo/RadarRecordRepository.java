@@ -15,4 +15,7 @@ public interface RadarRecordRepository extends JpaRepository<RadarRecord, Long> 
     List<RadarRecord> findAllByOrderByImportedAtDescIdDesc();
 
     long countByOutcome(RadarRecord.Outcome outcome);
+
+    /** Te same innowacje znalezione w innych źródłach (potwierdzenie wiarygodności). */
+    List<RadarRecord> findByDuplicateOf(pl.trackidea.domain.Innovation innovation);
 }

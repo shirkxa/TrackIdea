@@ -229,7 +229,7 @@
     "daysAgo": 70,
     "assessAfterDays": 11,
     "expertDelta": {
-      "NOWOSC": 1
+      "INNOWACYJNOSC": 1
     },
     "sourceAuthors": "Beata Kruk",
     "sourceName": "Przykład (dane demo)"
@@ -322,7 +322,7 @@
     "daysAgo": 150,
     "assessAfterDays": 14,
     "expertDelta": {
-      "PRZENASZALNOSC": -1
+      "POTENCJAL": -1
     },
     "sourceAuthors": "prof. Zofia Malinowska",
     "sourceName": "Przykład (dane demo)"

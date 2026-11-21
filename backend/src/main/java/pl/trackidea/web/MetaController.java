@@ -36,6 +36,7 @@ public class MetaController {
         m.put("paths", values(PathType.values()));
         m.put("statuses", Arrays.stream(InnovationStatus.values()).map(Dto.StatusView::of).toList());
         m.put("criteria", Arrays.stream(Criterion.values()).map(Dto.CriterionView::of).toList());
+        m.put("trlLevels", java.util.stream.IntStream.rangeClosed(1, 9).mapToObj(Dto.TrlView::of).toList());
         m.put("aiEnabled", assistant.isAiEnabled());
         return m;
     }

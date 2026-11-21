@@ -35,4 +35,12 @@ class ImporterParsingTest {
         assertThat(Names.titleCase("QSAR LAB SPOLKA Z OGRANICZONA ODPOWIEDZIALNOSCIA")).isEqualTo("Qsar Lab sp. z o.o.");
         assertThat(Names.titleCase("Gmina Ustka")).isEqualTo("Gmina Ustka");
     }
+
+    @Test
+    void describesSourceFactsInPolish() {
+        assertThat(CordisImporter.statusLabel("CLOSED")).isEqualTo("zakończony");
+        assertThat(CordisImporter.statusLabel("SIGNED")).isEqualTo("w realizacji");
+        assertThat(CordisImporter.euro("4998765")).isEqualTo("4 998 765 €");
+        assertThat(OpenAlexImporter.kindLabel("article")).isEqualTo("artykuł");
+    }
 }

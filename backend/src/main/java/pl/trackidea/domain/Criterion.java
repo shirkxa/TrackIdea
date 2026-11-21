@@ -1,13 +1,17 @@
 package pl.trackidea.domain;
 
-/** Kryteria oceny potencjału z jawnymi wagami (suma 100%). */
+/** Kryteria oceny z FAQ wyzwania „Radar innowacji” – jawne wagi (suma 100%). */
 public enum Criterion implements Labeled {
-    SKALA("Skala problemu", 20, "Ilu instytucji / osób dotyczy problem?", "Jedna klasa lub urząd", "Problem w setkach instytucji"),
-    NOWOSC("Nowość", 15, "Czy istnieją podobne rozwiązania (baza, patenty, publikacje)?", "Wiele identycznych", "Brak podobnych"),
-    DOJRZALOSC("Dojrzałość", 15, "Na jakim etapie jest rozwiązanie?", "Pomysł", "Działa w kilku miejscach"),
-    PRZENASZALNOSC("Przenaszalność", 20, "Jak łatwo wdrożyć to w innej instytucji?", "Wymaga unikalnych warunków", "Instrukcja + niski koszt"),
-    WPLYW("Wpływ", 20, "Jaki efekt społeczny, ekonomiczny lub edukacyjny?", "Trudny do zmierzenia", "Zmierzone, duże efekty"),
-    ZESPOL("Zespół i zasoby", 10, "Czy jest ktoś, kto może to rozwijać?", "Autor nieaktywny", "Zaangażowany zespół + zaplecze");
+    WDROZENIE("Poziom wdrożenia", 20, "Gdzie i w jakiej skali rozwiązanie już działa?",
+            "Pomysł lub koncepcja", "Działa w wielu miejscach"),
+    TRL("Gotowość technologiczna (TRL)", 15, "Na jakim poziomie TRL 1–9 jest rozwiązanie?",
+            "TRL 1–2", "TRL 8–9"),
+    INNOWACYJNOSC("Innowacyjność", 25, "Czy rozwiązanie jest nowe na tle podobnych (baza, patenty, publikacje)?",
+            "Wiele identycznych", "Brak podobnych"),
+    POTENCJAL("Potencjał zastosowania", 25, "Ile instytucji może to wykorzystać i jak łatwo to przenieść?",
+            "Jedno miejsce, unikalne warunki", "Wiele instytucji, niski koszt wdrożenia"),
+    WIARYGODNOSC("Wiarygodność", 15, "Czy informacje są potwierdzone przez źródło, efekty i inne bazy?",
+            "Brak źródła i efektów", "Potwierdzone w kilku źródłach, zmierzone efekty");
 
     private final String label;
     private final int weight;

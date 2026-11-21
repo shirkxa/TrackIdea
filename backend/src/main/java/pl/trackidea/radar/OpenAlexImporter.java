@@ -28,7 +28,7 @@ public class OpenAlexImporter implements SourceImporter {
             new Query("public administration digital services municipality", InnovationType.PROCESOWA, Sector.ADMINISTRACJA));
 
     private static final String SELECT =
-            "id,doi,title,publication_year,abstract_inverted_index,authorships,primary_topic,keywords,primary_location";
+            "id,doi,title,publication_year,abstract_inverted_index,authorships,primary_topic,keywords,primary_location,type,cited_by_count";
 
     private final HttpJson http;
     private final int perQuery;
@@ -101,11 +101,31 @@ public class OpenAlexImporter implements SourceImporter {
         String doi = w.path("doi").asString(null);
         String landing = w.path("primary_location").path("landing_page_url").asString(null);
         Sector sector = q.sector() != null ? q.sector() : sectorFrom(w.path("primary_topic"));
+        List<String> facts = new ArrayList<>();
+        String kind = w.path("type").asString("");
+        String venue = w.path("primary_location").path("source").path("display_name").asString("");
+        facts.add("Typ publikacji: " + kindLabel(kind) + (venue.isBlank() ? "" : " – " + venue));
+        if (w.path("publication_year").isNumber()) facts.add("Rok publikacji: " + w.path("publication_year").asInt());
+        facts.add("Liczba cytowań (OpenAlex): " + w.path("cited_by_count").asInt(0));
+        facts.add("Polska instytucja autorów: " + inst.path("display_name").asString(""));
+        if (doi != null) facts.add("DOI: " + doi.replace("https://doi.org/", ""));
         return new SourceRecord(name(), shortId(w.path("id").asString("")), Names.shorten(title, 240),
                 Names.shorten(abstractText, 2500), inst.path("display_name").asString(""),
                 institutionType(inst.path("type").asString("")), null, null, "Polska",
                 String.join(", ", authors), w.path("publication_year").isNumber() ? w.path("publication_year").asInt() : null,
-                keywords, doi != null ? doi : landing, q.type(), sector, null);
+                keywords, doi != null ? doi : landing, q.type(), sector, null, facts);
+    }
+
+    static String kindLabel(String type) {
+        return switch (type) {
+            case "article" -> "artykuł";
+            case "book-chapter" -> "rozdział w książce";
+            case "book" -> "książka";
+            case "dissertation" -> "rozprawa";
+            case "preprint" -> "preprint";
+            case "report" -> "raport";
+            default -> type.isBlank() ? "publikacja" : type;
+        };
     }
 
     /** OpenAlex przechowuje abstrakt jako indeks odwrotny: słowo → pozycje. */

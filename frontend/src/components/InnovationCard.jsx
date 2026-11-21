@@ -20,6 +20,11 @@ export default function InnovationCard({ card, extra, index = 0 }) {
         <StatusBadge status={card.status} />
         {card.type && <Badge tone="muted">{card.type.label}</Badge>}
         {card.maturity && <Badge tone="muted">{card.maturity.label}</Badge>}
+        {card.trl && (
+          <Badge tone="trl" title={`${card.trl.label}${card.estimated?.includes('trl') ? ' (szacunek)' : ''}`}>
+            TRL {card.trl.level}{card.estimated?.includes('trl') ? '*' : ''}
+          </Badge>
+        )}
       </div>
       <p className="card-summary">{card.summary}</p>
       <div className="tags">

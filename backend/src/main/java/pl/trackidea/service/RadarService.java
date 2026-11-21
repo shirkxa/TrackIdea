@@ -153,7 +153,7 @@ public class RadarService {
 
     /** Jeden rekord: nowy → karta, znany → odświeżenie, bardzo podobny do istniejącej innowacji → duplikat. */
     private RadarRecord ingest(SourceRecord r, int[] counts) {
-        int hash = Objects.hash(r.title(), r.abstractText());
+        int hash = Objects.hash(r.title(), r.abstractText(), r.facts());
         Optional<RadarRecord> known = records.findFirstBySourceAndRef(r.source(), r.ref());
         if (known.isPresent()) {
             RadarRecord rec = known.get();
@@ -162,6 +162,8 @@ public class RadarService {
                 Innovation inn = rec.getInnovation();
                 inn.setTitle(r.title());
                 inn.setSummary(assistant.heuristic(r.title() + ". " + r.abstractText()).summary());
+                inn.getSourceFacts().clear();
+                inn.getSourceFacts().addAll(r.facts());
                 inn.touch();
                 innovationService.log(inn, EventType.EDYCJA, "Zaktualizowano na podstawie zmian w źródle " + r.source() + ".", null);
                 rec.setContentHash(hash);
@@ -203,6 +205,11 @@ public class RadarService {
         inn.setType(r.typeHint() != null ? r.typeHint() : d.type());
         inn.setSector(r.sectorHint() != null ? r.sectorHint() : d.sector());
         inn.setMaturity(r.maturityHint() != null ? r.maturityHint() : d.maturity());
+        inn.setTrl(Trl.estimate(inn.getMaturity(), TextVectorizer.normalize(r.title() + " " + r.abstractText())));
+        // klasyfikacja pochodzi z automatu – to szacunek, dopóki analityk jej nie potwierdzi
+        inn.getEstimated().addAll(List.of("type", "sector", "maturity", "trl"));
+        inn.setSourceYear(r.year());
+        inn.getSourceFacts().addAll(r.facts());
         r.keywords().stream().filter(k -> k != null && !k.isBlank()).forEach(k -> inn.getTags().add(k.toLowerCase()));
         if (r.url() != null) {
             inn.getLinks().add(r.url());

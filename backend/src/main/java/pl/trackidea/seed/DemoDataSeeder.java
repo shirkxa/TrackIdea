@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import pl.trackidea.domain.*;
 import pl.trackidea.repo.*;
+import pl.trackidea.service.TextVectorizer;
 import pl.trackidea.service.AssessmentService;
 import pl.trackidea.service.RadarService;
 import tools.jackson.core.type.TypeReference;
@@ -43,7 +44,7 @@ public class DemoDataSeeder implements ApplicationRunner {
                           TransferModel transferModel, String ipStatus, List<String> tags, List<String> links,
                           String institution, String sourceAuthors, String sourceName, InnovationStatus status,
                           List<PathType> paths, int daysAgo, Integer assessAfterDays,
-                          Map<Criterion, Integer> expertDelta) {
+                          Map<Criterion, Integer> expertDelta, Integer trl) {
     }
 
     record NeedSeed(String key, String title, String description, String institution, Sector sector,
@@ -160,6 +161,12 @@ public class DemoDataSeeder implements ApplicationRunner {
         inn.setSource(Source.ANALITYK);
         inn.setSourceName(s.sourceName());
         inn.setStatus(s.status());
+        // TRL w danych demo jest szacowany automatycznie; zweryfikowane karty mają go potwierdzonego
+        inn.setTrl(s.trl() != null ? s.trl()
+                : Trl.estimate(s.maturity(), TextVectorizer.normalize(s.solution() + " " + s.results())));
+        if (s.trl() == null && s.status() != InnovationStatus.OCENIONA) {
+            inn.getEstimated().add("trl");
+        }
         if (s.paths() != null) inn.getChosenPaths().addAll(s.paths());
         Instant created = now.minus(Duration.ofDays(s.daysAgo()));
         inn.setCreatedAt(created);

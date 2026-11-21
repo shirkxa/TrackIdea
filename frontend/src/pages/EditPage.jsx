@@ -14,6 +14,7 @@ function toForm(d) {
     transferModel: d.card.transferModel?.value ?? null, ipStatus: d.ipStatus ?? '',
     tags: [...(d.card.tags ?? [])].join(', '), links: [...(d.links ?? [])].join('\n'),
     institutionId: d.card.institution?.id ?? null, sourceAuthors: d.card.authors ?? '',
+    trl: d.card.trl?.level ?? null,
   }
 }
 
@@ -32,6 +33,7 @@ export default function EditPage() {
 
 function EditForm({ id, initial }) {
   const { meta, notify } = useApp()
+  const trlOptions = (meta.trlLevels ?? []).map((t) => ({ value: t.level, label: `TRL ${t.level} – ${t.label}` }))
   const navigate = useNavigate()
   const institutions = useFetch('/institutions')
   const [form, setForm] = useState(initial)
@@ -74,6 +76,13 @@ function EditForm({ id, initial }) {
           <SelectEnum label="Typ" value={form.type} onChange={set('type')} options={meta.types} placeholder="Wybierz…" />
           <SelectEnum label="Sektor" value={form.sector} onChange={set('sector')} options={meta.sectors} placeholder="Wybierz…" />
           <SelectEnum label="Etap wdrożenia" value={form.maturity} onChange={set('maturity')} options={meta.maturities} placeholder="Wybierz…" />
+          <label className="field">
+            <span>Gotowość technologiczna (TRL)</span>
+            <select value={form.trl ?? ''} onChange={(e) => set('trl')(e.target.value ? Number(e.target.value) : null)}>
+              <option value="">Wybierz…</option>
+              {trlOptions.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
+            </select>
+          </label>
           <SelectEnum label="Model transferu" value={form.transferModel} onChange={set('transferModel')} options={meta.transferModels} placeholder="Wybierz…" />
           <label className="field">
             <span>Instytucja</span>

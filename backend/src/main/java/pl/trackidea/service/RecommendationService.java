@@ -32,10 +32,9 @@ public class RecommendationService {
 
     public List<PathRecommendation> recommend(Innovation inn) {
         Assessment a = assessmentService.currentOrPreview(inn);
-        int przen = a.score(Criterion.PRZENASZALNOSC);
-        int dojr = a.score(Criterion.DOJRZALOSC);
-        int nowosc = a.score(Criterion.NOWOSC);
-        int wplyw = a.score(Criterion.WPLYW);
+        int przen = a.score(Criterion.POTENCJAL);
+        int dojr = inn.getMaturity() == null ? 1 : inn.getMaturity().getLevel();
+        int nowosc = a.score(Criterion.INNOWACYJNOSC);
         InnovationType type = inn.getType() == null ? InnovationType.TECHNICZNA : inn.getType();
 
         List<MatchingService.Match> needs = matching.needsFor(inn);
@@ -44,8 +43,8 @@ public class RecommendationService {
         if (type.isNonTechnical() && przen >= 4) {
             List<MatchingService.Match> publicNeeds = needs.stream().filter(m -> isPublic(m.institutionType())).toList();
             out.add(rec(inn, PathType.OTWARTA_REPLIKACJA, 70 + przen * 5 + Math.min(10, publicNeeds.size() * 3),
-                    "Typ nietechniczny i przenaszalność ≥ 4",
-                    List.of("typ " + type.getLabel().toLowerCase(), "przenaszalność " + przen + "/5",
+                    "Typ nietechniczny i potencjał zastosowania ≥ 4",
+                    List.of("typ " + type.getLabel().toLowerCase(), "potencjał " + przen + "/5",
                             publicNeeds.isEmpty() ? "brak jeszcze zgłoszonych potrzeb – warto ogłosić w sieci szkół/JST"
                                     : "instytucje z podobną potrzebą: " + publicNeeds.size()),
                     "Instytucje z podobną potrzebą, sieci szkół, związki gmin",
@@ -55,7 +54,7 @@ public class RecommendationService {
         }
         if (type == InnovationType.TECHNICZNA && dojr <= 2) {
             out.add(rec(inn, PathType.ROZWOJ_PCI, 75 + (3 - dojr) * 5,
-                    "Innowacja techniczna, dojrzałość ≤ 2",
+                    "Innowacja techniczna, etap wdrożenia ≤ 2",
                     List.of("etap: " + label(inn.getMaturity()), "potrzebne prototypowanie i testy"),
                     "Laboratoria PCI, program akceleracyjny, uczelnie",
                     List.of("Wskazać program akceleracyjny lub laboratorium PCI", "Wrócić do oceny po nowych wynikach"),
@@ -63,8 +62,8 @@ public class RecommendationService {
         }
         if (type == InnovationType.TECHNICZNA && dojr >= 4 && nowosc >= 4) {
             out.add(rec(inn, PathType.KOMERCJALIZACJA, 80 + nowosc * 3,
-                    "Innowacja techniczna, dojrzałość ≥ 4 i nowość ≥ 4",
-                    List.of("dojrzałość " + dojr + "/5", "nowość " + nowosc + "/5",
+                    "Innowacja techniczna, etap wdrożenia ≥ 4 i innowacyjność ≥ 4",
+                    List.of("etap wdrożenia " + dojr + "/5", "innowacyjność " + nowosc + "/5",
                             "ochrona IP: " + (inn.getIpStatus() == null ? "brak informacji" : inn.getIpStatus())),
                     "Firmy z sektora, centra transferu technologii",
                     List.of("Sprawdzić status ochrony (UPRP / EPO)", "Wskazać branże, w których może być zastosowana",
@@ -74,7 +73,7 @@ public class RecommendationService {
         if (type == InnovationType.TECHNICZNA && dojr == 3) {
             out.add(rec(inn, PathType.PILOTAZ_BR, 70 + nowosc * 2,
                     "Innowacja techniczna w pilotażu – potrzebny partner do wdrożenia",
-                    List.of("etap: " + label(inn.getMaturity()), "nowość " + nowosc + "/5",
+                    List.of("etap: " + label(inn.getMaturity()), "innowacyjność " + nowosc + "/5",
                             "potrzebny partner do wdrożenia pilotażowego"),
                     "Firmy z branży, uczelnie, PCI",
                     List.of("Wskazać instytucje, które mogą przetestować rozwiązanie", "Ustalić zakres pilotażu"),
@@ -105,7 +104,7 @@ public class RecommendationService {
         if (out.isEmpty()) {
             out.add(rec(inn, type.isNonTechnical() ? PathType.OTWARTA_REPLIKACJA : PathType.ROZWOJ_PCI, 50,
                     "Żadna reguła nie dała silnej rekomendacji – ścieżka domyślna",
-                    List.of("przenaszalność " + przen + "/5", "dojrzałość " + dojr + "/5"),
+                    List.of("potencjał " + przen + "/5", "etap wdrożenia " + dojr + "/5"),
                     "Ekspert PCI", List.of("Uzupełnić kartę (efekty, wymagania)", "Ponowić ocenę"), List.of()));
         }
 

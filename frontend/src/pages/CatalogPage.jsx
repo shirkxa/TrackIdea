@@ -17,6 +17,7 @@ const SORTS = [
   { value: 'newest', label: 'Najnowsze' },
   { value: 'score', label: 'Najlepiej ocenione' },
   { value: 'updated', label: 'Ostatnio aktualizowane' },
+  { value: 'trl', label: 'Najwyższy TRL' },
 ]
 
 const PUBLIC_INSTITUTIONS = ['SZKOLA', 'UCZELNIA', 'JST', 'INSTYTUCJA_PUBLICZNA']
@@ -62,6 +63,7 @@ export default function CatalogPage() {
   const panelFilters = [
     { key: 'sector', label: 'Sektor', options: meta.sectors },
     { key: 'maturity', label: 'Etap', options: meta.maturities },
+    { key: 'minTrl', label: 'TRL', options: [3, 5, 7, 9].map((n) => ({ value: String(n), label: n === 9 ? 'TRL 9' : `TRL ${n}+` })) },
     { key: 'transferModel', label: 'Model transferu', options: meta.transferModels },
     { key: 'institutionType', label: 'Instytucja', options: meta.institutionTypes.filter((t) => PUBLIC_INSTITUTIONS.includes(t.value)) },
     { key: 'status', label: 'Status', options: statuses },

@@ -61,6 +61,7 @@ public class InnovationController {
                                          @RequestParam(required = false) InnovationStatus status,
                                          @RequestParam(required = false) Long institutionId,
                                          @RequestParam(required = false) String institution,
+                                         @RequestParam(required = false) Integer minTrl,
                                          @RequestParam(defaultValue = "newest") String sort) {
         Stream<Innovation> stream = innovations.findAll().stream().filter(i -> i.getStatus().isPubliclyVisible());
         if (type != null) stream = stream.filter(i -> i.getType() == type);
@@ -68,6 +69,7 @@ public class InnovationController {
         if (maturity != null) stream = stream.filter(i -> i.getMaturity() == maturity);
         if (transferModel != null) stream = stream.filter(i -> i.getTransferModel() == transferModel);
         if (status != null) stream = stream.filter(i -> i.getStatus() == status);
+        if (minTrl != null) stream = stream.filter(i -> i.getTrl() != null && i.getTrl() >= minTrl);
         if (institutionId != null) stream = stream.filter(i -> i.getInstitution() != null && i.getInstitution().getId().equals(institutionId));
         if (institutionType != null) stream = stream.filter(i -> i.getInstitution() != null && i.getInstitution().getType() == institutionType);
         if (institution != null && !institution.isBlank()) {
@@ -99,6 +101,7 @@ public class InnovationController {
         Comparator<Dto.InnovationCard> order = switch (sort) {
             case "score" -> Comparator.comparing((Dto.InnovationCard c) -> c.score() == null ? -1 : c.score()).reversed();
             case "updated" -> Comparator.comparing(Dto.InnovationCard::updatedAt).reversed();
+            case "trl" -> Comparator.comparing((Dto.InnovationCard c) -> c.trl() == null ? 0 : c.trl().level()).reversed();
             case "relevance" -> Comparator.comparing((Dto.InnovationCard c) -> relevance.getOrDefault(c.id(), 0.0)).reversed();
             default -> Comparator.comparing(Dto.InnovationCard::createdAt).reversed();
         };
@@ -124,12 +127,13 @@ public class InnovationController {
                                          @RequestParam(required = false) InnovationStatus status,
                                          @RequestParam(required = false) Long institutionId,
                                          @RequestParam(required = false) String institution,
+                                         @RequestParam(required = false) Integer minTrl,
                                          @RequestParam(defaultValue = "newest") String sort) {
         List<Dto.InnovationCard> cards = list(q, type, sector, maturity, transferModel, institutionType, status,
-                institutionId, institution, sort);
+                institutionId, institution, minTrl, sort);
         StringBuilder csv = new StringBuilder("\uFEFF");
         csv.append(String.join(";", "ID", "Tytuł", "Instytucja", "Typ instytucji", "Powiat", "Typ innowacji",
-                "Sektor", "Etap", "Model transferu", "Status", "Wynik (0-100)", "Autorzy", "Źródło", "Data dodania",
+                "Sektor", "Etap", "TRL", "Model transferu", "Status", "Wynik (0-100)", "Autorzy", "Źródło", "Data dodania",
                 "Tagi", "Link")).append("\r\n");
         for (Dto.InnovationCard c : cards) {
             csv.append(String.join(";",
@@ -141,6 +145,7 @@ public class InnovationController {
                     cell(label(c.type())),
                     cell(label(c.sector())),
                     cell(label(c.maturity())),
+                    c.trl() == null ? "" : c.trl().level() + (c.estimated().contains("trl") ? " (szacunek)" : ""),
                     cell(label(c.transferModel())),
                     cell(c.status().label()),
                     c.score() == null ? "" : String.valueOf(Math.round(c.score())),

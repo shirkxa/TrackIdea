@@ -30,7 +30,8 @@ public class Views {
         return new Dto.InnovationCard(i.getId(), i.getTitle(), i.getSummary(), Dto.EnumValue.of(i.getType()),
                 Dto.EnumValue.of(i.getSector()), Dto.EnumValue.of(i.getMaturity()), Dto.EnumValue.of(i.getTransferModel()),
                 Dto.StatusView.of(i.getStatus()), Dto.InstitutionView.of(i.getInstitution()), i.getSourceAuthors(),
-                i.getTags(), score, i.getCreatedAt(), i.getUpdatedAt(), Dto.EnumValue.of(i.getSource()), i.getSourceName());
+                i.getTags(), score, i.getCreatedAt(), i.getUpdatedAt(), Dto.EnumValue.of(i.getSource()), i.getSourceName(),
+                Dto.TrlView.of(i.getTrl()), i.getEstimated());
     }
 
     public Dto.InnovationDetail detail(Innovation i, Person viewer) {
@@ -52,6 +53,6 @@ public class Views {
         return new Dto.InnovationDetail(card(i), i.getProblem(), i.getSolution(), i.getRequirements(), i.getResults(),
                 i.getIpStatus(), i.getLinks(), i.getSourceRef(), innovationService.completeness(i), assessment,
                 i.getChosenPaths().stream().map(Dto.EnumValue::of).toList(), timeline, perms,
-                Dto.Ref.of(i.getMergedInto()));
+                Dto.Ref.of(i.getMergedInto()), i.getSourceYear(), i.getSourceFacts());
     }
 }

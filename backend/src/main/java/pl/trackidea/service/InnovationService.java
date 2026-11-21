@@ -36,7 +36,7 @@ public class InnovationService {
     public record CardEdit(String title, String summary, String problem, String solution, String requirements,
                            String results, InnovationType type, Sector sector, Maturity maturity,
                            TransferModel transferModel, String ipStatus, List<String> tags, List<String> links,
-                           Long institutionId, String sourceAuthors) {
+                           Long institutionId, String sourceAuthors, Integer trl) {
     }
 
     @Transactional(readOnly = true)
@@ -82,9 +82,18 @@ public class InnovationService {
         inn.setSolution(trimTo(f.solution(), 4000));
         inn.setRequirements(trimTo(f.requirements(), 2000));
         inn.setResults(trimTo(f.results(), 2000));
+        if (f.trl() != null && (f.trl() < 1 || f.trl() > 9)) {
+            throw DomainException.badRequest("TRL musi być w skali 1–9.");
+        }
+        // pole, które analityk zmienił, przestaje być szacunkiem automatu
+        confirmIfChanged(inn, "type", inn.getType(), f.type());
+        confirmIfChanged(inn, "sector", inn.getSector(), f.sector());
+        confirmIfChanged(inn, "maturity", inn.getMaturity(), f.maturity());
+        confirmIfChanged(inn, "trl", inn.getTrl(), f.trl());
         inn.setType(f.type());
         inn.setSector(f.sector());
         inn.setMaturity(f.maturity());
+        inn.setTrl(f.trl());
         inn.setTransferModel(f.transferModel());
         inn.setIpStatus(f.ipStatus());
         inn.setSourceAuthors(trimTo(f.sourceAuthors(), 255));
@@ -149,9 +158,17 @@ public class InnovationService {
         }
         a.setApprovedBy(actor);
         a.setApprovedAt(Instant.now());
+        // zatwierdzając ocenę analityk potwierdza też klasyfikację karty
+        inn.getEstimated().clear();
         changeStatus(inn, InnovationStatus.OCENIONA, "Analityk zatwierdził ocenę: " + Math.round(a.total()) + "/100"
                 + (changed > 0 ? " (poprawiono kryteria: " + changed + ")." : " (bez zmian względem propozycji)."), actor);
         return inn;
+    }
+
+    private static void confirmIfChanged(Innovation inn, String field, Object before, Object after) {
+        if (!Objects.equals(before, after)) {
+            inn.getEstimated().remove(field);
+        }
     }
 
     public Innovation choosePaths(Long id, List<PathType> paths, Person actor) {
