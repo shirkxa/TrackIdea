@@ -1,7 +1,15 @@
 import { NavLink, Link } from 'react-router-dom'
 import { useApp } from '../context.jsx'
+import { usePrefs } from '../usePrefs.js'
+import Icon from './Icon.jsx'
 
 const ROLE_ORDER = ['TWORCA', 'OPIEKUN', 'EKSPERT', 'PARTNER', 'ADMIN']
+
+const FONT_SIZES = [
+  { scale: 0, sup: '', title: 'Tekst standardowy' },
+  { scale: 1, sup: '+', title: 'Tekst większy' },
+  { scale: 2, sup: '++', title: 'Tekst największy' },
+]
 
 function UserSwitcher() {
   const { people, user, chooseUser, meta } = useApp()
@@ -12,6 +20,7 @@ function UserSwitcher() {
   }))
   return (
     <label className="user-switcher" title="Przełącznik ról demo – w wersji produkcyjnej logowanie">
+      <Icon name="user" size={22} />
       <span className="sr-only">Użytkownik demo</span>
       <select value={user?.id ?? ''} onChange={(e) => chooseUser(e.target.value ? Number(e.target.value) : null)}>
         <option value="">Gość</option>
@@ -31,19 +40,34 @@ function UserSwitcher() {
 
 export default function Layout({ children }) {
   const { user, error, toast } = useApp()
+  const prefs = usePrefs()
   const isPci = user && ['EKSPERT', 'ADMIN'].includes(user.role.value)
   return (
     <div className="app">
       <div className="topstrip">
-        <div className="wrap topstrip-inner">
-          <Link to="/" className="topstrip-link">Szukaj w katalogu</Link>
+        <div className="topstrip-inner">
+          <div className="a11y" aria-label="Ustawienia wyświetlania">
+            <button type="button" className="a11y-btn" onClick={prefs.toggleTheme}
+              aria-pressed={prefs.theme === 'dark'} title={prefs.theme === 'dark' ? 'Motyw jasny' : 'Motyw ciemny'}>
+              <Icon name="contrast" size={24} />
+            </button>
+            <div className="font-sizes" role="group" aria-label="Wielkość tekstu">
+              {FONT_SIZES.map((f) => (
+                <button key={f.scale} type="button" className={`a11y-btn font-btn font-btn-${f.scale}`}
+                  aria-pressed={prefs.fontScale === f.scale} onClick={() => prefs.setFontScale(f.scale)} title={f.title}>
+                  A{f.sup && <sup>{f.sup}</sup>}
+                </button>
+              ))}
+            </div>
+          </div>
           <UserSwitcher />
         </div>
       </div>
       <header className="topbar">
         <div className="wrap topbar-inner">
           <Link to="/" className="brand">
-            <img src="/logo-black.png" alt="" className="brand-logo" />
+            <img src="/logo-black.png" alt="" className="brand-logo logo-on-light" />
+            <img src="/logo-white.png" alt="" className="brand-logo logo-on-dark" />
             <span className="brand-text">
               <strong>TrackIdea</strong>
               <span>Radar innowacji</span>
