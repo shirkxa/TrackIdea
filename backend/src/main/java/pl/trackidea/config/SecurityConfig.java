@@ -1,5 +1,6 @@
 package pl.trackidea.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -18,6 +19,8 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.security.web.context.SecurityContextRepository;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.util.StringUtils;
 import pl.trackidea.repo.PersonRepository;
 
 /**
@@ -29,10 +32,11 @@ import pl.trackidea.repo.PersonRepository;
 public class SecurityConfig {
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http,
+                                                   @Value("${trackidea.cookie-domain:}") String cookieDomain) throws Exception {
         http
                 .cors(Customizer.withDefaults())
-                .csrf(csrf -> csrf.spa())
+                .csrf(csrf -> csrf.spa().csrfTokenRepository(csrfTokenRepository(cookieDomain)))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
@@ -45,6 +49,18 @@ public class SecurityConfig {
                 .httpBasic(basic -> basic.disable())
                 .logout(logout -> logout.disable());
         return http.build();
+    }
+
+    /**
+     * Ciasteczko XSRF-TOKEN czytane przez JS frontendu. Gdy frontend i API są na różnych subdomenach
+     * (np. trackidea.rapy.gg i trackidea-api.rapy.gg), trackidea.cookie-domain=rapy.gg udostępnia je obu.
+     */
+    private static CookieCsrfTokenRepository csrfTokenRepository(String cookieDomain) {
+        CookieCsrfTokenRepository repo = CookieCsrfTokenRepository.withHttpOnlyFalse();
+        if (StringUtils.hasText(cookieDomain)) {
+            repo.setCookieCustomizer(cookie -> cookie.domain(cookieDomain));
+        }
+        return repo;
     }
 
     @Bean
