@@ -1,5 +1,8 @@
 <p align="center">
-  <img src="frontend/public/logo-black.png" alt="TrackIdea" height="120">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="frontend/public/logo-white.png">
+    <img src="frontend/public/logo-black.png" alt="TrackIdea" height="120">
+  </picture>
 </p>
 
 # TrackIdea – radar ukrytych innowacji
