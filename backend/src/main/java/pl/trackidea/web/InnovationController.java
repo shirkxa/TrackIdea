@@ -64,9 +64,8 @@ public class InnovationController {
                                          @RequestParam(required = false) Long institutionId,
                                          @RequestParam(defaultValue = "newest") String sort,
                                          @RequestParam(defaultValue = "public") String scope,
-                                         @RequestParam(defaultValue = "false") boolean includeForks,
-                                         @RequestHeader(value = CurrentUser.HEADER, required = false) Long userId) {
-        Person viewer = currentUser.resolve(userId);
+                                         @RequestParam(defaultValue = "false") boolean includeForks) {
+        Person viewer = currentUser.get();
         Stream<Innovation> stream = innovations.findAll().stream();
         if ("mine".equals(scope)) {
             stream = stream.filter(i -> viewer != null && (i.isAuthor(viewer)
@@ -132,10 +131,9 @@ public class InnovationController {
                                          @RequestParam(required = false) InstitutionType institutionType,
                                          @RequestParam(required = false) InnovationStatus status,
                                          @RequestParam(required = false) Long institutionId,
-                                         @RequestParam(defaultValue = "newest") String sort,
-                                         @RequestHeader(value = CurrentUser.HEADER, required = false) Long userId) {
+                                         @RequestParam(defaultValue = "newest") String sort) {
         List<Dto.InnovationCard> cards = list(q, type, sector, maturity, transferModel, institutionType, status,
-                institutionId, sort, "public", false, userId);
+                institutionId, sort, "public", false);
         StringBuilder csv = new StringBuilder("\uFEFF");
         csv.append(String.join(";", "ID", "Tytuł", "Instytucja", "Typ instytucji", "Powiat", "Typ innowacji",
                 "Sektor", "Etap", "Model transferu", "Status", "Wynik (0-100)", "Głosy", "Obserwujący", "Forki",
@@ -181,9 +179,8 @@ public class InnovationController {
     }
 
     @GetMapping("/{id}")
-    public Dto.InnovationDetail get(@PathVariable Long id,
-                                    @RequestHeader(value = CurrentUser.HEADER, required = false) Long userId) {
-        Person viewer = currentUser.resolve(userId);
+    public Dto.InnovationDetail get(@PathVariable Long id) {
+        Person viewer = currentUser.get();
         Innovation inn = service.get(id);
         if (!service.canView(inn, viewer)) {
             throw DomainException.forbidden("To zgłoszenie czeka na potwierdzenie autora i nie jest jeszcze publiczne.");
@@ -217,30 +214,26 @@ public class InnovationController {
     }
 
     @PostMapping
-    public Dto.InnovationDetail create(@RequestBody InnovationForm form,
-                                       @RequestHeader(value = CurrentUser.HEADER, required = false) Long userId) {
-        Person actor = currentUser.resolve(userId);
+    public Dto.InnovationDetail create(@RequestBody InnovationForm form) {
+        Person actor = currentUser.get();
         return views.detail(service.create(form, actor), actor);
     }
 
     @PutMapping("/{id}")
-    public Dto.InnovationDetail update(@PathVariable Long id, @RequestBody InnovationForm form,
-                                       @RequestHeader(value = CurrentUser.HEADER, required = false) Long userId) {
-        Person actor = currentUser.resolve(userId);
+    public Dto.InnovationDetail update(@PathVariable Long id, @RequestBody InnovationForm form) {
+        Person actor = currentUser.get();
         return views.detail(service.update(id, form, actor), actor);
     }
 
     @PostMapping("/{id}/confirm")
-    public Dto.InnovationDetail confirm(@PathVariable Long id,
-                                        @RequestHeader(value = CurrentUser.HEADER, required = false) Long userId) {
-        Person actor = currentUser.resolve(userId);
+    public Dto.InnovationDetail confirm(@PathVariable Long id) {
+        Person actor = currentUser.get();
         return views.detail(service.confirm(id, actor), actor);
     }
 
     @PostMapping("/{id}/request-assessment")
-    public Dto.InnovationDetail requestAssessment(@PathVariable Long id,
-                                                  @RequestHeader(value = CurrentUser.HEADER, required = false) Long userId) {
-        Person actor = currentUser.resolve(userId);
+    public Dto.InnovationDetail requestAssessment(@PathVariable Long id) {
+        Person actor = currentUser.get();
         return views.detail(service.requestAssessment(id, actor), actor);
     }
 
@@ -248,9 +241,8 @@ public class InnovationController {
     }
 
     @PostMapping("/{id}/assessment/approve")
-    public Dto.InnovationDetail approve(@PathVariable Long id, @RequestBody ApproveRequest body,
-                                        @RequestHeader(value = CurrentUser.HEADER, required = false) Long userId) {
-        Person actor = currentUser.resolve(userId);
+    public Dto.InnovationDetail approve(@PathVariable Long id, @RequestBody ApproveRequest body) {
+        Person actor = currentUser.get();
         return views.detail(service.approveAssessment(id, body.scores(), actor), actor);
     }
 
@@ -258,37 +250,32 @@ public class InnovationController {
     }
 
     @PostMapping("/{id}/paths")
-    public Dto.InnovationDetail paths(@PathVariable Long id, @RequestBody PathsRequest body,
-                                      @RequestHeader(value = CurrentUser.HEADER, required = false) Long userId) {
-        Person actor = currentUser.resolve(userId);
+    public Dto.InnovationDetail paths(@PathVariable Long id, @RequestBody PathsRequest body) {
+        Person actor = currentUser.get();
         return views.detail(service.choosePaths(id, body.paths(), actor), actor);
     }
 
     @PostMapping("/{id}/fork")
-    public Dto.InnovationDetail fork(@PathVariable Long id,
-                                     @RequestHeader(value = CurrentUser.HEADER, required = false) Long userId) {
-        Person actor = currentUser.resolve(userId);
+    public Dto.InnovationDetail fork(@PathVariable Long id) {
+        Person actor = currentUser.get();
         return views.detail(service.fork(id, actor), actor);
     }
 
     @PostMapping("/{id}/confirm-deployment")
-    public Dto.InnovationDetail confirmDeployment(@PathVariable Long id,
-                                                  @RequestHeader(value = CurrentUser.HEADER, required = false) Long userId) {
-        Person actor = currentUser.resolve(userId);
+    public Dto.InnovationDetail confirmDeployment(@PathVariable Long id) {
+        Person actor = currentUser.get();
         return views.detail(service.confirmDeployment(id, actor), actor);
     }
 
     @PostMapping("/{id}/vote")
-    public Map<String, Object> vote(@PathVariable Long id,
-                                    @RequestHeader(value = CurrentUser.HEADER, required = false) Long userId) {
-        boolean voted = service.toggleVote(id, currentUser.resolve(userId));
+    public Map<String, Object> vote(@PathVariable Long id) {
+        boolean voted = service.toggleVote(id, currentUser.get());
         return Map.of("voted", voted);
     }
 
     @PostMapping("/{id}/follow")
-    public Map<String, Object> follow(@PathVariable Long id,
-                                      @RequestHeader(value = CurrentUser.HEADER, required = false) Long userId) {
-        boolean following = service.toggleFollow(id, currentUser.resolve(userId));
+    public Map<String, Object> follow(@PathVariable Long id) {
+        boolean following = service.toggleFollow(id, currentUser.get());
         return Map.of("following", following);
     }
 
@@ -296,8 +283,7 @@ public class InnovationController {
     }
 
     @PostMapping("/{id}/contact")
-    public Dto.ContactView contact(@PathVariable Long id, @RequestBody ContactBody body,
-                                   @RequestHeader(value = CurrentUser.HEADER, required = false) Long userId) {
-        return Dto.ContactView.of(service.requestContact(id, body.message(), currentUser.resolve(userId)));
+    public Dto.ContactView contact(@PathVariable Long id, @RequestBody ContactBody body) {
+        return Dto.ContactView.of(service.requestContact(id, body.message(), currentUser.get()));
     }
 }

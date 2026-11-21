@@ -15,7 +15,7 @@ export default function InnovationCard({ card, extra, index = 0 }) {
 
   async function toggle(kind) {
     if (!user) {
-      notify('Wybierz użytkownika w prawym górnym rogu.', 'error')
+      notify('Zaloguj się, żeby głosować i obserwować.', 'error')
       return
     }
     setBusy(true)

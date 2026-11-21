@@ -4,6 +4,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -73,6 +75,8 @@ public class DemoDataSeeder implements ApplicationRunner {
     private final AssessmentService assessmentService;
     private final InnovationService innovationService;
     private final RadarService radar;
+    private final PasswordEncoder passwordEncoder;
+    private final String demoPassword;
 
     private final Map<String, Institution> inst = new HashMap<>();
     private final Map<String, Person> person = new HashMap<>();
@@ -81,7 +85,11 @@ public class DemoDataSeeder implements ApplicationRunner {
     public DemoDataSeeder(InstitutionRepository institutions, PersonRepository people, InnovationRepository innovations,
                           InnovationEventRepository events, NeedRepository needs, PriorArtRepository priorArt,
                           VoteRepository votes, AssessmentRepository assessments, ContactRequestRepository contacts,
-                          AssessmentService assessmentService, InnovationService innovationService, RadarService radar) {
+                          AssessmentService assessmentService, InnovationService innovationService, RadarService radar,
+                          PasswordEncoder passwordEncoder,
+                          @Value("${trackidea.demo-password:demo123}") String demoPassword) {
+        this.passwordEncoder = passwordEncoder;
+        this.demoPassword = demoPassword;
         this.institutions = institutions;
         this.people = people;
         this.innovations = innovations;
@@ -107,8 +115,11 @@ public class DemoDataSeeder implements ApplicationRunner {
         for (InstitutionSeed s : read("seed/institutions.json", new TypeReference<List<InstitutionSeed>>() { })) {
             inst.put(s.key(), institutions.save(new Institution(s.name(), s.type(), s.city(), s.county(), null)));
         }
+        // wszystkie konta demo mają to samo hasło (trackidea.demo-password), zapisane jako hash BCrypt
+        String passwordHash = passwordEncoder.encode(demoPassword);
         for (PersonSeed s : read("seed/people.json", new TypeReference<List<PersonSeed>>() { })) {
             Person p = new Person();
+            p.setPasswordHash(passwordHash);
             p.setName(s.name());
             p.setRole(s.role());
             p.setInstitution(inst.get(s.institution()));

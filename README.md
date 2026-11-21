@@ -103,17 +103,19 @@ SPRING_PROFILES_ACTIVE=postgres DATABASE_URL=jdbc:postgresql://localhost:5432/tr
 
 ## Użytkownicy demo
 
-Logowanie zastępuje **przełącznik ról** w prawym górnym rogu. Najważniejsze osoby do scenariuszy:
+**Logowanie:** e-mail z tabeli poniżej (albo z profilu osoby) i hasło **`demo123`** – przycisk *Zaloguj się*
+w prawym górnym rogu. W trybie demo (`trackidea.demo-mode=true`) ten sam blok pozwala też przełączać konta
+jednym kliknięciem, co przydaje się na prezentacji. Najważniejsze osoby do scenariuszy:
 
-| Osoba | Rola | Do czego |
-|---|---|---|
-| Tomasz Wrona | Opiekun – LO „Horyzont” w Krośnie | zgłasza cudzy pomysł (zwiadowca) |
-| Anna Kowalczyk | Twórca – LO „Horyzont” | potwierdza autorstwo, prosi o ocenę |
-| Katarzyna Nowak | Ekspert PCI | zatwierdza oceny, wybiera ścieżki, uruchamia Radar |
-| Dorota Wilk | Opiekun – LO „Alfa” w Przemyślu | forkuje i potwierdza wdrożenie |
-| dr inż. Marek Zając | Twórca – Akademia Techniczno-Przyrodnicza | potwierdza innowację wykrytą przez Radar |
-| Jan Dudek | Partner – SkyAgro Systems | dostaje polecajkę drona, prosi o kontakt |
-| Piotr Mazur | Opiekun – Gmina Wiśniowa Dolina | szuka rozwiązania problemu z usterkami |
+| Osoba | E-mail | Rola | Do czego |
+|---|---|---|---|
+| Tomasz Wrona | `dyrektor@lo-horyzont.example.org` | Opiekun – LO „Horyzont” w Krośnie | zgłasza cudzy pomysł (zwiadowca) |
+| Anna Kowalczyk | `anna.kowalczyk@example.org` | Twórca – LO „Horyzont” | potwierdza autorstwo, prosi o ocenę |
+| Katarzyna Nowak | `k.nowak@pci.example.org` | Ekspert PCI | zatwierdza oceny, wybiera ścieżki, uruchamia Radar |
+| Dorota Wilk | `dorota.wilk@loalfa.example.org` | Opiekun – LO „Alfa” w Przemyślu | forkuje i potwierdza wdrożenie |
+| dr inż. Marek Zając | `m.zajac@atp.example.org` | Twórca – Akademia Techniczno-Przyrodnicza | potwierdza innowację wykrytą przez Radar |
+| Jan Dudek | `jan.dudek@skyagro.example.org` | Partner – SkyAgro Systems | dostaje polecajkę drona, prosi o kontakt |
+| Piotr Mazur | `p.mazur@wisniowa.example.org` | Opiekun – Gmina Wiśniowa Dolina | szuka rozwiązania problemu z usterkami |
 
 ## Scenariusze demo (punkt 6 wyzwania)
 
@@ -170,10 +172,13 @@ filtrami) – plik otwiera się bezpośrednio w Excelu.
 | POST | `/api/assistant/draft`, `/api/similar` | asystent karty, podobne rozwiązania |
 | GET/POST | `/api/needs` | tablica potrzeb z dopasowaniami |
 | GET | `/api/innovations/export` | eksport katalogu do CSV (UTF-8, separator `;`) |
+| GET/POST | `/api/auth/me`, `/api/auth/login`, `/api/auth/logout` | sesja użytkownika |
 | POST | `/api/radar/scan` | skan źródeł Radaru |
 | GET | `/api/stats`, `/api/pci/queue` | mierniki i kolejka pracy PCI |
 
-Użytkownika demo wskazuje nagłówek `X-User-Id`.
+Odczyt katalogu jest publiczny. Zapis wymaga zalogowania: `POST /api/auth/login` zakłada sesję (ciasteczko
+HttpOnly), a każde zapytanie zmieniające dane musi wysłać token CSRF z ciasteczka `XSRF-TOKEN` w nagłówku
+`X-XSRF-TOKEN`.
 
 ## Dane, AI i ograniczenia
 
@@ -189,12 +194,16 @@ Użytkownika demo wskazuje nagłówek `X-User-Id`.
   dlatego każde pole jest edytowalne.
 - **Prywatność:** zgłoszenia zwiadowców i rekordy Radaru są niepubliczne do potwierdzenia autora, a dane
   kontaktowe są widoczne dopiero po zaakceptowaniu prośby o kontakt.
-- **Logowanie:** w demo zastępuje je przełącznik ról; w wersji produkcyjnej Spring Security i SSO instytucji.
+- **Logowanie i uprawnienia:** Spring Security – sesja w ciasteczku HttpOnly (SameSite=Lax), nowy identyfikator
+  sesji po zalogowaniu, ochrona CSRF, hasła jako hash BCrypt. Odczyt katalogu jest publiczny, każdy zapis wymaga
+  zalogowania, a role (autor, opiekun instytucji, ekspert PCI) sprawdza backend przy każdej akcji.
+  **Tryb demo** (szybkie przełączanie kont bez hasła) służy tylko prezentacji – w produkcji
+  `trackidea.demo-mode=false`, a wspólne hasło demo trzeba zastąpić kontami z resetem hasła lub SSO.
 
 ## Co dalej po hackathonie
 
 - importery API dla PBN, NCBiR, UPRP i EPO oraz RSS-y stron szkół i gmin (Radar ma już kontrakt importera i REST API),
-- logowanie i role (Spring Security, SSO instytucji), powiadomienia e-mail,
+- SSO instytucji (np. Microsoft 365 szkół i urzędów), zakładanie kont i reset hasła, powiadomienia e-mail,
 - embeddingi i PostgreSQL + pgvector,
 - kalibracja wag kryteriów na danych z pilotażu z PCI (10–20 instytucji z Podkarpacia),
 - uruchomienie dla kolejnych regionów (wiele instytucji od początku, PCI jako operator).

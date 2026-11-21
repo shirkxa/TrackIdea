@@ -73,8 +73,8 @@ public class PciController {
     }
 
     @PostMapping("/radar/scan")
-    public Map<String, Object> scan(@RequestHeader(value = CurrentUser.HEADER, required = false) Long userId) {
-        Person actor = currentUser.resolve(userId);
+    public Map<String, Object> scan() {
+        Person actor = currentUser.get();
         if (actor == null || !actor.hasRole(pl.trackidea.domain.Role.EKSPERT, pl.trackidea.domain.Role.ADMIN)) {
             throw DomainException.forbidden("Skan Radaru uruchamia ekspert lub administrator PCI.");
         }
@@ -89,8 +89,8 @@ public class PciController {
     }
 
     @GetMapping("/contacts")
-    public List<Dto.ContactView> contacts(@RequestHeader(value = CurrentUser.HEADER, required = false) Long userId) {
-        Person me = currentUser.resolve(userId);
+    public List<Dto.ContactView> contacts() {
+        Person me = currentUser.get();
         if (me == null) {
             return List.of();
         }
@@ -98,11 +98,10 @@ public class PciController {
     }
 
     @PostMapping("/contacts/{id}/{decision}")
-    public Dto.ContactView answer(@PathVariable Long id, @PathVariable String decision,
-                                  @RequestHeader(value = CurrentUser.HEADER, required = false) Long userId) {
+    public Dto.ContactView answer(@PathVariable Long id, @PathVariable String decision) {
         if (!decision.equals("accept") && !decision.equals("reject")) {
             throw DomainException.badRequest("Nieznana decyzja.");
         }
-        return Dto.ContactView.of(innovationService.answerContact(id, decision.equals("accept"), currentUser.resolve(userId)));
+        return Dto.ContactView.of(innovationService.answerContact(id, decision.equals("accept"), currentUser.get()));
     }
 }

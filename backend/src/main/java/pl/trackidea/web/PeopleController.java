@@ -49,9 +49,8 @@ public class PeopleController {
     }
 
     @GetMapping("/people/{id}")
-    public Map<String, Object> person(@PathVariable Long id,
-                                      @RequestHeader(value = CurrentUser.HEADER, required = false) Long userId) {
-        Person viewer = currentUser.resolve(userId);
+    public Map<String, Object> person(@PathVariable Long id) {
+        Person viewer = currentUser.get();
         Person p = people.findById(id).orElseThrow(() -> DomainException.notFound("Brak profilu."));
         Map<String, Object> out = new LinkedHashMap<>();
         out.put("person", Dto.PersonView.of(p));
@@ -75,9 +74,8 @@ public class PeopleController {
     }
 
     @GetMapping("/institutions/{id}")
-    public Map<String, Object> institution(@PathVariable Long id,
-                                           @RequestHeader(value = CurrentUser.HEADER, required = false) Long userId) {
-        Person viewer = currentUser.resolve(userId);
+    public Map<String, Object> institution(@PathVariable Long id) {
+        Person viewer = currentUser.get();
         Institution inst = institutions.findById(id).orElseThrow(() -> DomainException.notFound("Brak instytucji."));
         Map<String, Object> out = new LinkedHashMap<>();
         out.put("institution", Dto.InstitutionView.of(inst));

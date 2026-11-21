@@ -10,6 +10,7 @@ import PciPage from './pages/PciPage.jsx'
 import MePage from './pages/MePage.jsx'
 import ProfilePage from './pages/ProfilePage.jsx'
 import InstitutionPage from './pages/InstitutionPage.jsx'
+import LoginPage from './pages/LoginPage.jsx'
 
 export default function App() {
   const { meta, error } = useApp()
@@ -26,6 +27,7 @@ export default function App() {
           <Route path="/needs" element={<NeedsPage />} />
           <Route path="/pci" element={<PciPage />} />
           <Route path="/me" element={<MePage />} />
+          <Route path="/login" element={<LoginPage />} />
           <Route path="/people/:id" element={<ProfilePage />} />
           <Route path="/institutions/:id" element={<InstitutionPage />} />
           <Route path="*" element={<p>Nie ma takiej strony.</p>} />

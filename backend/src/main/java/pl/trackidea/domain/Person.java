@@ -34,8 +34,12 @@ public class Person {
     @Column(length = 2000)
     private String bio;
 
-    /** Widoczny dopiero po zaakceptowaniu prośby o kontakt. */
+    /** Login. Widoczny dla innych dopiero po zaakceptowaniu prośby o kontakt. */
+    @Column(unique = true)
     private String email;
+
+    /** Hasło zapisane jako hash BCrypt – nigdy nie wychodzi poza backend. */
+    private String passwordHash;
 
     private String github;
     private String youtube;

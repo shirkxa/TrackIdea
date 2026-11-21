@@ -1,4 +1,4 @@
-import { NavLink, Link } from 'react-router-dom'
+import { NavLink, Link, useNavigate } from 'react-router-dom'
 import { useApp } from '../context.jsx'
 import { usePrefs } from '../usePrefs.js'
 import Icon from './Icon.jsx'
@@ -11,30 +11,57 @@ const FONT_SIZES = [
   { scale: 2, sup: '++', title: 'Tekst największy' },
 ]
 
-function UserSwitcher() {
-  const { people, user, chooseUser, meta } = useApp()
+/** Prawy blok paska: konto użytkownika. W trybie demo – szybkie przełączanie kont na prezentację. */
+function AccountBlock() {
+  const { people, user, chooseUser, logout, demoMode, meta, notify } = useApp()
+  const navigate = useNavigate()
   const groups = ROLE_ORDER.map((role) => ({
     role,
     label: meta?.roles.find((r) => r.value === role)?.label ?? role,
     people: people.filter((p) => p.role.value === role),
   }))
+
+  async function run(action) {
+    try {
+      await action()
+    } catch (e) {
+      notify(e.message, 'error')
+    }
+  }
+
   return (
-    <label className="user-switcher" title="Przełącznik ról demo – w wersji produkcyjnej logowanie">
+    <div className="user-switcher">
       <Icon name="user" size={22} />
-      <span className="sr-only">Użytkownik demo</span>
-      <select value={user?.id ?? ''} onChange={(e) => chooseUser(e.target.value ? Number(e.target.value) : null)}>
-        <option value="">Gość</option>
-        {groups.map((g) => (
-          <optgroup key={g.role} label={g.label}>
-            {g.people.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.name} · {p.institution?.name ?? ''}
-              </option>
+      {demoMode ? (
+        <label title="Tryb demo: przełącz konto jednym kliknięciem">
+          <span className="sr-only">Konto demo</span>
+          <select value={user?.id ?? ''} onChange={(e) => run(() => chooseUser(e.target.value ? Number(e.target.value) : null))}>
+            <option value="">Gość – wybierz konto demo</option>
+            {groups.map((g) => (
+              <optgroup key={g.role} label={g.label}>
+                {g.people.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.name} · {p.institution?.name ?? ''}
+                  </option>
+                ))}
+              </optgroup>
             ))}
-          </optgroup>
-        ))}
-      </select>
-    </label>
+          </select>
+        </label>
+      ) : (
+        user && <span className="account-name">{user.name}</span>
+      )}
+      {user ? (
+        <button type="button" className="strip-link" onClick={() => run(async () => {
+          await logout()
+          navigate('/')
+        })}>
+          Wyloguj
+        </button>
+      ) : (
+        <Link to="/login" className="strip-link">Zaloguj się</Link>
+      )}
+    </div>
   )
 }
 
@@ -60,7 +87,7 @@ export default function Layout({ children }) {
               ))}
             </div>
           </div>
-          <UserSwitcher />
+          <AccountBlock />
         </div>
       </div>
       <header className="topbar">

@@ -45,7 +45,7 @@ export default function SubmitPage() {
   if (!user) {
     return (
       <Section title={editing ? 'Edycja karty' : 'Zgłoś innowację'}>
-        <p className="notice">Wybierz użytkownika demo w prawym górnym rogu (np. nauczycielkę albo opiekuna instytucji), żeby zgłosić innowację.</p>
+        <p className="notice"><Link to="/login">Zaloguj się</Link>, żeby zgłosić innowację.</p>
       </Section>
     )
   }

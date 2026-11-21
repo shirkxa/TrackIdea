@@ -47,9 +47,8 @@ public class NeedController {
     }
 
     @PostMapping
-    public NeedWithMatches create(@RequestBody NeedForm form,
-                                  @RequestHeader(value = CurrentUser.HEADER, required = false) Long userId) {
-        Person actor = currentUser.resolve(userId);
+    public NeedWithMatches create(@RequestBody NeedForm form) {
+        Person actor = currentUser.get();
         if (actor == null || actor.getInstitution() == null) {
             throw DomainException.forbidden("Potrzebę publikuje osoba przypisana do instytucji lub firmy.");
         }

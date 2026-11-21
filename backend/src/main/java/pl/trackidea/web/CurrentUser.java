@@ -1,17 +1,15 @@
 package pl.trackidea.web;
 
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import pl.trackidea.domain.Person;
 import pl.trackidea.repo.PersonRepository;
 
-/**
- * Użytkownik demo wybrany przełącznikiem ról we frontendzie (nagłówek X-User-Id).
- * W wersji produkcyjnej zastępuje go Spring Security (logowanie e-mail / SSO instytucji).
- */
+/** Zalogowany użytkownik z sesji Spring Security (null dla gościa). */
 @Component
 public class CurrentUser {
-
-    public static final String HEADER = "X-User-Id";
 
     private final PersonRepository people;
 
@@ -19,7 +17,11 @@ public class CurrentUser {
         this.people = people;
     }
 
-    public Person resolve(Long id) {
-        return id == null ? null : people.findById(id).orElse(null);
+    public Person get() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated() || auth instanceof AnonymousAuthenticationToken) {
+            return null;
+        }
+        return people.findByEmailIgnoreCase(auth.getName()).orElse(null);
     }
 }

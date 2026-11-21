@@ -14,7 +14,7 @@ const CONTACT_TONE = { WYSLANA: 'warn', ZAAKCEPTOWANA: 'good', ODRZUCONA: 'muted
 export default function MePage() {
   const { user } = useApp()
   if (!user) {
-    return <p className="notice">Wybierz użytkownika demo w prawym górnym rogu, żeby zobaczyć swoje innowacje i kontakty.</p>
+    return <p className="notice"><Link to="/login">Zaloguj się</Link>, żeby zobaczyć swoje innowacje i kontakty.</p>
   }
   return <MyDashboard key={user.id} user={user} />
 }

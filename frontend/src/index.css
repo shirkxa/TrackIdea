@@ -1966,3 +1966,50 @@ textarea:focus {
   gap: 4px;
   margin-right: 12px;
 }
+
+/* ---------- logowanie ---------- */
+
+.login {
+  max-width: 440px;
+  margin: 24px auto;
+  padding: 32px;
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.login-demo {
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+
+.login-demo code {
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: var(--neutral-soft);
+}
+
+.strip-link {
+  border: 0;
+  background: none;
+  color: #fff;
+  font: inherit;
+  font-size: 0.85rem;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.strip-link:hover {
+  color: #fff;
+  opacity: 0.85;
+}
+
+.account-name {
+  font-size: 0.85rem;
+}
