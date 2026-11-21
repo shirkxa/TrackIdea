@@ -37,4 +37,10 @@ public class RadarRecord {
     private double duplicateSimilarity;
 
     private Instant importedAt = Instant.now();
+
+    /** Ostatni skan, w którym rekord nadal był w źródle (cykliczna aktualizacja). */
+    private Instant lastSeenAt = Instant.now();
+
+    /** Skrót treści rekordu – zmiana oznacza aktualizację w źródle. */
+    private int contentHash;
 }

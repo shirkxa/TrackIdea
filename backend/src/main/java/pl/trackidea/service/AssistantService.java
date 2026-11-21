@@ -121,35 +121,44 @@ public class AssistantService {
 
     private static final Map<InnovationType, List<String>> TYPE_KEYWORDS = Map.of(
             InnovationType.TECHNICZNA, List.of("dron", "czujnik", "sensor", "aplikac", "urzadzen", "algorytm", "prototyp",
-                    "oprogramow", "robot", "sztuczn", "uczenie maszyn", "elektron", "drukark", "platform", "system"),
+                    "oprogramow", "robot", "sztuczn", "uczenie maszyn", "elektron", "drukark", "platform", "system",
+                    "prototype", "device", "sensor", "algorithm", "software", "machine learning", "drone"),
             InnovationType.EDUKACYJNA, List.of("uczni", "lekcj", "nauczyc", "szkol", "eduk", "zajec", "kurs", "student",
-                    "dydakty", "mentor", "klas"),
+                    "dydakty", "mentor", "klas", "teaching", "student", "school", "learning", "pupil", "curriculum"),
             InnovationType.ORGANIZACYJNA, List.of("organizac", "harmonogram", "zarzadz", "procedur", "zespol", "koordyn",
                     "grafik", "dyzur"),
             InnovationType.SPOLECZNA, List.of("spolecz", "senior", "mieszkanc", "wolontar", "integrac", "wykluczen",
                     "sasiedz", "rodzin"),
             InnovationType.PROCESOWA, List.of("proces", "obieg", "dokument", "wniosk", "urzed", "cyfryzac", "kolejk",
-                    "e-usług", "zgloszen", "formular"));
+                    "e-usług", "zgloszen", "formular", "public administration", "municipal", "e-government",
+                    "local government", "public service"));
 
     private static final Map<Sector, List<String>> SECTOR_KEYWORDS = new EnumMap<>(Map.ofEntries(
-            Map.entry(Sector.EDUKACJA, List.of("szkol", "uczni", "nauczyc", "eduk", "lekcj", "student")),
-            Map.entry(Sector.ADMINISTRACJA, List.of("urzed", "gmin", "samorzad", "wniosk", "mieszkanc", "e-usług")),
-            Map.entry(Sector.ICT, List.of("aplikac", "oprogramow", "platform", "internet", "dane", "cyfrow", "system")),
+            Map.entry(Sector.EDUKACJA, List.of("szkol", "uczni", "nauczyc", "eduk", "lekcj", "student", "teaching",
+                    "school", "education", "learning")),
+            Map.entry(Sector.ADMINISTRACJA, List.of("urzed", "gmin", "samorzad", "wniosk", "mieszkanc", "e-usług",
+                    "municipal", "public administration", "government", "citizen")),
+            Map.entry(Sector.ICT, List.of("aplikac", "oprogramow", "platform", "internet", "dane", "cyfrow", "system",
+                    "software", "data", "digital", "algorithm", "network")),
             Map.entry(Sector.LOTNICTWO, List.of("dron", "lotnic", "samolot", "bezzalog")),
             Map.entry(Sector.KOSMOS, List.of("satelit", "kosmic", "orbit")),
             Map.entry(Sector.MOTORYZACJA, List.of("samochod", "pojazd", "motoryz", "elektromobil")),
-            Map.entry(Sector.ROLNICTWO, List.of("upraw", "rolni", "gospodarstw", "pole", "plony")),
-            Map.entry(Sector.ENERGETYKA, List.of("energi", "fotowolt", "ogrzew", "prad")),
-            Map.entry(Sector.ZDROWIE, List.of("zdrow", "pacjent", "medycz", "szpital", "lekarz")),
-            Map.entry(Sector.SRODOWISKO, List.of("srodowisk", "odpad", "recykl", "smog", "powietrz", "klimat")),
+            Map.entry(Sector.ROLNICTWO, List.of("upraw", "rolni", "gospodarstw", "pole", "plony", "crop", "agricultur", "farm")),
+            Map.entry(Sector.ENERGETYKA, List.of("energi", "fotowolt", "ogrzew", "prad", "energy", "photovoltaic", "battery")),
+            Map.entry(Sector.ZDROWIE, List.of("zdrow", "pacjent", "medycz", "szpital", "lekarz", "patient", "clinical", "health")),
+            Map.entry(Sector.SRODOWISKO, List.of("srodowisk", "odpad", "recykl", "smog", "powietrz", "klimat", "environment",
+                    "waste", "recycling", "climate", "pollution")),
             Map.entry(Sector.JAKOSC_ZYCIA, List.of("senior", "jakosc zycia", "mieszkanc", "sport", "rekreac"))));
 
     private static final List<String> PROBLEM_HINTS = List.of("problem", "brak", "trudno", "klopot", "wyzwani",
-            "nie maja", "nie bylo", "zbyt", "musial", "czeka", "trac");
+            "nie maja", "nie bylo", "zbyt", "musial", "czeka", "trac", "challenge", "lack", "difficult", "issue",
+            "limitation");
     private static final List<String> SOLUTION_HINTS = List.of("stworzy", "opracow", "program", "aplikac", "system",
-            "rozwiazani", "polega", "wprowadzi", "zbudowa", "platform", "narzedzi", "metod", "dzieki");
+            "rozwiazani", "polega", "wprowadzi", "zbudowa", "platform", "narzedzi", "metod", "dzieki", "we propose",
+            "we developed", "approach", "solution", "method");
     private static final List<String> RESULT_HINTS = List.of("efekt", "wynik", "spadl", "spadla", "wzrosl", "wzrosla",
-            "zmniejsz", "zwieksz", "popraw", "skroci", "oszczed", "ankiet");
+            "zmniejsz", "zwieksz", "popraw", "skroci", "oszczed", "ankiet", "result", "improved", "reduced",
+            "increased", "accuracy");
     private static final List<String> REQUIREMENT_HINTS = List.of("wymaga", "potrzebn", "koszt", "sprzet", "wystarcz",
             "materialy", "godzin");
 
@@ -235,10 +244,12 @@ public class AssistantService {
     }
 
     private static Maturity maturity(String n) {
-        if (n.matches("(?s).*(w kilku|w wielu|w \\d+ (szkol|gmin|urzed|placow|instytuc)).*")) return Maturity.DZIALA_W_WIELU;
+        if (n.matches("(?s).*(w kilku|w wielu|w \\d+ (szkol|gmin|urzed|placow|instytuc)|widely used|several institutions).*")) return Maturity.DZIALA_W_WIELU;
         if (n.matches("(?s).*(dziala od|od roku|od \\d+ lat|stosujemy|wdrozon|funkcjonuje|prowadzimy od).*")) return Maturity.DZIALA_W_JEDNYM;
-        if (n.contains("pilotaz") || n.contains("testuj") || n.contains("testow")) return Maturity.PILOTAZ;
-        if (n.contains("prototyp") || n.contains("model")) return Maturity.PROTOTYP;
+        if (n.contains("deployed") || n.contains("implemented in") || n.contains("in operation")) return Maturity.DZIALA_W_JEDNYM;
+        if (n.contains("pilotaz") || n.contains("testuj") || n.contains("testow") || n.contains("pilot")
+                || n.contains("field test") || n.contains("case study")) return Maturity.PILOTAZ;
+        if (n.contains("prototyp") || n.contains("model") || n.contains("prototype")) return Maturity.PROTOTYP;
         return Maturity.POMYSL;
     }
 

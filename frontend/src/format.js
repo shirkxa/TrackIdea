@@ -11,3 +11,9 @@ export function plural(n, one, few, many) {
   const t = n % 100
   return d >= 2 && d <= 4 && (t < 12 || t > 14) ? few : many
 }
+
+/** Data i godzina, np. „21 lis, 17:24”. */
+export function formatDateTime(iso) {
+  if (!iso) return ''
+  return new Date(iso).toLocaleString('pl-PL', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
+}

@@ -2049,3 +2049,38 @@ textarea:focus {
   height: 86%;
   object-fit: contain;
 }
+
+/* ---------- źródła Radaru ---------- */
+
+.source-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 12px;
+  margin: 12px 0 16px;
+}
+
+.source-card {
+  padding: 16px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+}
+
+.source-card p {
+  margin: 6px 0 0;
+}
+
+.source-error {
+  border-color: var(--warm);
+  background: var(--warm-soft);
+}
+
+.source-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.source-link {
+  margin-top: 4px;
+}

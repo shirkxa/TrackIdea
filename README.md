@@ -58,6 +58,14 @@ npm run dev
 
 Otwórz **http://localhost:5173**. Restart backendu przywraca czyste dane demo.
 
+**Źródła Radaru.** Po starcie backend pobiera prawdziwe rekordy z **OpenAlex** (publikacje polskich uczelni
+i instytutów) i **CORDIS** (projekty UE z udziałem polskich gmin, szkół, uczelni i firm), a potem odświeża je
+co 6 godzin. Bez internetu Radar może wczytać próbki z plików:
+
+```bash
+./mvnw spring-boot:run -Dspring-boot.run.arguments=--trackidea.radar.live=false
+```
+
 Opcjonalnie asystent AI z Claude: uruchom backend z ustawioną zmienną `ANTHROPIC_API_KEY`
 (bez niej działa tryb offline).
 
@@ -71,12 +79,12 @@ cd backend
 ./mvnw test
 ```
 
-21 testów (JUnit 5): jednostkowe dla wzoru oceny i wag, podobieństwa tekstów po polsku, reguł dopasowań
-i analizy tekstu offline oraz test integracyjny logowania, CSRF i uprawnień zespołu PCI.
+24 testy (JUnit 5): jednostkowe dla wzoru oceny i wag, podobieństwa tekstów po polsku, reguł dopasowań,
+analizy tekstu offline i parsowania danych ze źródeł Radaru oraz test integracyjny logowania, CSRF i uprawnień zespołu PCI.
 
 ## Dane, bezpieczeństwo i ograniczenia
 
-- **Dane:** Radar czyta w prototypie próbki eksportów z baz wskazanych przez PCI; docelowo każde źródło to importer API.
+- **Dane:** OpenAlex i CORDIS przez otwarte API (bez kluczy); kolejne źródła z listy PCI dodaje się jako nowy importer.
 - **Ocena:** jawne reguły i wagi; AI i reguły tylko proponują, decyzję zatwierdza ekspert PCI.
 - **Prywatność:** Radar nie zbiera danych osobowych użytkowników; autorzy innowacji są podawani tak, jak w źródle.
 - **Bezpieczeństwo:** logowanie Spring Security (sesja HttpOnly, CSRF, hasła BCrypt), uprawnienia sprawdzane

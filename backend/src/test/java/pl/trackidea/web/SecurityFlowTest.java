@@ -19,7 +19,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /** Logowanie, CSRF i uprawnienia zespołu PCI – na pełnym kontekście aplikacji z danymi demo. */
-@SpringBootTest
+@SpringBootTest(properties = "trackidea.radar.live=false")
 @AutoConfigureMockMvc
 class SecurityFlowTest {
 

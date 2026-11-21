@@ -59,6 +59,11 @@ export default function InnovationPage() {
             {card.authors && <> · Autorzy: {card.authors}</>}
             {' · '}w Radarze od {formatDate(card.createdAt)}
           </p>
+          {data.links?.length > 0 && (
+            <a className="btn btn-small source-link" href={[...data.links][0]} target="_blank" rel="noreferrer">
+              Zobacz w źródle ({card.sourceName}) ↗
+            </a>
+          )}
         </div>
         <div className="head-side">
           <ScoreRing score={card.score} size={84} />

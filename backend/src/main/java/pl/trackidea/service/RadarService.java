@@ -1,106 +1,195 @@
 package pl.trackidea.service;
 
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 import pl.trackidea.domain.*;
+import pl.trackidea.radar.SourceImporter;
+import pl.trackidea.radar.SourceRecord;
 import pl.trackidea.repo.InnovationRepository;
 import pl.trackidea.repo.InstitutionRepository;
 import pl.trackidea.repo.RadarRecordRepository;
-import tools.jackson.core.type.TypeReference;
-import tools.jackson.databind.DeserializationFeature;
-import tools.jackson.databind.json.JsonMapper;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.List;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Radar: automatyczne wykrywanie innowacji w otwartych bazach (PBN, NCBiR, Interreg…).
- * Na hackathonie czyta próbki eksportów z plików JSON w resources/radar/ – w docelowej wersji
- * każdy importer to osobny moduł pobierający dane z API źródła.
- * Przetwarzanie: import → ekstrakcja pól → deduplikacja → przypisanie instytucji → status „Wykryta”.
+ * Radar: cykliczne wyszukiwanie istniejących innowacji w otwartych źródłach.
+ * Dla każdego rekordu: pobranie → rozpoznanie obszaru i sektora → wykrycie duplikatu → karta „Wykryta”.
+ * Rekord już znany jest odświeżany (aktualność, zmiany w źródle).
  */
 @Service
-@Transactional
 public class RadarService {
+
+    private static final Logger log = LoggerFactory.getLogger(RadarService.class);
 
     /** Powyżej tego podobieństwa rekord uznajemy za duplikat istniejącej innowacji. */
     static final int DUPLICATE_THRESHOLD = 75;
 
-    public record SourceRecord(String source, String ref, String title, String abstractText, String institution,
-                               InstitutionType institutionType, String city, String county, String authors,
-                               Integer year, List<String> keywords, String url) {
+    public record ScanResult(int scanned, int created, int duplicates, int updated, int skipped,
+                             List<RadarRecord> records, List<String> errors) {
     }
 
-    public record ScanResult(int scanned, int created, int duplicates, int skipped, List<RadarRecord> records) {
+    /** Stan jednego źródła pokazywany w panelu PCI. */
+    public record SourceStatus(String name, String description, String homepage, boolean live, boolean active,
+                               Instant lastRunAt, int lastFetched, int lastCreated, int lastDuplicates,
+                               int lastUpdated, long totalRecords, String lastError) {
     }
 
+    private final List<SourceImporter> importers;
     private final RadarRecordRepository records;
     private final InnovationRepository innovations;
     private final InstitutionRepository institutions;
     private final SimilarityService similarity;
     private final AssistantService assistant;
     private final InnovationService innovationService;
-    private final JsonMapper json = JsonMapper.builder().disable(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES).build();
+    private final TransactionTemplate tx;
+    private final boolean liveEnabled;
+    private final Duration refreshInterval;
+    private final Map<String, SourceStatus> status = new ConcurrentHashMap<>();
+    private volatile Instant lastScanAt;
 
-    public RadarService(RadarRecordRepository records, InnovationRepository innovations,
+    public RadarService(List<SourceImporter> importers, RadarRecordRepository records, InnovationRepository innovations,
                         InstitutionRepository institutions, SimilarityService similarity, AssistantService assistant,
-                        InnovationService innovationService) {
+                        InnovationService innovationService, TransactionTemplate tx,
+                        @Value("${trackidea.radar.live:true}") boolean liveEnabled,
+                        @Value("${trackidea.radar.refresh-interval:PT6H}") Duration refreshInterval) {
+        this.importers = importers;
         this.records = records;
         this.innovations = innovations;
         this.institutions = institutions;
         this.similarity = similarity;
         this.assistant = assistant;
         this.innovationService = innovationService;
+        this.tx = tx;
+        this.liveEnabled = liveEnabled;
+        this.refreshInterval = refreshInterval;
     }
 
-    public List<String> sources() {
-        return List.of("PBN – publikacje naukowe", "NCBiR – wyszukiwarka sukcesów beneficjentów",
-                "Interreg – lista projektów", "UPRP / EPO – patenty (do oceny nowości)");
+    public boolean isLive() {
+        return liveEnabled;
     }
 
-    /** Skan „na żywo” (przycisk w panelu PCI). */
-    public ScanResult scan() {
-        return scan("classpath:radar/source-*.json");
+    public Instant nextScanAt() {
+        return lastScanAt == null ? null : lastScanAt.plus(refreshInterval);
     }
 
-    /** Rekordy zaimportowane przy starcie aplikacji (historia Radaru w danych demo). */
-    public ScanResult scanInitial() {
-        return scan("classpath:radar/initial-*.json");
+    public Instant lastScanAt() {
+        return lastScanAt;
     }
 
-    private ScanResult scan(String pattern) {
-        List<SourceRecord> incoming = loadSourceRecords(pattern);
-        int created = 0, duplicates = 0, skipped = 0;
+    public List<SourceStatus> sources() {
+        List<SourceStatus> out = new ArrayList<>();
+        for (SourceImporter imp : importers) {
+            SourceStatus s = status.get(imp.name());
+            long total = records.countBySource(imp.name());
+            out.add(s == null
+                    ? new SourceStatus(imp.name(), imp.description(), imp.homepage(), imp.live(), isActive(imp),
+                    null, 0, 0, 0, 0, total, null)
+                    : new SourceStatus(s.name(), s.description(), s.homepage(), s.live(), s.active(), s.lastRunAt(),
+                    s.lastFetched(), s.lastCreated(), s.lastDuplicates(), s.lastUpdated(), total, s.lastError()));
+        }
+        return out;
+    }
+
+    private boolean isActive(SourceImporter imp) {
+        return imp.live() == liveEnabled;
+    }
+
+    /** Dane startowe: bez internetu Radar od razu wczytuje próbki; w trybie online robi to harmonogram. */
+    public void scanInitial() {
+        if (!liveEnabled) {
+            scan();
+        }
+    }
+
+    /** Skan wszystkich aktywnych źródeł (przycisk w panelu PCI i harmonogram). */
+    public synchronized ScanResult scan() {
+        int scanned = 0, created = 0, duplicates = 0, updated = 0, skipped = 0;
         List<RadarRecord> touched = new ArrayList<>();
-        for (SourceRecord r : incoming) {
-            if (records.existsBySourceAndRef(r.source(), r.ref())) {
-                skipped++;
+        List<String> errors = new ArrayList<>();
+        for (SourceImporter imp : importers) {
+            if (!isActive(imp)) {
                 continue;
             }
-            String text = r.title() + " " + r.title() + " " + r.abstractText() + " " + String.join(" ", r.keywords());
-            List<SimilarItem> similar = similarity.similarInnovations(text, null, 1);
-            RadarRecord rec = new RadarRecord();
-            rec.setSource(r.source());
-            rec.setRef(r.ref());
-            rec.setTitle(r.title());
-            rec.setInstitutionName(r.institution());
-            if (!similar.isEmpty() && similar.getFirst().similarityPercent() >= DUPLICATE_THRESHOLD) {
-                rec.setOutcome(RadarRecord.Outcome.DUPLIKAT);
-                rec.setDuplicateOf(innovations.getReferenceById(similar.getFirst().id()));
-                rec.setDuplicateSimilarity(similar.getFirst().similarityPercent());
-                duplicates++;
-            } else {
-                rec.setOutcome(RadarRecord.Outcome.NOWA_INNOWACJA);
-                rec.setInnovation(createDetected(r));
-                created++;
+            List<SourceRecord> incoming;
+            try {
+                incoming = imp.fetch();
+            } catch (Exception e) {
+                String msg = e.getMessage() == null ? e.getClass().getSimpleName() : e.getMessage();
+                log.warn("Radar: źródło {} niedostępne: {}", imp.name(), msg);
+                errors.add(imp.name() + ": " + msg);
+                status.put(imp.name(), new SourceStatus(imp.name(), imp.description(), imp.homepage(), imp.live(), true,
+                        Instant.now(), 0, 0, 0, 0, 0, "Źródło niedostępne: " + msg));
+                continue;
             }
-            touched.add(records.save(rec));
+            int[] counts = new int[4]; // created, duplicates, updated, skipped
+            for (SourceRecord r : incoming) {
+                try {
+                    RadarRecord rec = tx.execute(t -> ingest(r, counts));
+                    if (rec != null) touched.add(rec);
+                } catch (RuntimeException e) {
+                    log.warn("Radar: pominięto rekord {} {}: {}", r.source(), r.ref(), e.getMessage());
+                    counts[3]++;
+                }
+            }
+            scanned += incoming.size();
+            created += counts[0];
+            duplicates += counts[1];
+            updated += counts[2];
+            skipped += counts[3];
+            status.put(imp.name(), new SourceStatus(imp.name(), imp.description(), imp.homepage(), imp.live(), true,
+                    Instant.now(), incoming.size(), counts[0], counts[1], counts[2], 0, null));
+            log.info("Radar: {} – pobrano {}, nowe {}, duplikaty {}, zaktualizowane {}", imp.name(), incoming.size(),
+                    counts[0], counts[1], counts[2]);
         }
-        return new ScanResult(incoming.size(), created, duplicates, skipped, touched);
+        lastScanAt = Instant.now();
+        return new ScanResult(scanned, created, duplicates, updated, skipped, touched, errors);
+    }
+
+    /** Jeden rekord: nowy → karta, znany → odświeżenie, bardzo podobny do istniejącej innowacji → duplikat. */
+    private RadarRecord ingest(SourceRecord r, int[] counts) {
+        int hash = Objects.hash(r.title(), r.abstractText());
+        Optional<RadarRecord> known = records.findFirstBySourceAndRef(r.source(), r.ref());
+        if (known.isPresent()) {
+            RadarRecord rec = known.get();
+            rec.setLastSeenAt(Instant.now());
+            if (rec.getContentHash() != hash && rec.getInnovation() != null) {
+                Innovation inn = rec.getInnovation();
+                inn.setTitle(r.title());
+                inn.setSummary(assistant.heuristic(r.title() + ". " + r.abstractText()).summary());
+                inn.touch();
+                innovationService.log(inn, EventType.EDYCJA, "Zaktualizowano na podstawie zmian w źródle " + r.source() + ".", null);
+                rec.setContentHash(hash);
+                counts[2]++;
+                return rec;
+            }
+            counts[3]++;
+            return null;
+        }
+        String text = r.title() + " " + r.title() + " " + r.abstractText() + " " + String.join(" ", r.keywords());
+        List<SimilarItem> similar = similarity.similarInnovations(text, null, 1);
+        RadarRecord rec = new RadarRecord();
+        rec.setSource(r.source());
+        rec.setRef(r.ref());
+        rec.setTitle(r.title());
+        rec.setInstitutionName(r.institution());
+        rec.setContentHash(hash);
+        if (!similar.isEmpty() && similar.getFirst().similarityPercent() >= DUPLICATE_THRESHOLD) {
+            rec.setOutcome(RadarRecord.Outcome.DUPLIKAT);
+            rec.setDuplicateOf(innovations.getReferenceById(similar.getFirst().id()));
+            rec.setDuplicateSimilarity(similar.getFirst().similarityPercent());
+            counts[1]++;
+        } else {
+            rec.setOutcome(RadarRecord.Outcome.NOWA_INNOWACJA);
+            rec.setInnovation(createDetected(r));
+            counts[0]++;
+        }
+        return records.save(rec);
     }
 
     private Innovation createDetected(SourceRecord r) {
@@ -111,19 +200,18 @@ public class RadarService {
         inn.setProblem(d.problem().isEmpty() ? null : d.problem());
         inn.setSolution(d.solution().isEmpty() ? r.abstractText() : d.solution());
         inn.setResults(d.results().isEmpty() ? null : d.results());
-        inn.setType(d.type());
-        inn.setSector(d.sector());
-        inn.setMaturity(d.maturity());
-        if (r.keywords() != null) {
-            r.keywords().forEach(k -> inn.getTags().add(k.toLowerCase()));
-        }
+        inn.setType(r.typeHint() != null ? r.typeHint() : d.type());
+        inn.setSector(r.sectorHint() != null ? r.sectorHint() : d.sector());
+        inn.setMaturity(r.maturityHint() != null ? r.maturityHint() : d.maturity());
+        r.keywords().stream().filter(k -> k != null && !k.isBlank()).forEach(k -> inn.getTags().add(k.toLowerCase()));
         if (r.url() != null) {
             inn.getLinks().add(r.url());
         }
-        inn.setInstitution(institutions.findFirstByNameIgnoreCase(r.institution()).orElseGet(() ->
-                institutions.save(new Institution(r.institution(),
-                        r.institutionType() == null ? InstitutionType.UCZELNIA : r.institutionType(),
-                        r.city(), r.county(), "podkarpackie"))));
+        String instName = r.institution() == null || r.institution().isBlank() ? "Instytucja nieznana" : r.institution();
+        inn.setInstitution(institutions.findFirstByNameIgnoreCase(instName).orElseGet(() ->
+                institutions.save(new Institution(instName,
+                        r.institutionType() == null ? InstitutionType.INSTYTUCJA_PUBLICZNA : r.institutionType(),
+                        r.city(), r.county(), r.region() == null ? "Polska" : r.region()))));
         inn.setSource(Source.RADAR);
         inn.setSourceName(r.source());
         inn.setSourceRef(r.ref());
@@ -131,22 +219,7 @@ public class RadarService {
         inn.setStatus(InnovationStatus.WYKRYTA);
         innovations.save(inn);
         innovationService.log(inn, EventType.WYKRYTO, "Wykryto w źródle " + r.source() + " (" + r.ref()
-                + "). Autorzy w źródle: " + r.authors() + ". Czeka na weryfikację analityka PCI.", null);
+                + (r.year() != null ? ", " + r.year() : "") + "). Czeka na weryfikację analityka PCI.", null);
         return inn;
-    }
-
-    private List<SourceRecord> loadSourceRecords(String pattern) {
-        List<SourceRecord> out = new ArrayList<>();
-        try {
-            Resource[] files = new PathMatchingResourcePatternResolver().getResources(pattern);
-            for (Resource f : files) {
-                try (InputStream in = f.getInputStream()) {
-                    out.addAll(json.readValue(in, new TypeReference<List<SourceRecord>>() { }));
-                }
-            }
-        } catch (IOException e) {
-            throw new IllegalStateException("Nie udało się wczytać danych Radaru", e);
-        }
-        return out;
     }
 }

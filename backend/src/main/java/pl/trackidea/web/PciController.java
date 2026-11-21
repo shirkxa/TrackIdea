@@ -56,8 +56,12 @@ public class PciController {
     @GetMapping("/radar")
     public Map<String, Object> radarState() {
         Map<String, Object> out = new LinkedHashMap<>();
+        out.put("live", radar.isLive());
+        out.put("lastScanAt", radar.lastScanAt());
+        out.put("nextScanAt", radar.nextScanAt());
         out.put("sources", radar.sources());
-        out.put("records", radarRecords.findAllByOrderByImportedAtDescIdDesc().stream().map(Dto.RadarRecordView::of).toList());
+        out.put("records", radarRecords.findAllByOrderByImportedAtDescIdDesc().stream().limit(100)
+                .map(Dto.RadarRecordView::of).toList());
         return out;
     }
 
@@ -72,7 +76,9 @@ public class PciController {
         out.put("scanned", r.scanned());
         out.put("created", r.created());
         out.put("duplicates", r.duplicates());
+        out.put("updated", r.updated());
         out.put("skipped", r.skipped());
+        out.put("errors", r.errors());
         out.put("records", r.records().stream().map(Dto.RadarRecordView::of).toList());
         return out;
     }

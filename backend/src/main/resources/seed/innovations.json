@@ -27,7 +27,7 @@
     "daysAgo": 120,
     "assessAfterDays": 9,
     "sourceAuthors": "Beata Kruk",
-    "sourceName": "Strona instytucji"
+    "sourceName": "Przykład (dane demo)"
   },
   {
     "key": "tutoring",
@@ -54,7 +54,7 @@
     "daysAgo": 200,
     "assessAfterDays": 12,
     "sourceAuthors": "Dorota Wilk",
-    "sourceName": "Strona instytucji"
+    "sourceName": "Przykład (dane demo)"
   },
   {
     "key": "klub",
@@ -76,7 +76,7 @@
     "status": "WYKRYTA",
     "daysAgo": 25,
     "sourceAuthors": "Adam Gil",
-    "sourceName": "Strona instytucji"
+    "sourceName": "Przykład (dane demo)"
   },
   {
     "key": "kompostownik",
@@ -101,7 +101,7 @@
     "daysAgo": 40,
     "assessAfterDays": 6,
     "sourceAuthors": "Aleksandra Pawlak",
-    "sourceName": "Strona instytucji"
+    "sourceName": "Przykład (dane demo)"
   },
   {
     "key": "grafik",
@@ -128,7 +128,7 @@
     "daysAgo": 300,
     "assessAfterDays": 10,
     "sourceAuthors": "Jerzy Bielecki",
-    "sourceName": "Strona instytucji"
+    "sourceName": "Przykład (dane demo)"
   },
   {
     "key": "seniorzy",
@@ -156,7 +156,7 @@
     "daysAgo": 90,
     "assessAfterDays": 8,
     "sourceAuthors": "Teresa Górecka",
-    "sourceName": "Strona instytucji"
+    "sourceName": "Przykład (dane demo)"
   },
   {
     "key": "wizyty",
@@ -180,7 +180,7 @@
     "status": "W_OCENIE",
     "daysAgo": 6,
     "sourceAuthors": "Piotr Mazur",
-    "sourceName": "Strona instytucji"
+    "sourceName": "Przykład (dane demo)"
   },
   {
     "key": "eseje",
@@ -204,7 +204,7 @@
     "status": "WYKRYTA",
     "daysAgo": 15,
     "sourceAuthors": "Kamil Wójcik",
-    "sourceName": "Strona instytucji"
+    "sourceName": "Przykład (dane demo)"
   },
   {
     "key": "energia",
@@ -232,7 +232,7 @@
       "NOWOSC": 1
     },
     "sourceAuthors": "Beata Kruk",
-    "sourceName": "Strona instytucji"
+    "sourceName": "Przykład (dane demo)"
   },
   {
     "key": "opaska",
@@ -251,7 +251,7 @@
     "status": "WYKRYTA",
     "daysAgo": 4,
     "sourceAuthors": "Lucyna Sowińska",
-    "sourceName": "Strona instytucji"
+    "sourceName": "Przykład (dane demo)"
   },
   {
     "key": "druk3d",
@@ -278,7 +278,7 @@
     "daysAgo": 110,
     "assessAfterDays": 7,
     "sourceAuthors": "Grzegorz Pawłowski",
-    "sourceName": "Strona instytucji"
+    "sourceName": "Przykład (dane demo)"
   },
   {
     "key": "piec",
@@ -298,7 +298,7 @@
     "sourceAuthors": "Pracownica referatu ochrony środowiska (bez konta)",
     "status": "WYKRYTA",
     "daysAgo": 2,
-    "sourceName": "Strona instytucji"
+    "sourceName": "Przykład (dane demo)"
   },
   {
     "key": "laboratorium",
@@ -325,7 +325,7 @@
       "PRZENASZALNOSC": -1
     },
     "sourceAuthors": "prof. Zofia Malinowska",
-    "sourceName": "Strona instytucji"
+    "sourceName": "Przykład (dane demo)"
   },
   {
     "key": "kompozyty",
@@ -353,7 +353,7 @@
     "daysAgo": 60,
     "assessAfterDays": 9,
     "sourceAuthors": "prof. Zofia Malinowska",
-    "sourceName": "Strona instytucji"
+    "sourceName": "Przykład (dane demo)"
   },
   {
     "key": "ladowarki",
@@ -376,7 +376,7 @@
     "status": "WYKRYTA",
     "daysAgo": 10,
     "sourceAuthors": "Ewa Lis",
-    "sourceName": "Strona instytucji"
+    "sourceName": "Przykład (dane demo)"
   },
   {
     "key": "kryzys",
@@ -400,7 +400,7 @@
     "daysAgo": 45,
     "assessAfterDays": 5,
     "sourceAuthors": "Adam Gil",
-    "sourceName": "Strona instytucji"
+    "sourceName": "Przykład (dane demo)"
   },
   {
     "key": "sor",
@@ -427,7 +427,7 @@
     "daysAgo": 80,
     "assessAfterDays": 10,
     "sourceAuthors": "Wiktor Lewandowski",
-    "sourceName": "Strona instytucji"
+    "sourceName": "Przykład (dane demo)"
   },
   {
     "key": "cubesat",
@@ -451,6 +451,6 @@
     "daysAgo": 35,
     "assessAfterDays": 8,
     "sourceAuthors": "Kamil Wójcik",
-    "sourceName": "Strona instytucji"
+    "sourceName": "Przykład (dane demo)"
   }
 ]

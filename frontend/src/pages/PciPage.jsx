@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { api } from '../api.js'
 import { Badge, Empty, ErrorBox, Loading, Section, StatusBadge } from '../components/ui.jsx'
 import { useApp } from '../context.jsx'
-import { formatDate } from '../format.js'
+import { formatDate, formatDateTime } from '../format.js'
 import { useFetch } from '../useFetch.js'
 
 /** Panel PCI: mierniki skuteczności, kolejka pracy eksperta i Radar (automatyczne wykrywanie). */
@@ -23,9 +23,12 @@ export default function PciPage() {
       const r = await api.post('/radar/scan')
       setLastScan(r)
       setVersion((v) => v + 1)
-      notify(r.created + r.duplicates === 0
-        ? 'Brak nowych rekordów w źródłach.'
-        : `Radar: nowe innowacje ${r.created}, duplikaty ${r.duplicates}.`)
+      notify(r.errors?.length
+        ? `Część źródeł niedostępna: ${r.errors.join('; ')}`
+        : r.created + r.duplicates + r.updated === 0
+          ? 'Źródła sprawdzone – brak nowych rekordów.'
+          : `Radar: nowe ${r.created}, zaktualizowane ${r.updated}, duplikaty ${r.duplicates}.`,
+      r.errors?.length ? 'error' : 'ok')
     } catch (e) {
       notify(e.message, 'error')
     } finally {
@@ -70,19 +73,41 @@ export default function PciPage() {
         title="Radar"
         actions={isPci && (
           <button className="btn btn-primary" disabled={scanning} onClick={scan}>
-            {scanning ? 'Skanowanie…' : '◎ Uruchom skan Radaru'}
+            {scanning ? 'Skanowanie źródeł…' : '◎ Skanuj teraz'}
           </button>
         )}
       >
         {radar.data && (
-          <ul className="sources">
-            {radar.data.sources.map((s) => <li key={s}>{s}</li>)}
-          </ul>
+          <>
+            <p className="muted small">
+              {radar.data.live ? 'Tryb online' : 'Tryb offline (próbki z plików)'}
+              {radar.data.lastScanAt && <> · ostatni skan {formatDateTime(radar.data.lastScanAt)}</>}
+              {radar.data.nextScanAt && <> · następny automatycznie {formatDateTime(radar.data.nextScanAt)}</>}
+            </p>
+            <div className="source-grid">
+              {radar.data.sources.filter((s) => s.active).map((s) => (
+                <div key={s.name} className={`source-card ${s.lastError ? 'source-error' : ''}`}>
+                  <div className="source-head">
+                    <strong>{s.homepage ? <a href={s.homepage} target="_blank" rel="noreferrer">{s.name}</a> : s.name}</strong>
+                    <Badge tone={s.lastError ? 'warn' : s.lastRunAt ? 'good' : 'muted'}>
+                      {s.lastError ? 'błąd' : s.lastRunAt ? 'działa' : 'czeka na skan'}
+                    </Badge>
+                  </div>
+                  <p className="muted small">{s.description}</p>
+                  <p className="small">
+                    W bazie: <b>{s.totalRecords}</b>
+                    {s.lastRunAt && <> · ostatnio pobrano {s.lastFetched}, nowe {s.lastCreated}, zaktualizowane {s.lastUpdated}</>}
+                  </p>
+                  {s.lastError && <p className="small">{s.lastError}</p>}
+                </div>
+              ))}
+            </div>
+          </>
         )}
         {lastScan && (
           <p className="notice small">
-            Ostatni skan: przejrzane rekordy {lastScan.scanned}, nowe innowacje {lastScan.created},
-            duplikaty {lastScan.duplicates}, już zaimportowane {lastScan.skipped}.
+            Skan: przejrzane {lastScan.scanned}, nowe {lastScan.created}, zaktualizowane {lastScan.updated},
+            duplikaty {lastScan.duplicates}, bez zmian {lastScan.skipped}.
           </p>
         )}
         {!radar.data ? <Loading /> : radar.data.records.length === 0 ? (
