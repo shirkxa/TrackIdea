@@ -33,7 +33,7 @@ export function Badge({ children, tone = 'info', title }) {
 
 export function ScoreRing({ score, size = 56, label = 'wynik' }) {
   if (score === null || score === undefined) {
-    return <div className="score-ring empty-score" style={{ width: size, height: size }} title="Jeszcze nie oceniono">–</div>
+    return <div className="score-ring empty-score" style={{ width: size, height: size }} title="Jeszcze nie oceniono"><span>–</span></div>
   }
   const deg = Math.round((score / 100) * 360)
   return (
