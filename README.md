@@ -16,9 +16,6 @@ oraz pokazuje, gdzie mogą znaleźć zastosowanie.
 Prototyp na HackNation – wyzwanie Podkarpackiego Centrum Innowacji **„Radar innowacji”**.
 Plan projektu: [`docs/TrackIdea_plan_projektu.pdf`](docs/TrackIdea_plan_projektu.pdf).
 
-> Radar nie jest platformą do zgłaszania pomysłów, portalem społecznościowym ani narzędziem do pozyskiwania
-> finansowania – zgodnie z doprecyzowaniem wyzwania.
-
 ## Problem
 
 Informacje o innowacjach są rozproszone w wielu źródłach, więc wartościowe rozwiązania pozostają mało znane,
